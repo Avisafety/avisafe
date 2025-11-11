@@ -1,5 +1,5 @@
 import { GlassCard } from "@/components/GlassCard";
-import { Calendar as CalendarIcon } from "lucide-react";
+import { Calendar as CalendarIcon, Plus } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { useState } from "react";
 import { mockDocuments, mockMissions, mockDrones, mockEquipment } from "@/data/mockData";
@@ -13,7 +13,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface CalendarEvent {
   type: string;
@@ -60,6 +66,13 @@ export const CalendarWidget = () => {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newEvent, setNewEvent] = useState({
+    title: "",
+    type: "Oppdrag",
+    description: "",
+    time: "09:00",
+  });
 
   const getEventsForDate = (checkDate: Date) => {
     return calendarEvents.filter((event) => isSameDay(event.date, checkDate));
@@ -70,11 +83,26 @@ export const CalendarWidget = () => {
   };
 
   const handleDateClick = (clickedDate: Date | undefined) => {
-    if (clickedDate && hasEvents(clickedDate)) {
+    if (clickedDate) {
       setSelectedDate(clickedDate);
       setDialogOpen(true);
+      setShowAddForm(false);
+      setNewEvent({ title: "", type: "Oppdrag", description: "", time: "09:00" });
     }
     setDate(clickedDate);
+  };
+
+  const handleAddEvent = () => {
+    if (!newEvent.title.trim()) {
+      toast.error("Tittel er påkrevd");
+      return;
+    }
+    
+    // Her ville vi normalt lagret til database
+    toast.success("Hendelse opprettet (simulert)");
+    setShowAddForm(false);
+    setDialogOpen(false);
+    setNewEvent({ title: "", type: "Oppdrag", description: "", time: "09:00" });
   };
 
   const selectedEvents = selectedDate ? getEventsForDate(selectedDate) : [];
@@ -138,36 +166,112 @@ export const CalendarWidget = () => {
       </GlassCard>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              Hendelser {selectedDate && format(selectedDate, "dd. MMMM yyyy", { locale: nb })}
+              {selectedDate && format(selectedDate, "dd. MMMM yyyy", { locale: nb })}
             </DialogTitle>
             <DialogDescription>
-              Detaljer om planlagte aktiviteter for denne dagen
+              Hendelser og aktiviteter for denne dagen
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-3">
-            {selectedEvents.map((event, index) => (
-              <div
-                key={index}
-                className="p-3 bg-card/30 rounded-lg border border-border"
-              >
-                <div className="flex items-start gap-2">
-                  <div className="flex-1">
-                    <h4 className="font-semibold text-sm mb-1">{event.title}</h4>
-                    <Badge variant="outline" className="text-xs">
-                      {event.type}
-                    </Badge>
-                  </div>
-                  <div className={cn("text-xs font-medium", event.color)}>
-                    {format(event.date, "HH:mm")}
-                  </div>
-                </div>
+          {!showAddForm ? (
+            <>
+              <div className="space-y-3">
+                {selectedEvents.length > 0 ? (
+                  selectedEvents.map((event, index) => (
+                    <div
+                      key={index}
+                      className="p-3 bg-card/30 rounded-lg border border-border"
+                    >
+                      <div className="flex items-start gap-2">
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-sm mb-1">{event.title}</h4>
+                          <Badge variant="outline" className="text-xs">
+                            {event.type}
+                          </Badge>
+                        </div>
+                        <div className={cn("text-xs font-medium", event.color)}>
+                          {format(event.date, "HH:mm")}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    Ingen hendelser denne dagen
+                  </p>
+                )}
               </div>
-            ))}
-          </div>
+
+              <Button onClick={() => setShowAddForm(true)} className="w-full gap-2">
+                <Plus className="w-4 h-4" />
+                Legg til hendelse
+              </Button>
+            </>
+          ) : (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="title">Tittel *</Label>
+                <Input
+                  id="title"
+                  placeholder="F.eks. Oppdrag i Oslo"
+                  value={newEvent.title}
+                  onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="type">Type</Label>
+                <Select
+                  value={newEvent.type}
+                  onValueChange={(value) => setNewEvent({ ...newEvent, type: value })}
+                >
+                  <SelectTrigger id="type">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Oppdrag">Oppdrag</SelectItem>
+                    <SelectItem value="Vedlikehold">Vedlikehold</SelectItem>
+                    <SelectItem value="Dokument">Dokument utgår</SelectItem>
+                    <SelectItem value="Møte">Møte</SelectItem>
+                    <SelectItem value="Annet">Annet</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="time">Tidspunkt</Label>
+                <Input
+                  id="time"
+                  type="time"
+                  value={newEvent.time}
+                  onChange={(e) => setNewEvent({ ...newEvent, time: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="description">Beskrivelse</Label>
+                <Textarea
+                  id="description"
+                  placeholder="Legg til detaljer..."
+                  value={newEvent.description}
+                  onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
+                  rows={3}
+                />
+              </div>
+
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => setShowAddForm(false)} className="flex-1">
+                  Avbryt
+                </Button>
+                <Button onClick={handleAddEvent} className="flex-1">
+                  Lagre
+                </Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </>

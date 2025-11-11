@@ -237,10 +237,10 @@ export const CalendarWidget = () => {
 
   return (
     <>
-      <GlassCard className="h-[400px] flex flex-col">
+      <GlassCard className="h-auto sm:h-[400px] flex flex-col">
         <div className="flex items-center gap-2 mb-3">
           <CalendarIcon className="w-5 h-5 text-primary" />
-          <h2 className="text-base font-semibold">Kalender</h2>
+          <h2 className="text-sm sm:text-base font-semibold">Kalender</h2>
         </div>
 
         <Calendar
@@ -253,24 +253,24 @@ export const CalendarWidget = () => {
             months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
             month: "space-y-4 w-full",
             caption: "flex justify-center pt-1 relative items-center",
-            caption_label: "text-sm font-medium",
+            caption_label: "text-xs sm:text-sm font-medium",
             nav: "space-x-1 flex items-center",
             nav_button: cn(
-              "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100"
+              "h-6 w-6 sm:h-7 sm:w-7 bg-transparent p-0 opacity-50 hover:opacity-100"
             ),
             nav_button_previous: "absolute left-1",
             nav_button_next: "absolute right-1",
             table: "w-full border-collapse space-y-1",
             head_row: "flex w-full",
             head_cell:
-              "text-muted-foreground rounded-md w-full font-normal text-[0.8rem]",
+              "text-muted-foreground rounded-md w-full font-normal text-[0.7rem] sm:text-[0.8rem]",
             row: "flex w-full mt-2",
             cell: cn(
-              "relative p-0 text-center text-sm focus-within:relative focus-within:z-20 [&:has([aria-selected])]:bg-accent [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected].day-range-end)]:rounded-r-md w-full",
-              "h-9"
+              "relative p-0 text-center text-xs sm:text-sm focus-within:relative focus-within:z-20 [&:has([aria-selected])]:bg-accent [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected].day-range-end)]:rounded-r-md w-full",
+              "h-8 sm:h-9"
             ),
             day: cn(
-              "h-9 w-full p-0 font-normal aria-selected:opacity-100 hover:bg-accent hover:text-accent-foreground rounded-md relative [&.has-events]:font-bold [&.has-events]:after:absolute [&.has-events]:after:bottom-1 [&.has-events]:after:left-1/2 [&.has-events]:after:-translate-x-1/2 [&.has-events]:after:w-1 [&.has-events]:after:h-1 [&.has-events]:after:bg-primary [&.has-events]:after:rounded-full"
+              "h-8 sm:h-9 w-full p-0 font-normal aria-selected:opacity-100 hover:bg-accent hover:text-accent-foreground rounded-md relative [&.has-events]:font-bold [&.has-events]:after:absolute [&.has-events]:after:bottom-1 [&.has-events]:after:left-1/2 [&.has-events]:after:-translate-x-1/2 [&.has-events]:after:w-1 [&.has-events]:after:h-1 [&.has-events]:after:bg-primary [&.has-events]:after:rounded-full"
             ),
             day_range_start: "day-range-start",
             day_range_end: "day-range-end",

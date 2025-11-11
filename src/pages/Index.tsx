@@ -206,8 +206,8 @@ const Index = () => {
         className="fixed inset-0 z-0"
         style={{
           backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.5)), url(${droneBackground})`,
-          backgroundSize: "100% auto",
-          backgroundPosition: "60% 55%",
+          backgroundSize: "cover",
+          backgroundPosition: "center center",
           backgroundAttachment: "fixed",
           backgroundRepeat: "no-repeat",
         }}
@@ -217,34 +217,16 @@ const Index = () => {
       <div className="relative z-10">
         {/* Header */}
         <header className="bg-card/20 backdrop-blur-md border-b border-glass sticky top-0 z-50">
-          <div className="container mx-auto px-4 py-3 max-w-[1800px]">
+          <div className="container mx-auto px-3 sm:px-4 py-2 sm:py-3 max-w-[1800px]">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Shield className="w-10 h-10 text-primary" />
+              <div className="flex items-center gap-2 sm:gap-3">
+                <Shield className="w-8 h-8 sm:w-10 sm:h-10 text-primary" />
                 <div>
-                  <h1 className="text-2xl font-bold">Sikkerhetsstyringssystem</h1>
-                  <p className="text-base text-primary">Drone Operations Management</p>
+                  <h1 className="text-lg sm:text-2xl font-bold">Sikkerhetsstyringssystem</h1>
+                  <p className="text-xs sm:text-base text-primary hidden sm:block">Drone Operations Management</p>
                 </div>
               </div>
-              <nav className="hidden md:flex items-center gap-4 text-base font-medium">
-                <a href="#" className="text-primary hover:text-primary/80 transition-colors">
-                  Dashboard
-                </a>
-                <a href="#" className="hover:text-primary transition-colors">
-                  Dokumenter
-                </a>
-                <a href="#" className="hover:text-primary transition-colors">
-                  Kalender
-                </a>
-                <a href="#" className="hover:text-primary transition-colors">
-                  Hendelser
-                </a>
-                <a href="#" className="hover:text-primary transition-colors">
-                  Oppdrag
-                </a>
-                <a href="#" className="hover:text-primary transition-colors">
-                  Ressurser
-                </a>
+              <nav className="flex items-center gap-2 sm:gap-4">
                 {isAdmin && (
                   <Button
                     variant="ghost"
@@ -262,7 +244,6 @@ const Index = () => {
                   variant="ghost"
                   size="sm"
                   onClick={handleSignOut}
-                  className="ml-2"
                   title="Logg ut"
                 >
                   <LogOut className="w-4 h-4" />
@@ -273,16 +254,16 @@ const Index = () => {
         </header>
 
         {/* Main Content */}
-        <main className="container mx-auto px-4 py-5 max-w-[1800px]">
+        <main className="container mx-auto px-3 sm:px-4 py-3 sm:py-5 max-w-[1800px]">
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
             onDragEnd={handleDragEnd}
           >
             <SortableContext items={layout.map((item) => item.id)} strategy={rectSortingStrategy}>
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {/* Top Row - News and Status */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-4">
                   <div className="lg:col-span-9">
                     {layout
                       .filter((item) => item.component === "news")
@@ -304,9 +285,9 @@ const Index = () => {
                 </div>
 
                 {/* Main Row - Sidebars with center content */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-4">
                   {/* Left Column */}
-                  <div className="lg:col-span-3 space-y-4">
+                  <div className="lg:col-span-3 space-y-3 sm:space-y-4">
                     {layout
                       .filter((item) => ["documents", "calendar"].includes(item.component))
                       .map((item) => (
@@ -317,9 +298,9 @@ const Index = () => {
                   </div>
 
                   {/* Center Column - Drone space and missions */}
-                  <div className="lg:col-span-6 space-y-4">
-                    {/* Empty space for drone background */}
-                    <div className="min-h-[400px]" />
+                  <div className="lg:col-span-6 space-y-3 sm:space-y-4">
+                    {/* Empty space for drone background - reduced on mobile */}
+                    <div className="min-h-[200px] sm:min-h-[300px] lg:min-h-[400px]" />
                     
                     {/* Missions below drone */}
                     {layout
@@ -332,7 +313,7 @@ const Index = () => {
                   </div>
 
                   {/* Right Column */}
-                  <div className="lg:col-span-3 flex flex-col gap-4" style={{ height: '816px' }}>
+                  <div className="lg:col-span-3 flex flex-col gap-3 sm:gap-4">
                     {layout
                       .filter((item) => item.component === "incidents")
                       .map((item) => (

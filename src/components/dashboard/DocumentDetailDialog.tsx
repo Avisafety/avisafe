@@ -207,30 +207,30 @@ export const DocumentDetailDialog = ({ open, onOpenChange, document, status }: D
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto mx-4 sm:mx-auto">
         <DialogHeader>
           <div className="flex items-start justify-between gap-2">
-            <DialogTitle className="text-xl">{document.tittel}</DialogTitle>
+            <DialogTitle className="text-lg sm:text-xl">{document.tittel}</DialogTitle>
             <StatusBadge status={status as any} />
           </div>
         </DialogHeader>
         
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           <div className="flex flex-wrap gap-2">
-            <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
+            <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 text-xs sm:text-sm">
               {document.kategori}
             </Badge>
-            <Badge variant="outline">
+            <Badge variant="outline" className="text-xs sm:text-sm">
               Versjon {document.versjon}
             </Badge>
             {document.synlighet && (
-              <Badge variant="outline">
+              <Badge variant="outline" className="text-xs sm:text-sm">
                 {document.synlighet}
               </Badge>
             )}
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-2 sm:space-y-3">
             {document.utsteder && (
               <div className="flex items-start gap-3">
                 <User className="w-5 h-5 text-muted-foreground mt-0.5" />

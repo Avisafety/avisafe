@@ -12,7 +12,7 @@ export const GlassCard = ({ children, className, dragHandleProps }: GlassCardPro
   return (
     <div
       className={cn(
-        "bg-card/40 backdrop-blur-md border border-glass rounded-lg p-5 shadow-lg relative group",
+        "bg-card/40 backdrop-blur-md border border-glass rounded-lg p-3 sm:p-5 shadow-lg relative group",
         className
       )}
     >
@@ -20,7 +20,7 @@ export const GlassCard = ({ children, className, dragHandleProps }: GlassCardPro
         <div
           {...dragHandleProps.attributes}
           {...dragHandleProps.listeners}
-          className="absolute top-5 right-5 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing z-10"
+          className="absolute top-3 right-3 sm:top-5 sm:right-5 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing z-10"
         >
           <GripVertical className="w-5 h-5 text-primary" />
         </div>

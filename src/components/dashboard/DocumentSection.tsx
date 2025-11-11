@@ -81,6 +81,8 @@ export const DocumentSection = () => {
         synlighet: "Intern" as any,
         fil_url: doc.fil_url,
         fil_navn: doc.fil_navn,
+        utsteder: doc.opprettet_av,
+        merknader: undefined,
       }));
 
       setDocuments(mappedDocuments);

@@ -223,9 +223,16 @@ const Index = () => {
                   </div>
 
                   {/* Right Column */}
-                  <div className="lg:col-span-3 space-y-4">
+                  <div className="lg:col-span-3 flex flex-col gap-4" style={{ height: '816px' }}>
                     {layout
-                      .filter((item) => ["incidents", "kpi"].includes(item.component))
+                      .filter((item) => item.component === "incidents")
+                      .map((item) => (
+                        <DraggableSection key={item.id} id={item.id} className="flex-1">
+                          {renderSection(item.component)}
+                        </DraggableSection>
+                      ))}
+                    {layout
+                      .filter((item) => item.component === "kpi")
                       .map((item) => (
                         <DraggableSection key={item.id} id={item.id}>
                           {renderSection(item.component)}

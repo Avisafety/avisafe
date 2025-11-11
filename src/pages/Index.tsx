@@ -171,11 +171,11 @@ const Index = () => {
             onDragEnd={handleDragEnd}
           >
             <SortableContext items={layout.map((item) => item.id)} strategy={rectSortingStrategy}>
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-                {/* Left Column */}
-                <div className="lg:col-span-3 space-y-4">
+              <div className="space-y-4">
+                {/* Top Row - News */}
+                <div className="w-full">
                   {layout
-                    .filter((item) => ["documents", "news", "calendar"].includes(item.component))
+                    .filter((item) => item.component === "news")
                     .map((item) => (
                       <DraggableSection key={item.id} id={item.id}>
                         {renderSection(item.component)}
@@ -183,13 +183,38 @@ const Index = () => {
                     ))}
                 </div>
 
-                {/* Center - Empty space for drone background */}
-                <div className="lg:col-span-6 min-h-[600px]" />
+                {/* Middle Row - Sidebars with center space */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                  {/* Left Column */}
+                  <div className="lg:col-span-3 space-y-4">
+                    {layout
+                      .filter((item) => ["documents", "calendar"].includes(item.component))
+                      .map((item) => (
+                        <DraggableSection key={item.id} id={item.id}>
+                          {renderSection(item.component)}
+                        </DraggableSection>
+                      ))}
+                  </div>
 
-                {/* Right Column */}
-                <div className="lg:col-span-3 space-y-4">
+                  {/* Center - Empty space for drone background */}
+                  <div className="lg:col-span-6 min-h-[400px]" />
+
+                  {/* Right Column */}
+                  <div className="lg:col-span-3 space-y-4">
+                    {layout
+                      .filter((item) => ["status", "incidents", "kpi"].includes(item.component))
+                      .map((item) => (
+                        <DraggableSection key={item.id} id={item.id}>
+                          {renderSection(item.component)}
+                        </DraggableSection>
+                      ))}
+                  </div>
+                </div>
+
+                {/* Bottom Row - Missions */}
+                <div className="w-full">
                   {layout
-                    .filter((item) => ["status", "missions", "incidents", "kpi"].includes(item.component))
+                    .filter((item) => item.component === "missions")
                     .map((item) => (
                       <DraggableSection key={item.id} id={item.id}>
                         {renderSection(item.component)}

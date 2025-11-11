@@ -57,6 +57,17 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        status: {
+          green: "hsl(var(--status-green))",
+          yellow: "hsl(var(--status-yellow))",
+          red: "hsl(var(--status-red))",
+        },
+      },
+      backgroundColor: {
+        glass: "hsl(var(--glass-bg))",
+      },
+      borderColor: {
+        glass: "hsl(var(--glass-border))",
       },
       borderRadius: {
         lg: "var(--radius)",

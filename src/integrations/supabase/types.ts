@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      calendar_events: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          event_date: string
+          event_time: string | null
+          id: string
+          title: string
+          type: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          event_date: string
+          event_time?: string | null
+          id?: string
+          title: string
+          type: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          event_date?: string
+          event_time?: string | null
+          id?: string
+          title?: string
+          type?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       documents: {
         Row: {
           fil_navn: string | null

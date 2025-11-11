@@ -1,10 +1,12 @@
 import { GlassCard } from "@/components/GlassCard";
 import { Calendar as CalendarIcon, Plus } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { mockDocuments, mockMissions, mockDrones, mockEquipment } from "@/data/mockData";
-import { format, isSameDay } from "date-fns";
+import { format, isSameDay, parse } from "date-fns";
 import { nb } from "date-fns/locale";
+import { supabase } from "@/integrations/supabase/client";
+import type { Tables } from "@/integrations/supabase/types";
 import {
   Dialog,
   DialogContent,
@@ -26,10 +28,15 @@ interface CalendarEvent {
   title: string;
   date: Date;
   color: string;
+  description?: string;
+  id?: string;
+  isCustom?: boolean;
 }
 
+type CalendarEventDB = Tables<"calendar_events">;
+
 // Generate calendar events from mock data
-const calendarEvents: CalendarEvent[] = [
+const getMockCalendarEvents = (): CalendarEvent[] => [
   ...mockDocuments
     .filter((doc) => doc.gyldig_til)
     .map((doc) => ({
@@ -67,6 +74,8 @@ export const CalendarWidget = () => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [customEvents, setCustomEvents] = useState<CalendarEventDB[]>([]);
+  const [loading, setLoading] = useState(true);
   const [newEvent, setNewEvent] = useState({
     title: "",
     type: "Oppdrag",
@@ -74,8 +83,97 @@ export const CalendarWidget = () => {
     time: "09:00",
   });
 
+  // Fetch custom events from database
+  useEffect(() => {
+    fetchCustomEvents();
+  }, []);
+
+  // Real-time subscription
+  useEffect(() => {
+    const channel = supabase
+      .channel('calendar-events-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'calendar_events'
+        },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            setCustomEvents((current) => [...current, payload.new as CalendarEventDB]);
+          } else if (payload.eventType === 'UPDATE') {
+            setCustomEvents((current) =>
+              current.map((event) =>
+                event.id === (payload.new as CalendarEventDB).id ? (payload.new as CalendarEventDB) : event
+              )
+            );
+          } else if (payload.eventType === 'DELETE') {
+            setCustomEvents((current) =>
+              current.filter((event) => event.id !== (payload.old as CalendarEventDB).id)
+            );
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const fetchCustomEvents = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('calendar_events')
+        .select('*')
+        .order('event_date', { ascending: true });
+
+      if (error) throw error;
+
+      setCustomEvents(data || []);
+    } catch (error: any) {
+      console.error('Error fetching calendar events:', error);
+      toast.error('Kunne ikke laste kalenderoppføringer');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Combine mock and custom events
+  const allEvents: CalendarEvent[] = [
+    ...getMockCalendarEvents(),
+    ...customEvents.map((event) => {
+      const eventDate = new Date(event.event_date);
+      if (event.event_time) {
+        const [hours, minutes] = event.event_time.split(':');
+        eventDate.setHours(parseInt(hours), parseInt(minutes));
+      }
+      
+      return {
+        id: event.id,
+        type: event.type,
+        title: event.title,
+        date: eventDate,
+        description: event.description || undefined,
+        color: getColorForType(event.type),
+        isCustom: true,
+      };
+    }),
+  ];
+
+  const getColorForType = (type: string): string => {
+    switch (type) {
+      case "Oppdrag": return "text-primary";
+      case "Vedlikehold": return "text-orange-500";
+      case "Dokument": return "text-blue-500";
+      case "Møte": return "text-purple-500";
+      default: return "text-gray-500";
+    }
+  };
+
   const getEventsForDate = (checkDate: Date) => {
-    return calendarEvents.filter((event) => isSameDay(event.date, checkDate));
+    return allEvents.filter((event) => isSameDay(event.date, checkDate));
   };
 
   const hasEvents = (checkDate: Date) => {
@@ -92,17 +190,46 @@ export const CalendarWidget = () => {
     }
   };
 
-  const handleAddEvent = () => {
+  const handleAddEvent = async () => {
     if (!newEvent.title.trim()) {
       toast.error("Tittel er påkrevd");
       return;
     }
-    
-    // Her ville vi normalt lagret til database
-    toast.success("Hendelse opprettet (simulert)");
-    setShowAddForm(false);
-    setDialogOpen(false);
-    setNewEvent({ title: "", type: "Oppdrag", description: "", time: "09:00" });
+
+    if (!selectedDate) {
+      toast.error("Ingen dato valgt");
+      return;
+    }
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast.error("Du må være logget inn for å opprette kalenderoppføringer");
+        return;
+      }
+
+      const { error } = await supabase
+        .from('calendar_events')
+        .insert({
+          user_id: user.id,
+          title: newEvent.title,
+          type: newEvent.type,
+          description: newEvent.description || null,
+          event_date: format(selectedDate, 'yyyy-MM-dd'),
+          event_time: newEvent.time,
+        });
+
+      if (error) throw error;
+
+      toast.success("Kalenderoppføring opprettet!");
+      setShowAddForm(false);
+      setDialogOpen(false);
+      setNewEvent({ title: "", type: "Oppdrag", description: "", time: "09:00" });
+    } catch (error: any) {
+      console.error('Error creating calendar event:', error);
+      toast.error(`Feil ved opprettelse: ${error.message}`);
+    }
   };
 
   const selectedEvents = selectedDate ? getEventsForDate(selectedDate) : [];
@@ -182,12 +309,15 @@ export const CalendarWidget = () => {
                 {selectedEvents.length > 0 ? (
                   selectedEvents.map((event, index) => (
                     <div
-                      key={index}
+                      key={event.id || index}
                       className="p-3 bg-card/30 rounded-lg border border-border"
                     >
                       <div className="flex items-start gap-2">
                         <div className="flex-1">
                           <h4 className="font-semibold text-sm mb-1">{event.title}</h4>
+                          {event.description && (
+                            <p className="text-xs text-muted-foreground mb-2">{event.description}</p>
+                          )}
                           <Badge variant="outline" className="text-xs">
                             {event.type}
                           </Badge>

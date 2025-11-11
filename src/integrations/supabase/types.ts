@@ -62,6 +62,51 @@ export type Database = {
         }
         Relationships: []
       }
+      incidents: {
+        Row: {
+          alvorlighetsgrad: string
+          beskrivelse: string | null
+          hendelsestidspunkt: string
+          id: string
+          kategori: string | null
+          lokasjon: string | null
+          oppdatert_dato: string | null
+          opprettet_dato: string | null
+          rapportert_av: string | null
+          status: string
+          tittel: string
+          user_id: string | null
+        }
+        Insert: {
+          alvorlighetsgrad: string
+          beskrivelse?: string | null
+          hendelsestidspunkt: string
+          id?: string
+          kategori?: string | null
+          lokasjon?: string | null
+          oppdatert_dato?: string | null
+          opprettet_dato?: string | null
+          rapportert_av?: string | null
+          status?: string
+          tittel: string
+          user_id?: string | null
+        }
+        Update: {
+          alvorlighetsgrad?: string
+          beskrivelse?: string | null
+          hendelsestidspunkt?: string
+          id?: string
+          kategori?: string | null
+          lokasjon?: string | null
+          oppdatert_dato?: string | null
+          opprettet_dato?: string | null
+          rapportert_av?: string | null
+          status?: string
+          tittel?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

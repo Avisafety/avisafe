@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Shield, Check, X, UserCog } from "lucide-react";
+import { Shield, Check, X, UserCog, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -186,6 +186,27 @@ const Admin = () => {
     }
   };
 
+  const deleteUser = async (userId: string, userName: string | null) => {
+    if (!confirm(`Er du sikker på at du vil slette brukeren ${userName || "Ikke oppgitt"}? Dette kan ikke angres.`)) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .delete()
+        .eq("id", userId);
+
+      if (error) throw error;
+
+      toast.success("Bruker slettet");
+      fetchData();
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      toast.error("Feil ved sletting av bruker");
+    }
+  };
+
   const getUserRoles = (userId: string) => {
     return userRoles.filter((r) => r.user_id === userId);
   };
@@ -264,14 +285,25 @@ const Admin = () => {
                           {new Date(profile.created_at).toLocaleDateString("nb-NO")}
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button
-                            size="sm"
-                            onClick={() => approveUser(profile.id)}
-                            className="gap-2"
-                          >
-                            <Check className="w-4 h-4" />
-                            Godkjenn
-                          </Button>
+                          <div className="flex gap-2 justify-end">
+                            <Button
+                              size="sm"
+                              onClick={() => approveUser(profile.id)}
+                              className="gap-2"
+                            >
+                              <Check className="w-4 h-4" />
+                              Godkjenn
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => deleteUser(profile.id, profile.full_name)}
+                              className="gap-2"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                              Slett
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -297,6 +329,7 @@ const Admin = () => {
                     <TableHead>Bruker ID</TableHead>
                     <TableHead>Roller</TableHead>
                     <TableHead className="text-right">Tildel rolle</TableHead>
+                    <TableHead className="text-right">Handlinger</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -340,6 +373,15 @@ const Admin = () => {
                               ))}
                             </SelectContent>
                           </Select>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => deleteUser(profile.id, profile.full_name)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
                         </TableCell>
                       </TableRow>
                     );

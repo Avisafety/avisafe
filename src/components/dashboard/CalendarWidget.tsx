@@ -3,7 +3,7 @@ import { Calendar as CalendarIcon, Plus } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { useState, useEffect } from "react";
 import { mockDocuments, mockMissions, mockDrones, mockEquipment } from "@/data/mockData";
-import { format, isSameDay, parse } from "date-fns";
+import { format, isSameDay } from "date-fns";
 import { nb } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
@@ -85,11 +85,13 @@ export const CalendarWidget = () => {
 
   // Fetch custom events from database
   useEffect(() => {
+    console.log('CalendarWidget: Fetching custom events');
     fetchCustomEvents();
   }, []);
 
   // Real-time subscription
   useEffect(() => {
+    console.log('CalendarWidget: Setting up real-time subscription');
     const channel = supabase
       .channel('calendar-events-changes')
       .on(
@@ -100,6 +102,7 @@ export const CalendarWidget = () => {
           table: 'calendar_events'
         },
         (payload) => {
+          console.log('CalendarWidget: Real-time event received:', payload.eventType);
           if (payload.eventType === 'INSERT') {
             setCustomEvents((current) => [...current, payload.new as CalendarEventDB]);
           } else if (payload.eventType === 'UPDATE') {
@@ -118,19 +121,25 @@ export const CalendarWidget = () => {
       .subscribe();
 
     return () => {
+      console.log('CalendarWidget: Cleaning up real-time subscription');
       supabase.removeChannel(channel);
     };
   }, []);
 
   const fetchCustomEvents = async () => {
     try {
+      console.log('CalendarWidget: Fetching events from database');
       const { data, error } = await supabase
         .from('calendar_events')
         .select('*')
         .order('event_date', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error('CalendarWidget: Error fetching events:', error);
+        throw error;
+      }
 
+      console.log('CalendarWidget: Fetched events:', data?.length || 0);
       setCustomEvents(data || []);
     } catch (error: any) {
       console.error('Error fetching calendar events:', error);

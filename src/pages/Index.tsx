@@ -44,9 +44,13 @@ const Index = () => {
   const navigate = useNavigate();
   const [layout, setLayout] = useState(defaultLayout);
 
+  console.log('Index render - User:', user?.email, 'Loading:', loading);
+
   useEffect(() => {
+    console.log('Index useEffect - User:', user?.email, 'Loading:', loading);
     if (!loading && !user) {
-      navigate("/auth");
+      console.log('Redirecting to auth');
+      navigate("/auth", { replace: true });
     }
   }, [user, loading, navigate]);
 
@@ -99,8 +103,9 @@ const Index = () => {
   };
 
   if (loading) {
+    console.log('Index: Showing loading state');
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
           <Shield className="w-16 h-16 text-primary animate-pulse mx-auto mb-4" />
           <p className="text-lg">Laster...</p>
@@ -110,8 +115,11 @@ const Index = () => {
   }
 
   if (!user) {
+    console.log('Index: No user, returning null');
     return null;
   }
+
+  console.log('Index: Rendering dashboard');
 
   const renderSection = (component: string) => {
     switch (component) {

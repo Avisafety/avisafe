@@ -2,9 +2,8 @@ import { GlassCard } from "@/components/GlassCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FileText, Plus, Search, AlertCircle, Upload, X } from "lucide-react";
-import { mockDocuments } from "@/data/mockData";
 import { Document } from "@/types";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { DocumentDetailDialog } from "./DocumentDetailDialog";
 import {
   Dialog,
@@ -55,6 +54,43 @@ export const DocumentSection = () => {
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedDocStatus, setSelectedDocStatus] = useState<string>("Grønn");
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchDocuments();
+  }, []);
+
+  const fetchDocuments = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('documents')
+        .select('*')
+        .order('opprettet_dato', { ascending: false });
+
+      if (error) throw error;
+
+      const mappedDocuments: Document[] = (data || []).map((doc) => ({
+        id: doc.id,
+        tittel: doc.tittel,
+        kategori: doc.kategori as any,
+        versjon: doc.versjon || "1.0",
+        gyldig_til: doc.gyldig_til ? new Date(doc.gyldig_til) : undefined,
+        sist_endret: doc.oppdatert_dato ? new Date(doc.oppdatert_dato) : new Date(doc.opprettet_dato!),
+        varsel_dager_for_utløp: doc.varsel_dager_for_utløp || 30,
+        synlighet: "Intern" as any,
+        fil_url: doc.fil_url,
+        fil_navn: doc.fil_navn,
+      }));
+
+      setDocuments(mappedDocuments);
+    } catch (error: any) {
+      console.error('Error fetching documents:', error);
+      toast.error('Kunne ikke hente dokumenter');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -131,6 +167,9 @@ export const DocumentSection = () => {
         varsel_dager_for_utløp: "30",
       });
       
+      // Refresh document list
+      fetchDocuments();
+      
     } catch (error: any) {
       console.error('Upload error:', error);
       toast.error(`Feil ved opplasting: ${error.message}`);
@@ -165,38 +204,48 @@ export const DocumentSection = () => {
       </div>
 
       <div className="space-y-2 flex-1 overflow-y-auto">
-        {mockDocuments.map((doc) => {
-          const status = getDocumentStatus(doc);
-          return (
-            <div
-              key={doc.id}
-              onClick={() => handleDocumentClick(doc, status)}
-              className="flex items-center justify-between p-3 bg-card/30 rounded hover:bg-card/50 transition-colors cursor-pointer"
-            >
-              <div className="flex items-center gap-2 flex-1">
-                <StatusDot status={status} />
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-medium text-sm truncate">{doc.tittel}</h3>
-                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
-                    <span className="px-2 py-0.5 bg-primary/10 text-primary rounded text-xs">
-                      {doc.kategori}
-                    </span>
-                    <span>v{doc.versjon}</span>
+        {loading ? (
+          <div className="flex items-center justify-center py-8">
+            <p className="text-sm text-muted-foreground">Laster dokumenter...</p>
+          </div>
+        ) : documents.length === 0 ? (
+          <div className="flex items-center justify-center py-8">
+            <p className="text-sm text-muted-foreground">Ingen dokumenter lagt til ennå</p>
+          </div>
+        ) : (
+          documents.map((doc) => {
+            const status = getDocumentStatus(doc);
+            return (
+              <div
+                key={doc.id}
+                onClick={() => handleDocumentClick(doc, status)}
+                className="flex items-center justify-between p-3 bg-card/30 rounded hover:bg-card/50 transition-colors cursor-pointer"
+              >
+                <div className="flex items-center gap-2 flex-1">
+                  <StatusDot status={status} />
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-medium text-sm truncate">{doc.tittel}</h3>
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
+                      <span className="px-2 py-0.5 bg-primary/10 text-primary rounded text-xs">
+                        {doc.kategori}
+                      </span>
+                      <span>v{doc.versjon}</span>
+                    </div>
                   </div>
                 </div>
+                
+                {status !== "Grønn" && doc.gyldig_til && (
+                  <div className="flex items-center gap-1 text-xs">
+                    <AlertCircle className="w-4 h-4 text-destructive" />
+                    <span className={status === "Rød" ? "text-destructive font-medium" : "text-status-yellow"}>
+                      {status === "Rød" ? "Utløpt" : "Snart"}
+                    </span>
+                  </div>
+                )}
               </div>
-              
-              {status !== "Grønn" && doc.gyldig_til && (
-                <div className="flex items-center gap-1 text-xs">
-                  <AlertCircle className="w-4 h-4 text-destructive" />
-                  <span className={status === "Rød" ? "text-destructive font-medium" : "text-status-yellow"}>
-                    {status === "Rød" ? "Utløpt" : "Snart"}
-                  </span>
-                </div>
-              )}
-            </div>
-          );
-        })}
+            );
+          })
+        )}
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

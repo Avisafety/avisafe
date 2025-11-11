@@ -11,12 +11,14 @@ export interface Document {
   fil?: string;
   url?: string;
   versjon: string;
-  utsteder: string;
+  utsteder?: string;
   gyldig_til?: Date;
   varsel_dager_for_utløp: number;
-  merknader: string;
+  merknader?: string;
   synlighet: DocumentVisibility;
   sist_endret: Date;
+  fil_url?: string;
+  fil_navn?: string;
 }
 
 export type PersonRole = "Pilot" | "Tekniker" | "Operativ leder" | "Observatør" | "Annet";

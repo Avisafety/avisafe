@@ -1,9 +1,10 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Document } from "@/types";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { nb } from "date-fns/locale";
-import { Calendar, AlertCircle, FileText, User } from "lucide-react";
+import { Calendar, AlertCircle, FileText, User, Download, ExternalLink } from "lucide-react";
 import { StatusBadge } from "@/components/StatusBadge";
 
 interface DocumentDetailDialogProps {
@@ -136,6 +137,34 @@ export const DocumentDetailDialog = ({ open, onOpenChange, document, status }: D
                   </p>
                 </div>
               </div>
+            </div>
+          )}
+
+          {document.fil_url && (
+            <div className="flex gap-2 pt-4 border-t border-border">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => window.open(document.fil_url, '_blank')}
+              >
+                <ExternalLink className="w-4 h-4 mr-2" />
+                Åpne dokument
+              </Button>
+              <Button
+                variant="default"
+                className="flex-1"
+                onClick={() => {
+                  const link = window.document.createElement('a');
+                  link.href = document.fil_url!;
+                  link.download = document.fil_navn || document.tittel;
+                  window.document.body.appendChild(link);
+                  link.click();
+                  window.document.body.removeChild(link);
+                }}
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Last ned
+              </Button>
             </div>
           )}
         </div>

@@ -7,7 +7,8 @@ import { MissionsSection } from "@/components/dashboard/MissionsSection";
 import { KPIChart } from "@/components/dashboard/KPIChart";
 import { NewsSection } from "@/components/dashboard/NewsSection";
 import { DraggableSection } from "@/components/dashboard/DraggableSection";
-import { Shield, RotateCcw, LogOut } from "lucide-react";
+import { Shield, LogOut } from "lucide-react";
+import { ProfileDialog } from "@/components/ProfileDialog";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -86,11 +87,6 @@ const Index = () => {
     }
   };
 
-  const resetLayout = () => {
-    setLayout(defaultLayout);
-    localStorage.removeItem(STORAGE_KEY);
-    toast.success("Layout tilbakestilt");
-  };
 
   const handleSignOut = async () => {
     await signOut();
@@ -180,15 +176,7 @@ const Index = () => {
                 <a href="#" className="hover:text-primary transition-colors">
                   Ressurser
                 </a>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={resetLayout}
-                  className="ml-2"
-                  title="Tilbakestill layout"
-                >
-                  <RotateCcw className="w-4 h-4" />
-                </Button>
+                <ProfileDialog />
                 <Button
                   variant="ghost"
                   size="sm"

@@ -40,9 +40,9 @@ const defaultLayout = [
 ];
 
 const Index = () => {
-  const [layout, setLayout] = useState(defaultLayout);
   const { user, loading, signOut } = useAuth();
   const navigate = useNavigate();
+  const [layout, setLayout] = useState(defaultLayout);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -92,11 +92,17 @@ const Index = () => {
     toast.success("Layout tilbakestilt");
   };
 
+  const handleSignOut = async () => {
+    await signOut();
+    toast.success("Logget ut");
+    navigate("/auth");
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <Shield className="w-16 h-16 text-primary mx-auto mb-4 animate-pulse" />
+          <Shield className="w-16 h-16 text-primary animate-pulse mx-auto mb-4" />
           <p className="text-lg">Laster...</p>
         </div>
       </div>
@@ -186,7 +192,7 @@ const Index = () => {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={signOut}
+                  onClick={handleSignOut}
                   className="ml-2"
                   title="Logg ut"
                 >

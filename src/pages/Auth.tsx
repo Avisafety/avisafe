@@ -9,30 +9,44 @@ import { toast } from "sonner";
 import { Shield } from "lucide-react";
 import droneBackground from "@/assets/drone-background.png";
 
-export default function Auth() {
+const Auth = () => {
+  const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
-  const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!email || !password) {
+      toast.error("Vennligst fyll ut alle felt");
+      return;
+    }
+
+    if (!isLogin && !fullName) {
+      toast.error("Vennligst fyll ut fullt navn");
+      return;
+    }
+
     setLoading(true);
 
     try {
       if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
 
         if (error) throw error;
-        toast.success("Innlogget!");
-        navigate("/");
+
+        if (data.user) {
+          toast.success("Innlogging vellykket!");
+          navigate("/");
+        }
       } else {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -44,15 +58,15 @@ export default function Auth() {
         });
 
         if (error) throw error;
-        toast.success("Konto opprettet! Du kan nå logge inn.");
-        setIsLogin(true);
+
+        if (data.user) {
+          toast.success("Konto opprettet! Du kan nå logge inn.");
+          setIsLogin(true);
+        }
       }
     } catch (error: any) {
-      if (error.message.includes("already registered")) {
-        toast.error("Denne e-posten er allerede registrert");
-      } else {
-        toast.error(error.message);
-      }
+      console.error("Auth error:", error);
+      toast.error(error.message || "En feil oppstod");
     } finally {
       setLoading(false);
     }
@@ -60,36 +74,41 @@ export default function Auth() {
 
   return (
     <div className="min-h-screen relative flex items-center justify-center">
-      {/* Background with gradient overlay */}
+      {/* Background */}
       <div 
         className="fixed inset-0 z-0"
         style={{
-          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.5)), url(${droneBackground})`,
-          backgroundSize: "100% auto",
-          backgroundPosition: "60% 55%",
+          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.7)), url(${droneBackground})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
           backgroundAttachment: "fixed",
-          backgroundRepeat: "no-repeat",
         }}
       />
 
       {/* Content */}
       <div className="relative z-10 w-full max-w-md px-4">
-        <Card className="backdrop-blur-md bg-card/90 border-glass">
-          <CardHeader className="space-y-1 text-center">
-            <div className="flex justify-center mb-4">
-              <Shield className="w-12 h-12 text-primary" />
+        <Card className="bg-card/95 backdrop-blur-sm border-border/50">
+          <CardHeader className="space-y-4">
+            <div className="flex items-center justify-center gap-3">
+              <Shield className="w-10 h-10 text-primary" />
+              <div>
+                <CardTitle className="text-2xl">Sikkerhetsstyringssystem</CardTitle>
+                <CardDescription className="text-primary">Drone Operations</CardDescription>
+              </div>
             </div>
-            <CardTitle className="text-2xl">
-              {isLogin ? "Logg inn" : "Opprett konto"}
-            </CardTitle>
-            <CardDescription>
-              {isLogin 
-                ? "Logg inn på Sikkerhetsstyringssystem" 
-                : "Opprett en konto for å komme i gang"}
-            </CardDescription>
+            <div className="text-center">
+              <CardTitle className="text-xl">
+                {isLogin ? "Logg inn" : "Opprett konto"}
+              </CardTitle>
+              <CardDescription>
+                {isLogin 
+                  ? "Skriv inn dine innloggingsdetaljer" 
+                  : "Fyll ut skjemaet for å opprette en konto"}
+              </CardDescription>
+            </div>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleAuth} className="space-y-4">
               {!isLogin && (
                 <div className="space-y-2">
                   <Label htmlFor="fullName">Fullt navn</Label>
@@ -131,23 +150,25 @@ export default function Auth() {
                 className="w-full"
                 disabled={loading}
               >
-                {loading ? "Vennligst vent..." : isLogin ? "Logg inn" : "Opprett konto"}
+                {loading ? "Behandler..." : (isLogin ? "Logg inn" : "Opprett konto")}
               </Button>
+              <div className="text-center text-sm">
+                <button
+                  type="button"
+                  onClick={() => setIsLogin(!isLogin)}
+                  className="text-primary hover:underline"
+                >
+                  {isLogin 
+                    ? "Har du ikke konto? Opprett en her" 
+                    : "Har du allerede konto? Logg inn her"}
+                </button>
+              </div>
             </form>
-            <div className="mt-4 text-center text-sm">
-              <button
-                type="button"
-                onClick={() => setIsLogin(!isLogin)}
-                className="text-primary hover:underline"
-              >
-                {isLogin 
-                  ? "Har du ikke en konto? Registrer deg" 
-                  : "Har du allerede en konto? Logg inn"}
-              </button>
-            </div>
           </CardContent>
         </Card>
       </div>
     </div>
   );
-}
+};
+
+export default Auth;

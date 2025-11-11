@@ -28,79 +28,77 @@ const statusColors = {
 export const IncidentsSection = () => {
   return (
     <GlassCard>
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <AlertTriangle className="w-5 h-5 text-destructive" />
-          <h2 className="text-xl font-semibold">Hendelser & Oppfølging</h2>
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-1.5">
+          <AlertTriangle className="w-4 h-4 text-destructive" />
+          <h2 className="text-sm font-semibold">Hendelser</h2>
         </div>
-        <Button size="sm" variant="destructive" className="gap-2">
-          <AlertTriangle className="w-4 h-4" />
-          Rapporter hendelse
+        <Button size="sm" variant="destructive" className="gap-1 h-7 text-xs">
+          <AlertTriangle className="w-3 h-3" />
+          Rapporter
         </Button>
       </div>
 
       <Tabs defaultValue="incidents" className="w-full">
-        <TabsList className="w-full">
-          <TabsTrigger value="incidents" className="flex-1">
+        <TabsList className="w-full h-8">
+          <TabsTrigger value="incidents" className="flex-1 text-xs">
             Hendelser ({mockIncidents.length})
           </TabsTrigger>
-          <TabsTrigger value="followups" className="flex-1">
+          <TabsTrigger value="followups" className="flex-1 text-xs">
             Oppfølging ({mockFollowUps.length})
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="incidents" className="space-y-2 mt-4">
+        <TabsContent value="incidents" className="space-y-1.5 mt-2">
           {mockIncidents.slice(0, 4).map((incident) => (
             <div
               key={incident.id}
-              className="p-3 bg-card/30 rounded-lg hover:bg-card/50 transition-colors cursor-pointer"
+              className="p-2 bg-card/30 rounded hover:bg-card/50 transition-colors cursor-pointer"
             >
-              <div className="flex items-start justify-between gap-3">
+              <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="font-medium text-sm">{incident.tittel}</h3>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2 text-xs">
-                    <Badge className={severityColors[incident.alvorlighet]}>
+                  <h3 className="font-medium text-xs mb-0.5">{incident.tittel}</h3>
+                  <div className="flex flex-wrap items-center gap-1 text-[10px]">
+                    <Badge className={`${severityColors[incident.alvorlighet]} text-[10px] px-1 py-0`}>
                       {incident.alvorlighet}
                     </Badge>
-                    <Badge variant="outline">{incident.kategori}</Badge>
+                    <Badge variant="outline" className="text-[10px] px-1 py-0">{incident.kategori}</Badge>
                     <span className="text-muted-foreground">
-                      {format(incident.tidspunkt, "dd. MMM yyyy", { locale: nb })}
+                      {format(incident.tidspunkt, "dd. MMM", { locale: nb })}
                     </span>
                   </div>
                 </div>
-                <Badge className={statusColors[incident.status]}>{incident.status}</Badge>
+                <Badge className={`${statusColors[incident.status]} text-[10px] px-1 py-0`}>{incident.status}</Badge>
               </div>
             </div>
           ))}
         </TabsContent>
 
-        <TabsContent value="followups" className="space-y-2 mt-4">
+        <TabsContent value="followups" className="space-y-1.5 mt-2">
           {mockFollowUps.map((followUp) => {
             const incident = mockIncidents.find((i) => i.id === followUp.hendelse_id);
             return (
               <div
                 key={followUp.id}
-                className="p-3 bg-card/30 rounded-lg hover:bg-card/50 transition-colors cursor-pointer"
+                className="p-2 bg-card/30 rounded hover:bg-card/50 transition-colors cursor-pointer"
               >
-                <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-sm mb-1">{incident?.tittel}</h3>
-                    <p className="text-xs text-muted-foreground line-clamp-1 mb-2">
+                    <h3 className="font-medium text-xs mb-0.5">{incident?.tittel}</h3>
+                    <p className="text-[10px] text-muted-foreground line-clamp-1 mb-1">
                       {followUp.tiltak}
                     </p>
-                    <div className="flex flex-wrap items-center gap-2 text-xs">
-                      <div className="flex items-center gap-1">
+                    <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
+                      <div className="flex items-center gap-0.5">
                         <Clock className="w-3 h-3" />
-                        <span>Frist: {format(followUp.frist, "dd. MMM", { locale: nb })}</span>
+                        <span>{format(followUp.frist, "dd. MMM", { locale: nb })}</span>
                       </div>
                       {followUp.ansvarlig && (
                         <span className="text-muted-foreground">• {followUp.ansvarlig}</span>
                       )}
                     </div>
                   </div>
-                  <Badge className={statusColors[followUp.status]}>{followUp.status}</Badge>
+                  <Badge className={`${statusColors[followUp.status]} text-[10px] px-1 py-0`}>{followUp.status}</Badge>
                 </div>
               </div>
             );

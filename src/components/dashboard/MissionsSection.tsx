@@ -22,33 +22,33 @@ const riskColors = {
 export const MissionsSection = () => {
   return (
     <GlassCard>
-      <div className="flex items-center gap-2 mb-4">
-        <Calendar className="w-5 h-5 text-primary" />
-        <h2 className="text-xl font-semibold">Kommende oppdrag</h2>
+      <div className="flex items-center gap-2 mb-2">
+        <Calendar className="w-4 h-4 text-primary" />
+        <h2 className="text-sm font-semibold">Kommende oppdrag</h2>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-2">
         {mockMissions.map((mission) => (
           <div
             key={mission.id}
-            className="p-4 bg-card/30 rounded-lg hover:bg-card/50 transition-colors cursor-pointer"
+            className="p-2 bg-card/30 rounded hover:bg-card/50 transition-colors cursor-pointer"
           >
-            <div className="flex items-start justify-between gap-3 mb-2">
-              <h3 className="font-semibold">{mission.tittel}</h3>
-              <Badge className={statusColors[mission.status]}>{mission.status}</Badge>
+            <div className="flex items-start justify-between gap-2 mb-1">
+              <h3 className="font-semibold text-xs">{mission.tittel}</h3>
+              <Badge className={`${statusColors[mission.status]} text-[10px] px-1 py-0`}>{mission.status}</Badge>
             </div>
             
-            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-              <MapPin className="w-4 h-4" />
+            <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
+              <MapPin className="w-3 h-3" />
               <span>{mission.lokasjon}</span>
             </div>
             
-            <div className="flex flex-wrap items-center gap-2 text-xs">
-              <Badge variant="outline">
-                {format(mission.start, "dd. MMM yyyy 'kl.' HH:mm", { locale: nb })}
+            <div className="flex flex-wrap items-center gap-1 text-[10px]">
+              <Badge variant="outline" className="text-[10px] px-1 py-0">
+                {format(mission.start, "dd. MMM HH:mm", { locale: nb })}
               </Badge>
-              <Badge className={riskColors[mission.risk_nivå]}>
-                Risiko: {mission.risk_nivå}
+              <Badge className={`${riskColors[mission.risk_nivå]} text-[10px] px-1 py-0`}>
+                {mission.risk_nivå}
               </Badge>
               <span className="text-muted-foreground">• {mission.kunde}</span>
             </div>

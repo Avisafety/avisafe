@@ -14,7 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      documents: {
+        Row: {
+          fil_navn: string | null
+          fil_storrelse: number | null
+          fil_url: string | null
+          gyldig_til: string | null
+          id: string
+          kategori: string
+          oppdatert_dato: string | null
+          opprettet_av: string | null
+          opprettet_dato: string | null
+          tittel: string
+          user_id: string | null
+          varsel_dager_for_utløp: number | null
+          versjon: string | null
+        }
+        Insert: {
+          fil_navn?: string | null
+          fil_storrelse?: number | null
+          fil_url?: string | null
+          gyldig_til?: string | null
+          id?: string
+          kategori: string
+          oppdatert_dato?: string | null
+          opprettet_av?: string | null
+          opprettet_dato?: string | null
+          tittel: string
+          user_id?: string | null
+          varsel_dager_for_utløp?: number | null
+          versjon?: string | null
+        }
+        Update: {
+          fil_navn?: string | null
+          fil_storrelse?: number | null
+          fil_url?: string | null
+          gyldig_til?: string | null
+          id?: string
+          kategori?: string
+          oppdatert_dato?: string | null
+          opprettet_av?: string | null
+          opprettet_dato?: string | null
+          tittel?: string
+          user_id?: string | null
+          varsel_dager_for_utløp?: number | null
+          versjon?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

@@ -193,7 +193,7 @@ export const IncidentsSection = () => {
           onClick={() => setDialogOpen(true)}
         >
           <AlertTriangle className="w-3 h-3 sm:w-4 sm:h-4" />
-          <span className="hidden xs:inline">Rapporter</span>
+          <span className="hidden xs:inline">Rapporter hendelse</span>
         </Button>
       </div>
 

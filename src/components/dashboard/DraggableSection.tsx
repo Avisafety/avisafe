@@ -1,7 +1,7 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical } from "lucide-react";
-import { ReactNode } from "react";
+import { ReactNode, cloneElement, isValidElement } from "react";
 
 interface DraggableSectionProps {
   id: string;
@@ -25,20 +25,20 @@ export const DraggableSection = ({ id, children, className }: DraggableSectionPr
     opacity: isDragging ? 0.5 : 1,
   };
 
+  // Add drag handle to the children
+  const childrenWithDragHandle = isValidElement(children)
+    ? cloneElement(children as React.ReactElement<any>, {
+        dragHandleProps: { attributes, listeners },
+      })
+    : children;
+
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className={`relative group ${className || ""}`}
+      className={className || ""}
     >
-      <div
-        {...attributes}
-        {...listeners}
-        className="absolute -left-1 top-2 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing z-10"
-      >
-        <GripVertical className="w-5 h-5 text-primary" />
-      </div>
-      {children}
+      {childrenWithDragHandle}
     </div>
   );
 };

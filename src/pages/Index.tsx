@@ -7,8 +7,10 @@ import { MissionsSection } from "@/components/dashboard/MissionsSection";
 import { KPIChart } from "@/components/dashboard/KPIChart";
 import { NewsSection } from "@/components/dashboard/NewsSection";
 import { DraggableSection } from "@/components/dashboard/DraggableSection";
-import { Shield, RotateCcw } from "lucide-react";
+import { Shield, RotateCcw, LogOut } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 import {
   DndContext,
   closestCenter,
@@ -39,6 +41,14 @@ const defaultLayout = [
 
 const Index = () => {
   const [layout, setLayout] = useState(defaultLayout);
+  const { user, loading, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate("/auth");
+    }
+  }, [user, loading, navigate]);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -81,6 +91,21 @@ const Index = () => {
     localStorage.removeItem(STORAGE_KEY);
     toast.success("Layout tilbakestilt");
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <Shield className="w-16 h-16 text-primary mx-auto mb-4 animate-pulse" />
+          <p className="text-lg">Laster...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
 
   const renderSection = (component: string) => {
     switch (component) {
@@ -157,6 +182,15 @@ const Index = () => {
                   title="Tilbakestill layout"
                 >
                   <RotateCcw className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={signOut}
+                  className="ml-2"
+                  title="Logg ut"
+                >
+                  <LogOut className="w-4 h-4" />
                 </Button>
               </nav>
             </div>

@@ -42,6 +42,19 @@ const Auth = () => {
         if (error) throw error;
 
         if (data.user) {
+          // Check if user is approved
+          const { data: profileData } = await supabase
+            .from("profiles")
+            .select("approved")
+            .eq("id", data.user.id)
+            .maybeSingle();
+
+          if (profileData && !(profileData as any).approved) {
+            await supabase.auth.signOut();
+            toast.error("Din konto venter på godkjenning fra administrator");
+            return;
+          }
+
           toast.success("Innlogging vellykket!");
           navigate("/");
         }
@@ -60,8 +73,10 @@ const Auth = () => {
         if (error) throw error;
 
         if (data.user) {
-          toast.success("Konto opprettet! Du kan nå logge inn.");
-          setIsLogin(true);
+          toast.success("Konto opprettet! Venter på godkjenning fra administrator.");
+          setEmail("");
+          setPassword("");
+          setFullName("");
         }
       }
     } catch (error: any) {

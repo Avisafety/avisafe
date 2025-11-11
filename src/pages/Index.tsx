@@ -46,12 +46,44 @@ const Index = () => {
   const navigate = useNavigate();
   const [layout, setLayout] = useState(defaultLayout);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isApproved, setIsApproved] = useState(false);
+  const [checkingApproval, setCheckingApproval] = useState(true);
 
   useEffect(() => {
     if (!loading && !user) {
       navigate("/auth", { replace: true });
     }
   }, [user, loading, navigate]);
+
+  useEffect(() => {
+    if (user) {
+      checkUserApproval();
+    }
+  }, [user]);
+
+  const checkUserApproval = async () => {
+    setCheckingApproval(true);
+    try {
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("approved")
+        .eq("id", user?.id)
+        .maybeSingle();
+
+      if (profileData) {
+        setIsApproved((profileData as any).approved);
+        
+        if (!(profileData as any).approved) {
+          // User is not approved, sign them out
+          await signOut();
+        }
+      }
+    } catch (error) {
+      console.error("Error checking approval:", error);
+    } finally {
+      setCheckingApproval(false);
+    }
+  };
 
   useEffect(() => {
     if (user) {
@@ -117,7 +149,7 @@ const Index = () => {
     navigate("/auth");
   };
 
-  if (loading) {
+  if (loading || checkingApproval) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
@@ -128,8 +160,21 @@ const Index = () => {
     );
   }
 
-  if (!user) {
-    return null;
+  if (!user || !isApproved) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center max-w-md px-4">
+          <Shield className="w-16 h-16 text-primary mx-auto mb-4" />
+          <h2 className="text-2xl font-bold mb-2">Avventer godkjenning</h2>
+          <p className="text-muted-foreground mb-6">
+            Din konto venter på godkjenning fra administrator. Du vil motta tilgang så snart kontoen er godkjent.
+          </p>
+          <Button onClick={() => navigate("/auth")}>
+            Tilbake til innlogging
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   const renderSection = (component: string) => {

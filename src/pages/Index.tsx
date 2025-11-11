@@ -61,25 +61,36 @@ const Index = () => {
         </header>
 
         {/* Main Content */}
-        <main className="container mx-auto px-4 py-3 max-w-[1800px]">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-            {/* Left Column */}
-            <div className="space-y-3">
+        <main className="container mx-auto px-4 py-3 max-w-[1600px]">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 auto-rows-min">
+            {/* Row 1 */}
+            <div className="lg:col-span-2">
               <DocumentSection />
-              <CalendarSection />
             </div>
-
-            {/* Middle Column */}
-            <div className="space-y-3">
+            
+            <div className="lg:col-span-3">
+              <NewsSection />
+            </div>
+            
+            <div className="lg:col-span-4">
               <StatusPanel />
+            </div>
+            
+            <div className="lg:col-span-3 lg:row-span-2">
               <MissionsSection />
             </div>
 
-            {/* Right Column */}
-            <div className="space-y-3">
+            {/* Row 2 */}
+            <div className="lg:col-span-2">
+              <CalendarSection />
+            </div>
+            
+            <div className="lg:col-span-3">
               <IncidentsSection />
+            </div>
+            
+            <div className="lg:col-span-4">
               <KPIChart />
-              <NewsSection />
             </div>
           </div>
         </main>

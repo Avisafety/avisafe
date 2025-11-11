@@ -67,6 +67,12 @@ export const DocumentDetailDialog = ({ open, onOpenChange, document, status }: D
     if (!document.fil_url) return;
     
     try {
+      // Check if it's an external URL
+      if (document.fil_url.startsWith('http://') || document.fil_url.startsWith('https://')) {
+        window.open(document.fil_url, '_blank');
+        return;
+      }
+      
       // Extract path from URL if it's a full URL (for backwards compatibility)
       let filePath = document.fil_url;
       if (filePath.includes('/storage/v1/object/')) {
@@ -93,6 +99,13 @@ export const DocumentDetailDialog = ({ open, onOpenChange, document, status }: D
 
   const handleDownloadDocument = async () => {
     if (!document.fil_url || downloading) return;
+    
+    // Check if it's an external URL - can't download directly
+    if (document.fil_url.startsWith('http://') || document.fil_url.startsWith('https://')) {
+      window.open(document.fil_url, '_blank');
+      toast.info('Åpner ekstern lenke i ny fane');
+      return;
+    }
     
     setDownloading(true);
     try {
@@ -158,23 +171,28 @@ export const DocumentDetailDialog = ({ open, onOpenChange, document, status }: D
 
     setDeleting(true);
     try {
-      // Extract path from URL if it's a full URL
-      let filePath = document.fil_url;
-      if (filePath.includes('/storage/v1/object/')) {
-        const parts = filePath.split('/documents/');
-        if (parts.length > 1) {
-          filePath = parts[1];
+      // Only delete from storage if it's not an external URL
+      const isExternalUrl = document.fil_url.startsWith('http://') || document.fil_url.startsWith('https://');
+      
+      if (!isExternalUrl) {
+        // Extract path from URL if it's a full URL
+        let filePath = document.fil_url;
+        if (filePath.includes('/storage/v1/object/')) {
+          const parts = filePath.split('/documents/');
+          if (parts.length > 1) {
+            filePath = parts[1];
+          }
         }
+
+        // Delete from storage
+        const { error: storageError } = await supabase.storage
+          .from('documents')
+          .remove([filePath]);
+
+        if (storageError) throw storageError;
       }
 
-      // Delete from storage
-      const { error: storageError } = await supabase.storage
-        .from('documents')
-        .remove([filePath]);
-
-      if (storageError) throw storageError;
-
-      // Delete from database
+      // Delete from database (works for both files and URLs)
       const { error: dbError } = await supabase
         .from('documents')
         .delete()

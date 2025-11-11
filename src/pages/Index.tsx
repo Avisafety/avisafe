@@ -121,7 +121,7 @@ const Index = () => {
       <div className="relative z-10">
         {/* Header */}
         <header className="bg-card/20 backdrop-blur-md border-b border-glass sticky top-0 z-50">
-          <div className="container mx-auto px-4 py-3">
+          <div className="container mx-auto px-4 py-3 max-w-[1800px]">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <Shield className="w-10 h-10 text-primary" />

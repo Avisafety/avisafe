@@ -50,12 +50,12 @@ const calendarItems = [
 export const CalendarSection = () => {
   return (
     <GlassCard>
-      <div className="flex items-center gap-2 mb-2">
-        <CalendarIcon className="w-4 h-4 text-primary" />
-        <h2 className="text-sm font-semibold">Kalender</h2>
+      <div className="flex items-center gap-2 mb-3">
+        <CalendarIcon className="w-5 h-5 text-primary" />
+        <h2 className="text-base font-semibold">Kalender</h2>
       </div>
 
-      <div className="space-y-1.5">
+      <div className="space-y-2">
         {calendarItems.map((item, index) => {
           const Icon = item.icon;
           const isUrgent = item.date < addDays(now, 7);
@@ -63,21 +63,21 @@ export const CalendarSection = () => {
           return (
             <div
               key={index}
-              className="flex items-center gap-2 p-2 bg-card/30 rounded hover:bg-card/50 transition-colors cursor-pointer"
+              className="flex items-center gap-2 p-3 bg-card/30 rounded hover:bg-card/50 transition-colors cursor-pointer"
             >
-              <Icon className={`w-3 h-3 flex-shrink-0 ${item.color}`} />
+              <Icon className={`w-4 h-4 flex-shrink-0 ${item.color}`} />
               <div className="flex-1 min-w-0">
-                <h3 className="font-medium text-xs truncate">{item.title}</h3>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <Badge variant="outline" className="text-[10px] px-1 py-0">
+                <h3 className="font-medium text-sm truncate">{item.title}</h3>
+                <div className="flex items-center gap-2 mt-1">
+                  <Badge variant="outline" className="text-xs px-1.5 py-0.5">
                     {item.type}
                   </Badge>
-                  <span className="text-[10px] text-muted-foreground">
+                  <span className="text-xs text-muted-foreground">
                     {format(item.date, "dd. MMM", { locale: nb })}
                   </span>
                 </div>
               </div>
-              {isUrgent && <AlertTriangle className="w-3 h-3 text-destructive flex-shrink-0" />}
+              {isUrgent && <AlertTriangle className="w-4 h-4 text-destructive flex-shrink-0" />}
             </div>
           );
         })}

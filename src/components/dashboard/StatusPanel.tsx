@@ -45,26 +45,26 @@ const StatusCard = ({
 
   return (
     <div
-      className={`${bgColors[primaryStatus]} ${borderColors[primaryStatus]} border-2 rounded p-2 transition-all hover:scale-105 cursor-pointer`}
+      className={`${bgColors[primaryStatus]} ${borderColors[primaryStatus]} border-2 rounded p-3 transition-all hover:scale-105 cursor-pointer`}
     >
-      <div className="flex items-center gap-2 mb-1">
-        <Icon className="w-4 h-4" />
-        <h3 className="font-semibold text-xs">{title}</h3>
+      <div className="flex items-center gap-2 mb-2">
+        <Icon className="w-5 h-5" />
+        <h3 className="font-semibold text-sm">{title}</h3>
       </div>
       
-      <div className="text-2xl font-bold mb-1">{total}</div>
+      <div className="text-3xl font-bold mb-2">{total}</div>
       
-      <div className="flex gap-2 text-xs">
+      <div className="flex gap-2 text-sm">
         <div className="flex items-center gap-1">
-          <div className="w-1.5 h-1.5 rounded-full bg-status-green" />
+          <div className="w-2 h-2 rounded-full bg-status-green" />
           <span>{counts.Grønn}</span>
         </div>
         <div className="flex items-center gap-1">
-          <div className="w-1.5 h-1.5 rounded-full bg-status-yellow" />
+          <div className="w-2 h-2 rounded-full bg-status-yellow" />
           <span>{counts.Gul}</span>
         </div>
         <div className="flex items-center gap-1">
-          <div className="w-1.5 h-1.5 rounded-full bg-status-red" />
+          <div className="w-2 h-2 rounded-full bg-status-red" />
           <span>{counts.Rød}</span>
         </div>
       </div>
@@ -79,8 +79,8 @@ export const StatusPanel = () => {
 
   return (
     <GlassCard>
-      <h2 className="text-sm font-semibold mb-2">Ressursstatus (RAG)</h2>
-      <div className="grid grid-cols-3 gap-2">
+      <h2 className="text-base font-semibold mb-3">Ressursstatus (RAG)</h2>
+      <div className="grid grid-cols-3 gap-3">
         <StatusCard title="Droner" icon={Plane} counts={droneStatus} />
         <StatusCard title="Utstyr" icon={Gauge} counts={equipmentStatus} />
         <StatusCard title="Personell" icon={Users} counts={personnelStatus} />

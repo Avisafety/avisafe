@@ -36,7 +36,7 @@ export const DraggableSection = ({ id, children, className }: DraggableSectionPr
         {...listeners}
         className="absolute -left-1 top-2 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing z-10"
       >
-        <GripVertical className="w-4 h-4 text-primary" />
+        <GripVertical className="w-5 h-5 text-primary" />
       </div>
       {children}
     </div>

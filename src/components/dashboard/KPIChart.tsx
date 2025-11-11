@@ -14,16 +14,16 @@ const data = [
 export const KPIChart = () => {
   return (
     <GlassCard>
-      <div className="flex items-center gap-2 mb-2">
-        <TrendingUp className="w-4 h-4 text-primary" />
-        <h2 className="text-sm font-semibold">Hendelser siste 6 mnd</h2>
+      <div className="flex items-center gap-2 mb-3">
+        <TrendingUp className="w-5 h-5 text-primary" />
+        <h2 className="text-base font-semibold">Hendelser siste 6 mnd</h2>
       </div>
 
-      <ResponsiveContainer width="100%" height={140}>
+      <ResponsiveContainer width="100%" height={200}>
         <BarChart data={data}>
           <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-          <XAxis dataKey="month" className="text-xs" />
-          <YAxis className="text-xs" />
+          <XAxis dataKey="month" className="text-sm" />
+          <YAxis className="text-sm" />
           <Tooltip
             contentStyle={{
               backgroundColor: "hsl(var(--card))",

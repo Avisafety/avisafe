@@ -121,16 +121,16 @@ const Index = () => {
       <div className="relative z-10">
         {/* Header */}
         <header className="bg-card/20 backdrop-blur-md border-b border-glass sticky top-0 z-50">
-          <div className="container mx-auto px-4 py-2">
+          <div className="container mx-auto px-4 py-3">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Shield className="w-6 h-6 text-primary" />
+              <div className="flex items-center gap-3">
+                <Shield className="w-8 h-8 text-primary" />
                 <div>
-                  <h1 className="text-lg font-bold">Sikkerhetsstyringssystem</h1>
-                  <p className="text-xs text-muted-foreground">Drone Operations Management</p>
+                  <h1 className="text-xl font-bold">Sikkerhetsstyringssystem</h1>
+                  <p className="text-sm text-muted-foreground">Drone Operations Management</p>
                 </div>
               </div>
-              <nav className="hidden md:flex items-center gap-4 text-xs font-medium">
+              <nav className="hidden md:flex items-center gap-4 text-sm font-medium">
                 <a href="#" className="text-primary hover:text-primary/80 transition-colors">
                   Dashboard
                 </a>
@@ -156,7 +156,7 @@ const Index = () => {
                   className="ml-2"
                   title="Tilbakestill layout"
                 >
-                  <RotateCcw className="w-3 h-3" />
+                  <RotateCcw className="w-4 h-4" />
                 </Button>
               </nav>
             </div>
@@ -164,14 +164,14 @@ const Index = () => {
         </header>
 
         {/* Main Content */}
-        <main className="container mx-auto px-4 py-3 max-w-[1600px]">
+        <main className="container mx-auto px-4 py-5 max-w-[1600px]">
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
             onDragEnd={handleDragEnd}
           >
             <SortableContext items={layout.map((item) => item.id)} strategy={rectSortingStrategy}>
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 auto-rows-min">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 auto-rows-min">
                 {layout.map((item) => (
                   <DraggableSection key={item.id} id={item.id} className={item.gridClass}>
                     {renderSection(item.component)}

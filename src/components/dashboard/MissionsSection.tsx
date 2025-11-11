@@ -27,7 +27,7 @@ export const MissionsSection = () => {
         <h2 className="text-base font-semibold">Kommende oppdrag</h2>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+      <div className="space-y-2">
         {mockMissions.map((mission) => (
           <div
             key={mission.id}

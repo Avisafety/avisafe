@@ -211,15 +211,19 @@ const Index = () => {
                   </div>
                 </div>
 
-                {/* Bottom Row - Missions */}
-                <div className="w-full">
-                  {layout
-                    .filter((item) => item.component === "missions")
-                    .map((item) => (
-                      <DraggableSection key={item.id} id={item.id}>
-                        {renderSection(item.component)}
-                      </DraggableSection>
-                    ))}
+                {/* Bottom Row - Missions in center */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                  <div className="lg:col-span-3" />
+                  <div className="lg:col-span-6">
+                    {layout
+                      .filter((item) => item.component === "missions")
+                      .map((item) => (
+                        <DraggableSection key={item.id} id={item.id}>
+                          {renderSection(item.component)}
+                        </DraggableSection>
+                      ))}
+                  </div>
+                  <div className="lg:col-span-3" />
                 </div>
               </div>
             </SortableContext>

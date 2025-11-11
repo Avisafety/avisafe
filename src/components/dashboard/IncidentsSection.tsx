@@ -3,10 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, Clock } from "lucide-react";
-import { mockIncidents, mockFollowUps } from "@/data/mockData";
+import { mockFollowUps } from "@/data/mockData";
 import { format } from "date-fns";
 import { nb } from "date-fns/locale";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import type { Tables } from "@/integrations/supabase/types";
 import {
   Dialog,
   DialogContent,
@@ -41,9 +42,13 @@ const statusColors = {
   Forsinket: "bg-status-red/20 text-red-700 dark:text-red-300",
 };
 
+type Incident = Tables<"incidents">;
+
 export const IncidentsSection = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [incidents, setIncidents] = useState<Incident[]>([]);
+  const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
     tittel: "",
     beskrivelse: "",
@@ -53,6 +58,63 @@ export const IncidentsSection = () => {
     kategori: "",
     lokasjon: "",
   });
+
+  // Fetch incidents from database
+  useEffect(() => {
+    fetchIncidents();
+  }, []);
+
+  // Real-time subscription
+  useEffect(() => {
+    const channel = supabase
+      .channel('incidents-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'incidents'
+        },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            setIncidents((current) => [payload.new as Incident, ...current]);
+          } else if (payload.eventType === 'UPDATE') {
+            setIncidents((current) =>
+              current.map((incident) =>
+                incident.id === (payload.new as Incident).id ? (payload.new as Incident) : incident
+              )
+            );
+          } else if (payload.eventType === 'DELETE') {
+            setIncidents((current) =>
+              current.filter((incident) => incident.id !== (payload.old as Incident).id)
+            );
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const fetchIncidents = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('incidents')
+        .select('*')
+        .order('hendelsestidspunkt', { ascending: false });
+
+      if (error) throw error;
+
+      setIncidents(data || []);
+    } catch (error: any) {
+      console.error('Error fetching incidents:', error);
+      toast.error('Kunne ikke laste hendelser');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = async () => {
     if (!formData.tittel || !formData.hendelsestidspunkt) {
@@ -128,7 +190,7 @@ export const IncidentsSection = () => {
       <Tabs defaultValue="incidents" className="w-full flex-1 flex flex-col">
         <TabsList className="w-full h-9">
           <TabsTrigger value="incidents" className="flex-1 text-sm">
-            Hendelser ({mockIncidents.length})
+            Hendelser ({incidents.length})
           </TabsTrigger>
           <TabsTrigger value="followups" className="flex-1 text-sm">
             Oppfølging ({mockFollowUps.length})
@@ -136,33 +198,45 @@ export const IncidentsSection = () => {
         </TabsList>
 
         <TabsContent value="incidents" className="space-y-2 mt-3 flex-1 overflow-y-auto">
-          {mockIncidents.slice(0, 4).map((incident) => (
-            <div
-              key={incident.id}
-              className="p-3 bg-card/30 rounded hover:bg-card/50 transition-colors cursor-pointer"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-medium text-sm mb-1">{incident.tittel}</h3>
-                  <div className="flex flex-wrap items-center gap-1.5 text-xs">
-                    <Badge className={`${severityColors[incident.alvorlighet]} text-xs px-1.5 py-0.5`}>
-                      {incident.alvorlighet}
-                    </Badge>
-                    <Badge variant="outline" className="text-xs px-1.5 py-0.5">{incident.kategori}</Badge>
-                    <span className="text-muted-foreground">
-                      {format(incident.tidspunkt, "dd. MMM", { locale: nb })}
-                    </span>
-                  </div>
-                </div>
-                <Badge className={`${statusColors[incident.status]} text-xs px-1.5 py-0.5`}>{incident.status}</Badge>
-              </div>
+          {loading ? (
+            <div className="text-center py-4 text-sm text-muted-foreground">
+              Laster hendelser...
             </div>
-          ))}
+          ) : incidents.length === 0 ? (
+            <div className="text-center py-4 text-sm text-muted-foreground">
+              Ingen hendelser registrert
+            </div>
+          ) : (
+            incidents.slice(0, 4).map((incident) => (
+              <div
+                key={incident.id}
+                className="p-3 bg-card/30 rounded hover:bg-card/50 transition-colors cursor-pointer"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-medium text-sm mb-1">{incident.tittel}</h3>
+                    <div className="flex flex-wrap items-center gap-1.5 text-xs">
+                      <Badge className={`${severityColors[incident.alvorlighetsgrad as keyof typeof severityColors] || 'bg-gray-500/20'} text-xs px-1.5 py-0.5`}>
+                        {incident.alvorlighetsgrad}
+                      </Badge>
+                      {incident.kategori && (
+                        <Badge variant="outline" className="text-xs px-1.5 py-0.5">{incident.kategori}</Badge>
+                      )}
+                      <span className="text-muted-foreground">
+                        {format(new Date(incident.hendelsestidspunkt), "dd. MMM", { locale: nb })}
+                      </span>
+                    </div>
+                  </div>
+                  <Badge className={`${statusColors[incident.status as keyof typeof statusColors] || 'bg-gray-500/20'} text-xs px-1.5 py-0.5`}>{incident.status}</Badge>
+                </div>
+              </div>
+            ))
+          )}
         </TabsContent>
 
         <TabsContent value="followups" className="space-y-2 mt-3 flex-1 overflow-y-auto">
           {mockFollowUps.map((followUp) => {
-            const incident = mockIncidents.find((i) => i.id === followUp.hendelse_id);
+            const incident = incidents.find((i) => i.id === followUp.hendelse_id);
             return (
               <div
                 key={followUp.id}

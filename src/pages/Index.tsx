@@ -9,6 +9,7 @@ import { NewsSection } from "@/components/dashboard/NewsSection";
 import { DraggableSection } from "@/components/dashboard/DraggableSection";
 import { Shield, LogOut, Settings } from "lucide-react";
 import { ProfileDialog } from "@/components/ProfileDialog";
+import { PendingApprovalsBadge } from "@/components/PendingApprovalsBadge";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -249,10 +250,11 @@ const Index = () => {
                     variant="ghost"
                     size="sm"
                     onClick={() => navigate("/admin")}
-                    className="gap-2"
+                    className="gap-2 relative"
                     title="Administrator"
                   >
                     <Settings className="w-4 h-4" />
+                    <PendingApprovalsBadge isAdmin={isAdmin} />
                   </Button>
                 )}
                 <ProfileDialog />

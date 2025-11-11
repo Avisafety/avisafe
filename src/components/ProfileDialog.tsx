@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { PendingApprovalsBadge } from "./PendingApprovalsBadge";
+
 
 interface Profile {
   full_name: string | null;
@@ -146,9 +146,8 @@ export const ProfileDialog = () => {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="sm" title="Min profil" className="relative">
+        <Button variant="ghost" size="sm" title="Min profil">
           <User className="w-4 h-4" />
-          <PendingApprovalsBadge isAdmin={isAdmin} />
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[80vh]">

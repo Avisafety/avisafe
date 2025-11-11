@@ -5,6 +5,7 @@ import { FileText, Plus, Search, AlertCircle, Upload, X } from "lucide-react";
 import { mockDocuments } from "@/data/mockData";
 import { Document } from "@/types";
 import { useState, useRef } from "react";
+import { DocumentDetailDialog } from "./DocumentDetailDialog";
 import {
   Dialog,
   DialogContent,
@@ -50,6 +51,10 @@ export const DocumentSection = () => {
     varsel_dager_for_utløp: "30",
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [selectedDocStatus, setSelectedDocStatus] = useState<string>("Grønn");
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -134,8 +139,15 @@ export const DocumentSection = () => {
     }
   };
 
+  const handleDocumentClick = (doc: Document, status: string) => {
+    setSelectedDocument(doc);
+    setSelectedDocStatus(status);
+    setDetailDialogOpen(true);
+  };
+
   return (
-    <GlassCard className="h-[400px] flex flex-col">
+    <>
+      <GlassCard className="h-[400px] flex flex-col">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <FileText className="w-5 h-5 text-primary" />
@@ -158,6 +170,7 @@ export const DocumentSection = () => {
           return (
             <div
               key={doc.id}
+              onClick={() => handleDocumentClick(doc, status)}
               className="flex items-center justify-between p-3 bg-card/30 rounded hover:bg-card/50 transition-colors cursor-pointer"
             >
               <div className="flex items-center gap-2 flex-1">
@@ -305,6 +318,14 @@ export const DocumentSection = () => {
           </div>
         </DialogContent>
       </Dialog>
+      
+      <DocumentDetailDialog 
+        open={detailDialogOpen}
+        onOpenChange={setDetailDialogOpen}
+        document={selectedDocument}
+        status={selectedDocStatus}
+      />
     </GlassCard>
+    </>
   );
 };

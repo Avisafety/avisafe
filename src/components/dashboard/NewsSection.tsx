@@ -4,16 +4,28 @@ import { Newspaper, Pin } from "lucide-react";
 import { mockNews } from "@/data/mockData";
 import { format } from "date-fns";
 import { nb } from "date-fns/locale";
+import { useState } from "react";
+import { NewsDetailDialog } from "./NewsDetailDialog";
+import { News } from "@/types";
 
 export const NewsSection = () => {
+  const [selectedNews, setSelectedNews] = useState<News | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  
   const sortedNews = [...mockNews].sort((a, b) => {
     if (a.pin_on_top && !b.pin_on_top) return -1;
     if (!a.pin_on_top && b.pin_on_top) return 1;
     return b.publisert.getTime() - a.publisert.getTime();
   });
 
+  const handleNewsClick = (news: News) => {
+    setSelectedNews(news);
+    setDialogOpen(true);
+  };
+
   return (
-    <GlassCard className="h-auto">
+    <>
+      <GlassCard className="h-auto">
       <div className="flex items-center gap-2 mb-3">
         <Newspaper className="w-5 h-5 text-primary" />
         <h2 className="text-base font-semibold">Nyheter</h2>
@@ -23,6 +35,7 @@ export const NewsSection = () => {
         {sortedNews.map((news) => (
           <div
             key={news.id}
+            onClick={() => handleNewsClick(news)}
             className="p-3 bg-card/30 rounded hover:bg-card/50 transition-colors cursor-pointer"
           >
             <div className="flex items-start gap-2">
@@ -53,5 +66,12 @@ export const NewsSection = () => {
         ))}
       </div>
     </GlassCard>
+    
+    <NewsDetailDialog 
+      open={dialogOpen}
+      onOpenChange={setDialogOpen}
+      news={selectedNews}
+    />
+    </>
   );
 };

@@ -4,6 +4,9 @@ import { Calendar, MapPin } from "lucide-react";
 import { mockMissions } from "@/data/mockData";
 import { format } from "date-fns";
 import { nb } from "date-fns/locale";
+import { useState } from "react";
+import { MissionDetailDialog } from "./MissionDetailDialog";
+import { Mission } from "@/types";
 
 const statusColors = {
   Planlagt: "bg-blue-500/20 text-blue-700 dark:text-blue-300",
@@ -20,8 +23,17 @@ const riskColors = {
 };
 
 export const MissionsSection = () => {
+  const [selectedMission, setSelectedMission] = useState<Mission | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  const handleMissionClick = (mission: Mission) => {
+    setSelectedMission(mission);
+    setDialogOpen(true);
+  };
+
   return (
-    <GlassCard className="h-[400px] flex flex-col">
+    <>
+      <GlassCard className="h-[400px] flex flex-col">
       <div className="flex items-center gap-2 mb-3">
         <Calendar className="w-5 h-5 text-primary" />
         <h2 className="text-base font-semibold">Kommende oppdrag</h2>
@@ -31,6 +43,7 @@ export const MissionsSection = () => {
         {mockMissions.map((mission) => (
           <div
             key={mission.id}
+            onClick={() => handleMissionClick(mission)}
             className="p-3 bg-card/30 rounded hover:bg-card/50 transition-colors cursor-pointer"
           >
             <div className="flex items-start justify-between gap-2 mb-1.5">
@@ -56,5 +69,12 @@ export const MissionsSection = () => {
         ))}
       </div>
     </GlassCard>
+    
+    <MissionDetailDialog 
+      open={dialogOpen}
+      onOpenChange={setDialogOpen}
+      mission={selectedMission}
+    />
+    </>
   );
 };

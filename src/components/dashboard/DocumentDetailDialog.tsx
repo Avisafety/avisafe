@@ -6,6 +6,9 @@ import { format } from "date-fns";
 import { nb } from "date-fns/locale";
 import { Calendar, AlertCircle, FileText, User, Download, ExternalLink } from "lucide-react";
 import { StatusBadge } from "@/components/StatusBadge";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { useState } from "react";
 
 interface DocumentDetailDialogProps {
   open: boolean;
@@ -15,7 +18,77 @@ interface DocumentDetailDialogProps {
 }
 
 export const DocumentDetailDialog = ({ open, onOpenChange, document, status }: DocumentDetailDialogProps) => {
+  const [downloading, setDownloading] = useState(false);
+  
   if (!document) return null;
+
+  const handleOpenDocument = async () => {
+    if (!document.fil_url) return;
+    
+    try {
+      // Extract path from URL if it's a full URL (for backwards compatibility)
+      let filePath = document.fil_url;
+      if (filePath.includes('/storage/v1/object/')) {
+        const parts = filePath.split('/documents/');
+        if (parts.length > 1) {
+          filePath = parts[1];
+        }
+      }
+      
+      // Generate signed URL for viewing
+      const { data, error } = await supabase.storage
+        .from('documents')
+        .createSignedUrl(filePath, 3600); // Valid for 1 hour
+
+      if (error) throw error;
+      if (data?.signedUrl) {
+        window.open(data.signedUrl, '_blank');
+      }
+    } catch (error: any) {
+      console.error('Error opening document:', error);
+      toast.error('Kunne ikke åpne dokumentet');
+    }
+  };
+
+  const handleDownloadDocument = async () => {
+    if (!document.fil_url || downloading) return;
+    
+    setDownloading(true);
+    try {
+      // Extract path from URL if it's a full URL (for backwards compatibility)
+      let filePath = document.fil_url;
+      if (filePath.includes('/storage/v1/object/')) {
+        const parts = filePath.split('/documents/');
+        if (parts.length > 1) {
+          filePath = parts[1];
+        }
+      }
+      
+      // Download file using Supabase client
+      const { data, error } = await supabase.storage
+        .from('documents')
+        .download(filePath);
+
+      if (error) throw error;
+      
+      // Create blob URL and download
+      const url = window.URL.createObjectURL(data);
+      const link = window.document.createElement('a');
+      link.href = url;
+      link.download = document.fil_navn || document.tittel;
+      window.document.body.appendChild(link);
+      link.click();
+      window.document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      toast.success('Dokumentet ble lastet ned');
+    } catch (error: any) {
+      console.error('Error downloading document:', error);
+      toast.error('Kunne ikke laste ned dokumentet');
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   const getDaysUntilExpiry = () => {
     if (!document.gyldig_til) return null;
@@ -145,7 +218,7 @@ export const DocumentDetailDialog = ({ open, onOpenChange, document, status }: D
               <Button
                 variant="outline"
                 className="flex-1"
-                onClick={() => window.open(document.fil_url, '_blank')}
+                onClick={handleOpenDocument}
               >
                 <ExternalLink className="w-4 h-4 mr-2" />
                 Åpne dokument
@@ -153,17 +226,11 @@ export const DocumentDetailDialog = ({ open, onOpenChange, document, status }: D
               <Button
                 variant="default"
                 className="flex-1"
-                onClick={() => {
-                  const link = window.document.createElement('a');
-                  link.href = document.fil_url!;
-                  link.download = document.fil_navn || document.tittel;
-                  window.document.body.appendChild(link);
-                  link.click();
-                  window.document.body.removeChild(link);
-                }}
+                onClick={handleDownloadDocument}
+                disabled={downloading}
               >
                 <Download className="w-4 h-4 mr-2" />
-                Last ned
+                {downloading ? "Laster ned..." : "Last ned"}
               </Button>
             </div>
           )}

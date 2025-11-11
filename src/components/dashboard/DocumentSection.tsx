@@ -138,11 +138,9 @@ export const DocumentSection = () => {
 
       if (uploadError) throw uploadError;
 
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('documents')
-        .getPublicUrl(fileName);
-
+      // Store the file path (not URL) in database
+      // We'll generate signed URLs when needed
+      
       // Insert document metadata into database
       const { error: dbError } = await supabase
         .from('documents')
@@ -152,7 +150,7 @@ export const DocumentSection = () => {
           kategori: formData.kategori,
           gyldig_til: formData.gyldig_til || null,
           varsel_dager_for_utløp: parseInt(formData.varsel_dager_for_utløp),
-          fil_url: publicUrl,
+          fil_url: fileName, // Store the path, not the URL
           fil_navn: selectedFile.name,
           fil_storrelse: selectedFile.size,
         });

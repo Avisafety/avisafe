@@ -2,13 +2,25 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Document } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { format } from "date-fns";
 import { nb } from "date-fns/locale";
-import { Calendar, AlertCircle, FileText, User, Download, ExternalLink } from "lucide-react";
+import { Calendar, AlertCircle, FileText, User, Download, ExternalLink, Edit, Trash2 } from "lucide-react";
 import { StatusBadge } from "@/components/StatusBadge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface DocumentDetailDialogProps {
   open: boolean;
@@ -19,6 +31,35 @@ interface DocumentDetailDialogProps {
 
 export const DocumentDetailDialog = ({ open, onOpenChange, document, status }: DocumentDetailDialogProps) => {
   const [downloading, setDownloading] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedDate, setEditedDate] = useState("");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  
+  useEffect(() => {
+    checkAdminStatus();
+  }, []);
+
+  useEffect(() => {
+    if (document?.gyldig_til) {
+      setEditedDate(format(document.gyldig_til, "yyyy-MM-dd"));
+    }
+  }, [document]);
+
+  const checkAdminStatus = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('role', 'admin')
+      .maybeSingle();
+
+    setIsAdmin(!!data);
+  };
   
   if (!document) return null;
 
@@ -90,6 +131,70 @@ export const DocumentDetailDialog = ({ open, onOpenChange, document, status }: D
     }
   };
 
+  const handleUpdateExpiryDate = async () => {
+    if (!document.id || !editedDate) return;
+
+    try {
+      const { error } = await supabase
+        .from('documents')
+        .update({ gyldig_til: editedDate })
+        .eq('id', document.id);
+
+      if (error) throw error;
+
+      toast.success('Utløpsdato oppdatert');
+      setIsEditing(false);
+      onOpenChange(false);
+      // Refresh the page to show updated data
+      window.location.reload();
+    } catch (error: any) {
+      console.error('Error updating expiry date:', error);
+      toast.error('Kunne ikke oppdatere utløpsdato');
+    }
+  };
+
+  const handleDeleteDocument = async () => {
+    if (!document.id || !document.fil_url || deleting) return;
+
+    setDeleting(true);
+    try {
+      // Extract path from URL if it's a full URL
+      let filePath = document.fil_url;
+      if (filePath.includes('/storage/v1/object/')) {
+        const parts = filePath.split('/documents/');
+        if (parts.length > 1) {
+          filePath = parts[1];
+        }
+      }
+
+      // Delete from storage
+      const { error: storageError } = await supabase.storage
+        .from('documents')
+        .remove([filePath]);
+
+      if (storageError) throw storageError;
+
+      // Delete from database
+      const { error: dbError } = await supabase
+        .from('documents')
+        .delete()
+        .eq('id', document.id);
+
+      if (dbError) throw dbError;
+
+      toast.success('Dokument slettet');
+      setDeleteDialogOpen(false);
+      onOpenChange(false);
+      // Refresh the page to show updated list
+      window.location.reload();
+    } catch (error: any) {
+      console.error('Error deleting document:', error);
+      toast.error('Kunne ikke slette dokumentet');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const getDaysUntilExpiry = () => {
     if (!document.gyldig_til) return null;
     const today = new Date();
@@ -141,9 +246,38 @@ export const DocumentDetailDialog = ({ open, onOpenChange, document, status }: D
                 <Calendar className="w-5 h-5 text-muted-foreground mt-0.5" />
                 <div className="flex-1">
                   <p className="text-sm font-medium text-muted-foreground">Gyldig til</p>
-                  <p className="text-base">
-                    {format(document.gyldig_til, "dd. MMMM yyyy", { locale: nb })}
-                  </p>
+                  {isEditing && isAdmin ? (
+                    <div className="flex gap-2 items-center mt-1">
+                      <Input
+                        type="date"
+                        value={editedDate}
+                        onChange={(e) => setEditedDate(e.target.value)}
+                        className="max-w-[200px]"
+                      />
+                      <Button size="sm" onClick={handleUpdateExpiryDate}>
+                        Lagre
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => setIsEditing(false)}>
+                        Avbryt
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <p className="text-base">
+                        {format(document.gyldig_til, "dd. MMMM yyyy", { locale: nb })}
+                      </p>
+                      {isAdmin && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setIsEditing(true)}
+                          className="h-6 px-2"
+                        >
+                          <Edit className="w-3 h-3" />
+                        </Button>
+                      )}
+                    </div>
+                  )}
                   {daysUntilExpiry !== null && (
                     <p className={`text-sm mt-1 ${
                       daysUntilExpiry < 0 
@@ -214,28 +348,62 @@ export const DocumentDetailDialog = ({ open, onOpenChange, document, status }: D
           )}
 
           {document.fil_url && (
-            <div className="flex gap-2 pt-4 border-t border-border">
-              <Button
-                variant="outline"
-                className="flex-1"
-                onClick={handleOpenDocument}
-              >
-                <ExternalLink className="w-4 h-4 mr-2" />
-                Åpne dokument
-              </Button>
-              <Button
-                variant="default"
-                className="flex-1"
-                onClick={handleDownloadDocument}
-                disabled={downloading}
-              >
-                <Download className="w-4 h-4 mr-2" />
-                {downloading ? "Laster ned..." : "Last ned"}
-              </Button>
+            <div className="space-y-2 pt-4 border-t border-border">
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={handleOpenDocument}
+                >
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  Åpne dokument
+                </Button>
+                <Button
+                  variant="default"
+                  className="flex-1"
+                  onClick={handleDownloadDocument}
+                  disabled={downloading}
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  {downloading ? "Laster ned..." : "Last ned"}
+                </Button>
+              </div>
+              
+              {isAdmin && (
+                <Button
+                  variant="destructive"
+                  className="w-full"
+                  onClick={() => setDeleteDialogOpen(true)}
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Slett dokument
+                </Button>
+              )}
             </div>
           )}
         </div>
       </DialogContent>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Er du sikker?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Dette vil permanent slette dokumentet "{document.tittel}". Denne handlingen kan ikke angres.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Avbryt</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteDocument}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? "Sletter..." : "Slett"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 };

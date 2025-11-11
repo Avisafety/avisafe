@@ -172,15 +172,26 @@ const Index = () => {
           >
             <SortableContext items={layout.map((item) => item.id)} strategy={rectSortingStrategy}>
               <div className="space-y-4">
-                {/* Top Row - News */}
-                <div className="w-full">
-                  {layout
-                    .filter((item) => item.component === "news")
-                    .map((item) => (
-                      <DraggableSection key={item.id} id={item.id}>
-                        {renderSection(item.component)}
-                      </DraggableSection>
-                    ))}
+                {/* Top Row - News and Status */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                  <div className="lg:col-span-9">
+                    {layout
+                      .filter((item) => item.component === "news")
+                      .map((item) => (
+                        <DraggableSection key={item.id} id={item.id}>
+                          {renderSection(item.component)}
+                        </DraggableSection>
+                      ))}
+                  </div>
+                  <div className="lg:col-span-3">
+                    {layout
+                      .filter((item) => item.component === "status")
+                      .map((item) => (
+                        <DraggableSection key={item.id} id={item.id}>
+                          {renderSection(item.component)}
+                        </DraggableSection>
+                      ))}
+                  </div>
                 </div>
 
                 {/* Main Row - Sidebars with center content */}
@@ -214,7 +225,7 @@ const Index = () => {
                   {/* Right Column */}
                   <div className="lg:col-span-3 space-y-4">
                     {layout
-                      .filter((item) => ["status", "incidents", "kpi"].includes(item.component))
+                      .filter((item) => ["incidents", "kpi"].includes(item.component))
                       .map((item) => (
                         <DraggableSection key={item.id} id={item.id}>
                           {renderSection(item.component)}

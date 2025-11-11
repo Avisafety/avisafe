@@ -124,13 +124,13 @@ const Index = () => {
           <div className="container mx-auto px-4 py-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <Shield className="w-8 h-8 text-primary" />
+                <Shield className="w-10 h-10 text-primary" />
                 <div>
-                  <h1 className="text-xl font-bold">Sikkerhetsstyringssystem</h1>
-                  <p className="text-sm text-muted-foreground">Drone Operations Management</p>
+                  <h1 className="text-2xl font-bold">Sikkerhetsstyringssystem</h1>
+                  <p className="text-base text-primary">Drone Operations Management</p>
                 </div>
               </div>
-              <nav className="hidden md:flex items-center gap-4 text-sm font-medium">
+              <nav className="hidden md:flex items-center gap-4 text-base font-medium">
                 <a href="#" className="text-primary hover:text-primary/80 transition-colors">
                   Dashboard
                 </a>

@@ -1,7 +1,7 @@
 import { GlassCard } from "@/components/GlassCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { FileText, Plus, Search, AlertCircle, Upload, X } from "lucide-react";
+import { FileText, Plus, Search, AlertCircle, Upload, X, Link } from "lucide-react";
 import { Document } from "@/types";
 import { useState, useRef, useEffect } from "react";
 import { DocumentDetailDialog } from "./DocumentDetailDialog";
@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -43,11 +44,13 @@ export const DocumentSection = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadType, setUploadType] = useState<"file" | "url">("file");
   const [formData, setFormData] = useState({
     tittel: "",
     kategori: "Policy",
     gyldig_til: "",
     varsel_dager_for_utløp: "30",
+    url: "",
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -112,8 +115,18 @@ export const DocumentSection = () => {
   };
 
   const handleUpload = async () => {
-    if (!selectedFile || !formData.tittel) {
-      toast.error("Vennligst fyll ut alle påkrevde felt");
+    if (!formData.tittel) {
+      toast.error("Vennligst fyll ut tittel");
+      return;
+    }
+
+    if (uploadType === "file" && !selectedFile) {
+      toast.error("Vennligst velg en fil");
+      return;
+    }
+
+    if (uploadType === "url" && !formData.url) {
+      toast.error("Vennligst legg inn en URL");
       return;
     }
 
@@ -128,18 +141,28 @@ export const DocumentSection = () => {
         return;
       }
 
-      // Upload file to storage
-      const fileExt = selectedFile.name.split('.').pop();
-      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
-      
-      const { error: uploadError } = await supabase.storage
-        .from('documents')
-        .upload(fileName, selectedFile);
+      let filePath = "";
+      let fileName = "";
+      let fileSize = 0;
 
-      if (uploadError) throw uploadError;
+      if (uploadType === "file" && selectedFile) {
+        // Upload file to storage
+        const fileExt = selectedFile.name.split('.').pop();
+        filePath = `${user.id}/${Date.now()}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('documents')
+          .upload(filePath, selectedFile);
 
-      // Store the file path (not URL) in database
-      // We'll generate signed URLs when needed
+        if (uploadError) throw uploadError;
+
+        fileName = selectedFile.name;
+        fileSize = selectedFile.size;
+      } else if (uploadType === "url") {
+        // For URL, store the URL directly in fil_url
+        filePath = formData.url;
+        fileName = formData.tittel; // Use title as filename for URLs
+      }
       
       // Insert document metadata into database
       const { error: dbError } = await supabase
@@ -150,21 +173,23 @@ export const DocumentSection = () => {
           kategori: formData.kategori,
           gyldig_til: formData.gyldig_til || null,
           varsel_dager_for_utløp: parseInt(formData.varsel_dager_for_utløp),
-          fil_url: fileName, // Store the path, not the URL
-          fil_navn: selectedFile.name,
-          fil_storrelse: selectedFile.size,
+          fil_url: filePath,
+          fil_navn: fileName,
+          fil_storrelse: fileSize,
         });
 
       if (dbError) throw dbError;
 
-      toast.success("Dokument lastet opp!");
+      toast.success(uploadType === "file" ? "Dokument lastet opp!" : "Dokument lenke lagt til!");
       setDialogOpen(false);
       setSelectedFile(null);
+      setUploadType("file");
       setFormData({
         tittel: "",
         kategori: "Policy",
         gyldig_til: "",
         varsel_dager_for_utløp: "30",
+        url: "",
       });
       
       // Refresh document list
@@ -259,41 +284,72 @@ export const DocumentSection = () => {
 
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="file">Fil *</Label>
-              <input
-                ref={fileInputRef}
-                id="file"
-                type="file"
-                onChange={handleFileSelect}
-                className="hidden"
-                accept=".pdf,.doc,.docx,.xls,.xlsx,.txt"
-              />
-              
-              {!selectedFile ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <Upload className="w-4 h-4 mr-2" />
-                  Velg fil
-                </Button>
-              ) : (
-                <div className="flex items-center gap-2 p-3 border rounded-lg">
-                  <FileText className="w-4 h-4" />
-                  <span className="flex-1 text-sm truncate">{selectedFile.name}</span>
+              <Label>Type *</Label>
+              <RadioGroup value={uploadType} onValueChange={(value: "file" | "url") => setUploadType(value)}>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="file" id="file-option" />
+                  <Label htmlFor="file-option" className="font-normal cursor-pointer">Last opp fil</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="url" id="url-option" />
+                  <Label htmlFor="url-option" className="font-normal cursor-pointer">Lenke til dokument</Label>
+                </div>
+              </RadioGroup>
+            </div>
+
+            {uploadType === "file" ? (
+              <div className="space-y-2">
+                <Label htmlFor="file">Fil *</Label>
+                <input
+                  ref={fileInputRef}
+                  id="file"
+                  type="file"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                  accept=".pdf,.doc,.docx,.xls,.xlsx,.txt"
+                />
+                
+                {!selectedFile ? (
                   <Button
                     type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setSelectedFile(null)}
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => fileInputRef.current?.click()}
                   >
-                    <X className="w-4 h-4" />
+                    <Upload className="w-4 h-4 mr-2" />
+                    Velg fil
                   </Button>
+                ) : (
+                  <div className="flex items-center gap-2 p-3 border rounded-lg">
+                    <FileText className="w-4 h-4" />
+                    <span className="flex-1 text-sm truncate">{selectedFile.name}</span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setSelectedFile(null)}
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <Label htmlFor="url">Dokument URL *</Label>
+                <div className="relative">
+                  <Link className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    id="url"
+                    type="url"
+                    value={formData.url}
+                    onChange={(e) => setFormData({ ...formData, url: e.target.value })}
+                    placeholder="https://eksempel.no/dokument.pdf"
+                    className="pl-9"
+                  />
                 </div>
-              )}
-            </div>
+              </div>
+            )}
 
             <div className="space-y-2">
               <Label htmlFor="tittel">Tittel *</Label>
@@ -358,10 +414,10 @@ export const DocumentSection = () => {
               </Button>
               <Button
                 onClick={handleUpload}
-                disabled={uploading || !selectedFile || !formData.tittel}
+                disabled={uploading || !formData.tittel || (uploadType === "file" && !selectedFile) || (uploadType === "url" && !formData.url)}
                 className="flex-1"
               >
-                {uploading ? "Laster opp..." : "Last opp"}
+                {uploading ? "Lagrer..." : uploadType === "file" ? "Last opp" : "Legg til"}
               </Button>
             </div>
           </div>

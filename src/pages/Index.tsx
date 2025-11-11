@@ -226,6 +226,16 @@ const Index = () => {
                   <p className="text-xs sm:text-base text-primary hidden sm:block">Drone Operations Management</p>
                 </div>
               </div>
+              
+              {/* Desktop Navigation */}
+              <nav className="hidden lg:flex items-center gap-1">
+                <Button variant="ghost" size="sm">Dashboard</Button>
+                <Button variant="ghost" size="sm">Dokumenter</Button>
+                <Button variant="ghost" size="sm">Kalender</Button>
+                <Button variant="ghost" size="sm">Hendelser</Button>
+                <Button variant="ghost" size="sm">Status</Button>
+              </nav>
+              
               <nav className="flex items-center gap-2 sm:gap-4">
                 {isAdmin && (
                   <Button

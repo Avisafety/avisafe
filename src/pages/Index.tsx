@@ -1,7 +1,7 @@
 import droneBackground from "@/assets/drone-background.png";
 import { DocumentSection } from "@/components/dashboard/DocumentSection";
 import { StatusPanel } from "@/components/dashboard/StatusPanel";
-import { CalendarSection } from "@/components/dashboard/CalendarSection";
+import { CalendarWidget } from "@/components/dashboard/CalendarWidget";
 import { IncidentsSection } from "@/components/dashboard/IncidentsSection";
 import { MissionsSection } from "@/components/dashboard/MissionsSection";
 import { KPIChart } from "@/components/dashboard/KPIChart";
@@ -28,13 +28,13 @@ import { toast } from "sonner";
 const STORAGE_KEY = "dashboard-layout";
 
 const defaultLayout = [
-  { id: "documents", component: "documents", gridClass: "lg:col-span-2" },
-  { id: "news", component: "news", gridClass: "lg:col-span-3" },
-  { id: "status", component: "status", gridClass: "lg:col-span-4" },
-  { id: "missions", component: "missions", gridClass: "lg:col-span-3 lg:row-span-2" },
-  { id: "calendar", component: "calendar", gridClass: "lg:col-span-2" },
-  { id: "incidents", component: "incidents", gridClass: "lg:col-span-3" },
-  { id: "kpi", component: "kpi", gridClass: "lg:col-span-4" },
+  { id: "documents", component: "documents" },
+  { id: "news", component: "news" },
+  { id: "calendar", component: "calendar" },
+  { id: "status", component: "status" },
+  { id: "missions", component: "missions" },
+  { id: "incidents", component: "incidents" },
+  { id: "kpi", component: "kpi" },
 ];
 
 const Index = () => {
@@ -93,7 +93,7 @@ const Index = () => {
       case "missions":
         return <MissionsSection />;
       case "calendar":
-        return <CalendarSection />;
+        return <CalendarWidget />;
       case "incidents":
         return <IncidentsSection />;
       case "kpi":
@@ -164,19 +164,38 @@ const Index = () => {
         </header>
 
         {/* Main Content */}
-        <main className="container mx-auto px-4 py-5 max-w-[1600px]">
+        <main className="container mx-auto px-4 py-5 max-w-[1800px]">
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
             onDragEnd={handleDragEnd}
           >
             <SortableContext items={layout.map((item) => item.id)} strategy={rectSortingStrategy}>
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 auto-rows-min">
-                {layout.map((item) => (
-                  <DraggableSection key={item.id} id={item.id} className={item.gridClass}>
-                    {renderSection(item.component)}
-                  </DraggableSection>
-                ))}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                {/* Left Column */}
+                <div className="lg:col-span-3 space-y-4">
+                  {layout
+                    .filter((item) => ["documents", "news", "calendar"].includes(item.component))
+                    .map((item) => (
+                      <DraggableSection key={item.id} id={item.id}>
+                        {renderSection(item.component)}
+                      </DraggableSection>
+                    ))}
+                </div>
+
+                {/* Center - Empty space for drone background */}
+                <div className="lg:col-span-6 min-h-[600px]" />
+
+                {/* Right Column */}
+                <div className="lg:col-span-3 space-y-4">
+                  {layout
+                    .filter((item) => ["status", "missions", "incidents", "kpi"].includes(item.component))
+                    .map((item) => (
+                      <DraggableSection key={item.id} id={item.id}>
+                        {renderSection(item.component)}
+                      </DraggableSection>
+                    ))}
+                </div>
               </div>
             </SortableContext>
           </DndContext>

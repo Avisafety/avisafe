@@ -13,13 +13,13 @@ export const NewsSection = () => {
   });
 
   return (
-    <GlassCard>
+    <GlassCard className="h-[400px] flex flex-col">
       <div className="flex items-center gap-2 mb-3">
         <Newspaper className="w-5 h-5 text-primary" />
         <h2 className="text-base font-semibold">Nyheter</h2>
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-2 flex-1 overflow-y-auto">
         {sortedNews.map((news) => (
           <div
             key={news.id}

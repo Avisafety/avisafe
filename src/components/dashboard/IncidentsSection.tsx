@@ -27,7 +27,7 @@ const statusColors = {
 
 export const IncidentsSection = () => {
   return (
-    <GlassCard>
+    <GlassCard className="h-[400px] flex flex-col">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <AlertTriangle className="w-5 h-5 text-destructive" />
@@ -39,7 +39,7 @@ export const IncidentsSection = () => {
         </Button>
       </div>
 
-      <Tabs defaultValue="incidents" className="w-full">
+      <Tabs defaultValue="incidents" className="w-full flex-1 flex flex-col">
         <TabsList className="w-full h-9">
           <TabsTrigger value="incidents" className="flex-1 text-sm">
             Hendelser ({mockIncidents.length})
@@ -49,7 +49,7 @@ export const IncidentsSection = () => {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="incidents" className="space-y-2 mt-3">
+        <TabsContent value="incidents" className="space-y-2 mt-3 flex-1 overflow-y-auto">
           {mockIncidents.slice(0, 4).map((incident) => (
             <div
               key={incident.id}
@@ -74,7 +74,7 @@ export const IncidentsSection = () => {
           ))}
         </TabsContent>
 
-        <TabsContent value="followups" className="space-y-2 mt-3">
+        <TabsContent value="followups" className="space-y-2 mt-3 flex-1 overflow-y-auto">
           {mockFollowUps.map((followUp) => {
             const incident = mockIncidents.find((i) => i.id === followUp.hendelse_id);
             return (

@@ -29,7 +29,7 @@ const StatusDot = ({ status }: { status: string }) => {
 
 export const DocumentSection = () => {
   return (
-    <GlassCard>
+    <GlassCard className="h-[400px] flex flex-col">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <FileText className="w-5 h-5 text-primary" />
@@ -46,7 +46,7 @@ export const DocumentSection = () => {
         <Input placeholder="Søk..." className="pl-8 h-9 text-sm" />
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-2 flex-1 overflow-y-auto">
         {mockDocuments.map((doc) => {
           const status = getDocumentStatus(doc);
           return (

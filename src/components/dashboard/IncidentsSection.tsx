@@ -181,39 +181,39 @@ export const IncidentsSection = () => {
   return (
     <>
       <GlassCard className="h-full flex flex-col">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <AlertTriangle className="w-5 h-5 text-destructive" />
-          <h2 className="text-base font-semibold">Hendelser</h2>
+      <div className="flex items-center justify-between mb-2 sm:mb-3">
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-destructive" />
+          <h2 className="text-sm sm:text-base font-semibold">Hendelser</h2>
         </div>
         <Button 
           size="sm" 
           variant="destructive" 
-          className="gap-1 h-8 text-sm"
+          className="gap-1 h-7 sm:h-8 text-xs sm:text-sm px-2 sm:px-3"
           onClick={() => setDialogOpen(true)}
         >
-          <AlertTriangle className="w-4 h-4" />
-          Rapporter
+          <AlertTriangle className="w-3 h-3 sm:w-4 sm:h-4" />
+          <span className="hidden xs:inline">Rapporter</span>
         </Button>
       </div>
 
       <Tabs defaultValue="incidents" className="w-full flex-1 flex flex-col">
-        <TabsList className="w-full h-9">
-          <TabsTrigger value="incidents" className="flex-1 text-sm">
+        <TabsList className="w-full h-8 sm:h-9">
+          <TabsTrigger value="incidents" className="flex-1 text-xs sm:text-sm">
             Hendelser ({incidents.length})
           </TabsTrigger>
-          <TabsTrigger value="followups" className="flex-1 text-sm">
+          <TabsTrigger value="followups" className="flex-1 text-xs sm:text-sm">
             Oppfølging ({mockFollowUps.length})
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="incidents" className="space-y-2 mt-3 flex-1 overflow-y-auto">
+        <TabsContent value="incidents" className="space-y-1.5 sm:space-y-2 mt-2 sm:mt-3 flex-1 overflow-y-auto">
           {loading ? (
-            <div className="text-center py-4 text-sm text-muted-foreground">
+            <div className="text-center py-4 text-xs sm:text-sm text-muted-foreground">
               Laster hendelser...
             </div>
           ) : incidents.length === 0 ? (
-            <div className="text-center py-4 text-sm text-muted-foreground">
+            <div className="text-center py-4 text-xs sm:text-sm text-muted-foreground">
               Ingen hendelser registrert
             </div>
           ) : (
@@ -221,55 +221,55 @@ export const IncidentsSection = () => {
               <div
                 key={incident.id}
                 onClick={() => handleIncidentClick(incident)}
-                className="p-3 bg-card/30 rounded hover:bg-card/50 transition-colors cursor-pointer"
+                className="p-2 sm:p-3 bg-card/30 rounded hover:bg-card/50 transition-colors cursor-pointer"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-sm mb-1">{incident.tittel}</h3>
-                    <div className="flex flex-wrap items-center gap-1.5 text-xs">
-                      <Badge className={`${severityColors[incident.alvorlighetsgrad as keyof typeof severityColors] || 'bg-gray-500/20'} text-xs px-1.5 py-0.5`}>
+                    <h3 className="font-medium text-xs sm:text-sm mb-1">{incident.tittel}</h3>
+                    <div className="flex flex-wrap items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs">
+                      <Badge className={`${severityColors[incident.alvorlighetsgrad as keyof typeof severityColors] || 'bg-gray-500/20'} text-[10px] sm:text-xs px-1 sm:px-1.5 py-0.5`}>
                         {incident.alvorlighetsgrad}
                       </Badge>
                       {incident.kategori && (
-                        <Badge variant="outline" className="text-xs px-1.5 py-0.5">{incident.kategori}</Badge>
+                        <Badge variant="outline" className="text-[10px] sm:text-xs px-1 sm:px-1.5 py-0.5">{incident.kategori}</Badge>
                       )}
                       <span className="text-muted-foreground">
                         {format(new Date(incident.hendelsestidspunkt), "dd. MMM", { locale: nb })}
                       </span>
                     </div>
                   </div>
-                  <Badge className={`${statusColors[incident.status as keyof typeof statusColors] || 'bg-gray-500/20'} text-xs px-1.5 py-0.5`}>{incident.status}</Badge>
+                  <Badge className={`${statusColors[incident.status as keyof typeof statusColors] || 'bg-gray-500/20'} text-[10px] sm:text-xs px-1 sm:px-1.5 py-0.5 whitespace-nowrap`}>{incident.status}</Badge>
                 </div>
               </div>
             ))
           )}
         </TabsContent>
 
-        <TabsContent value="followups" className="space-y-2 mt-3 flex-1 overflow-y-auto">
+        <TabsContent value="followups" className="space-y-1.5 sm:space-y-2 mt-2 sm:mt-3 flex-1 overflow-y-auto">
           {mockFollowUps.map((followUp) => {
             const incident = incidents.find((i) => i.id === followUp.hendelse_id);
             return (
               <div
                 key={followUp.id}
-                className="p-3 bg-card/30 rounded hover:bg-card/50 transition-colors cursor-pointer"
+                className="p-2 sm:p-3 bg-card/30 rounded hover:bg-card/50 transition-colors cursor-pointer"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-sm mb-1">{incident?.tittel}</h3>
-                    <p className="text-xs text-muted-foreground line-clamp-1 mb-1.5">
+                    <h3 className="font-medium text-xs sm:text-sm mb-1">{incident?.tittel}</h3>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground line-clamp-1 mb-1 sm:mb-1.5">
                       {followUp.tiltak}
                     </p>
-                    <div className="flex flex-wrap items-center gap-2 text-xs">
+                    <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs">
                       <div className="flex items-center gap-1">
-                        <Clock className="w-4 h-4" />
+                        <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
                         <span>{format(followUp.frist, "dd. MMM", { locale: nb })}</span>
                       </div>
                       {followUp.ansvarlig && (
-                        <span className="text-muted-foreground">• {followUp.ansvarlig}</span>
+                        <span className="text-muted-foreground truncate">• {followUp.ansvarlig}</span>
                       )}
                     </div>
                   </div>
-                  <Badge className={`${statusColors[followUp.status]} text-xs px-1.5 py-0.5`}>{followUp.status}</Badge>
+                  <Badge className={`${statusColors[followUp.status]} text-[10px] sm:text-xs px-1 sm:px-1.5 py-0.5 whitespace-nowrap`}>{followUp.status}</Badge>
                 </div>
               </div>
             );
@@ -278,7 +278,7 @@ export const IncidentsSection = () => {
       </Tabs>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto mx-4 sm:mx-auto">
           <DialogHeader>
             <DialogTitle>Rapporter hendelse</DialogTitle>
             <DialogDescription>

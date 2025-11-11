@@ -81,7 +81,7 @@ export const CalendarWidget = () => {
 
   return (
     <>
-      <GlassCard className="h-[500px] flex flex-col">
+      <GlassCard className="h-[350px] flex flex-col">
         <div className="flex items-center gap-2 mb-3">
           <CalendarIcon className="w-5 h-5 text-primary" />
           <h2 className="text-base font-semibold">Kalender</h2>

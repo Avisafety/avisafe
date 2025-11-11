@@ -1,0 +1,71 @@
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Equipment } from "@/types";
+import { StatusBadge } from "@/components/StatusBadge";
+import { format } from "date-fns";
+import { nb } from "date-fns/locale";
+
+interface EquipmentListDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  equipment: Equipment[];
+}
+
+export const EquipmentListDialog = ({ open, onOpenChange, equipment }: EquipmentListDialogProps) => {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Utstyr ({equipment.length})</DialogTitle>
+        </DialogHeader>
+        
+        <div className="space-y-4">
+          {equipment.map((item) => (
+            <div key={item.id} className="border border-border rounded-lg p-4 space-y-2">
+              <div className="flex items-start justify-between">
+                <div>
+                  <h3 className="font-semibold text-lg">{item.navn}</h3>
+                  <p className="text-sm text-muted-foreground">{item.type}</p>
+                </div>
+                <StatusBadge status={item.status} />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div>
+                  <span className="text-muted-foreground">Serienummer:</span>
+                  <span className="ml-2 font-medium">{item.serienummer}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Tilgjengelig:</span>
+                  <span className="ml-2 font-medium">{item.tilgjengelig ? "Ja" : "Nei"}</span>
+                </div>
+                {item.neste_vedlikehold && (
+                  <div>
+                    <span className="text-muted-foreground">Neste vedlikehold:</span>
+                    <span className="ml-2 font-medium">
+                      {format(item.neste_vedlikehold, "dd.MM.yyyy", { locale: nb })}
+                    </span>
+                  </div>
+                )}
+                {item.sist_vedlikeholdt && (
+                  <div>
+                    <span className="text-muted-foreground">Sist vedlikeholdt:</span>
+                    <span className="ml-2 font-medium">
+                      {format(item.sist_vedlikeholdt, "dd.MM.yyyy", { locale: nb })}
+                    </span>
+                  </div>
+                )}
+              </div>
+              
+              {item.merknader && (
+                <div className="text-sm pt-2 border-t border-border">
+                  <span className="text-muted-foreground">Merknader:</span>
+                  <p className="mt-1">{item.merknader}</p>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};

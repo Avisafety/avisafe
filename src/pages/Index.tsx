@@ -7,11 +7,12 @@ import { MissionsSection } from "@/components/dashboard/MissionsSection";
 import { KPIChart } from "@/components/dashboard/KPIChart";
 import { NewsSection } from "@/components/dashboard/NewsSection";
 import { DraggableSection } from "@/components/dashboard/DraggableSection";
-import { Shield, LogOut } from "lucide-react";
+import { Shield, LogOut, Settings } from "lucide-react";
 import { ProfileDialog } from "@/components/ProfileDialog";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import {
   DndContext,
   closestCenter,
@@ -44,12 +45,34 @@ const Index = () => {
   const { user, loading, signOut } = useAuth();
   const navigate = useNavigate();
   const [layout, setLayout] = useState(defaultLayout);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
       navigate("/auth", { replace: true });
     }
   }, [user, loading, navigate]);
+
+  useEffect(() => {
+    if (user) {
+      checkAdminStatus();
+    }
+  }, [user]);
+
+  const checkAdminStatus = async () => {
+    try {
+      const { data } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user?.id)
+        .eq("role", "admin")
+        .maybeSingle();
+
+      setIsAdmin(!!data);
+    } catch (error) {
+      console.error("Error checking admin status:", error);
+    }
+  };
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -176,6 +199,17 @@ const Index = () => {
                 <a href="#" className="hover:text-primary transition-colors">
                   Ressurser
                 </a>
+                {isAdmin && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => navigate("/admin")}
+                    className="gap-2"
+                    title="Administrator"
+                  >
+                    <Settings className="w-4 h-4" />
+                  </Button>
+                )}
                 <ProfileDialog />
                 <Button
                   variant="ghost"

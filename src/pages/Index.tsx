@@ -183,7 +183,7 @@ const Index = () => {
                     ))}
                 </div>
 
-                {/* Middle Row - Sidebars with center space */}
+                {/* Main Row - Sidebars with center content */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
                   {/* Left Column */}
                   <div className="lg:col-span-3 space-y-4">
@@ -196,8 +196,20 @@ const Index = () => {
                       ))}
                   </div>
 
-                  {/* Center - Empty space for drone background */}
-                  <div className="lg:col-span-6 min-h-[400px]" />
+                  {/* Center Column - Drone space and missions */}
+                  <div className="lg:col-span-6 space-y-4">
+                    {/* Empty space for drone background */}
+                    <div className="min-h-[400px]" />
+                    
+                    {/* Missions below drone */}
+                    {layout
+                      .filter((item) => item.component === "missions")
+                      .map((item) => (
+                        <DraggableSection key={item.id} id={item.id}>
+                          {renderSection(item.component)}
+                        </DraggableSection>
+                      ))}
+                  </div>
 
                   {/* Right Column */}
                   <div className="lg:col-span-3 space-y-4">
@@ -209,21 +221,6 @@ const Index = () => {
                         </DraggableSection>
                       ))}
                   </div>
-                </div>
-
-                {/* Bottom Row - Missions in center */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-                  <div className="lg:col-span-3" />
-                  <div className="lg:col-span-6">
-                    {layout
-                      .filter((item) => item.component === "missions")
-                      .map((item) => (
-                        <DraggableSection key={item.id} id={item.id}>
-                          {renderSection(item.component)}
-                        </DraggableSection>
-                      ))}
-                  </div>
-                  <div className="lg:col-span-3" />
                 </div>
               </div>
             </SortableContext>

@@ -17,7 +17,7 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 210 24% 16%;
 
-    --primary: 188 94% 43%;
+    --primary: 188 94% 35%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 210 40% 96.1%;
@@ -26,7 +26,7 @@ All colors MUST be HSL.
     --muted: 210 40% 96.1%;
     --muted-foreground: 215 16% 47%;
 
-    --accent: 188 94% 43%;
+    --accent: 188 94% 35%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
@@ -65,7 +65,7 @@ All colors MUST be HSL.
     --popover: 210 24% 12%;
     --popover-foreground: 210 20% 98%;
 
-    --primary: 188 94% 43%;
+    --primary: 188 94% 35%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 210 30% 15%;
@@ -74,7 +74,7 @@ All colors MUST be HSL.
     --muted: 210 30% 15%;
     --muted-foreground: 215 20% 65%;
 
-    --accent: 188 94% 43%;
+    --accent: 188 94% 35%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;

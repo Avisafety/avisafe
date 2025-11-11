@@ -83,15 +83,24 @@ export const CalendarWidget = () => {
     time: "09:00",
   });
 
+  // Helper function - must be defined before use
+  const getColorForType = (type: string): string => {
+    switch (type) {
+      case "Oppdrag": return "text-primary";
+      case "Vedlikehold": return "text-orange-500";
+      case "Dokument": return "text-blue-500";
+      case "Møte": return "text-purple-500";
+      default: return "text-gray-500";
+    }
+  };
+
   // Fetch custom events from database
   useEffect(() => {
-    console.log('CalendarWidget: Fetching custom events');
     fetchCustomEvents();
   }, []);
 
   // Real-time subscription
   useEffect(() => {
-    console.log('CalendarWidget: Setting up real-time subscription');
     const channel = supabase
       .channel('calendar-events-changes')
       .on(
@@ -102,7 +111,6 @@ export const CalendarWidget = () => {
           table: 'calendar_events'
         },
         (payload) => {
-          console.log('CalendarWidget: Real-time event received:', payload.eventType);
           if (payload.eventType === 'INSERT') {
             setCustomEvents((current) => [...current, payload.new as CalendarEventDB]);
           } else if (payload.eventType === 'UPDATE') {
@@ -121,25 +129,19 @@ export const CalendarWidget = () => {
       .subscribe();
 
     return () => {
-      console.log('CalendarWidget: Cleaning up real-time subscription');
       supabase.removeChannel(channel);
     };
   }, []);
 
   const fetchCustomEvents = async () => {
     try {
-      console.log('CalendarWidget: Fetching events from database');
       const { data, error } = await supabase
         .from('calendar_events')
         .select('*')
         .order('event_date', { ascending: true });
 
-      if (error) {
-        console.error('CalendarWidget: Error fetching events:', error);
-        throw error;
-      }
+      if (error) throw error;
 
-      console.log('CalendarWidget: Fetched events:', data?.length || 0);
       setCustomEvents(data || []);
     } catch (error: any) {
       console.error('Error fetching calendar events:', error);
@@ -170,16 +172,6 @@ export const CalendarWidget = () => {
       };
     }),
   ];
-
-  const getColorForType = (type: string): string => {
-    switch (type) {
-      case "Oppdrag": return "text-primary";
-      case "Vedlikehold": return "text-orange-500";
-      case "Dokument": return "text-blue-500";
-      case "Møte": return "text-purple-500";
-      default: return "text-gray-500";
-    }
-  };
 
   const getEventsForDate = (checkDate: Date) => {
     return allEvents.filter((event) => isSameDay(event.date, checkDate));

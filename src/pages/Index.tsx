@@ -111,7 +111,7 @@ const Index = () => {
         style={{
           backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.5)), url(${droneBackground})`,
           backgroundSize: "100% auto",
-          backgroundPosition: "center center",
+          backgroundPosition: "60% 55%",
           backgroundAttachment: "fixed",
           backgroundRepeat: "no-repeat",
         }}

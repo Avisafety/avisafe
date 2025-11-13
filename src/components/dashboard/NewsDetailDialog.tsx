@@ -1,9 +1,11 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { News } from "@/types";
+import { Tables } from "@/integrations/supabase/types";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { nb } from "date-fns/locale";
 import { Pin, User, Calendar } from "lucide-react";
+
+type News = Tables<"news">;
 
 interface NewsDetailDialogProps {
   open: boolean;
@@ -30,7 +32,7 @@ export const NewsDetailDialog = ({ open, onOpenChange, news }: NewsDetailDialogP
           <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground border-b border-border pb-3">
             <div className="flex items-center gap-1.5">
               <Calendar className="w-4 h-4" />
-              <span>{format(news.publisert, "dd. MMMM yyyy, HH:mm", { locale: nb })}</span>
+              <span>{format(new Date(news.publisert), "dd. MMMM yyyy, HH:mm", { locale: nb })}</span>
             </div>
             <div className="flex items-center gap-1.5">
               <User className="w-4 h-4" />

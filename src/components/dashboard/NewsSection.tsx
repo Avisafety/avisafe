@@ -1,21 +1,64 @@
 import { GlassCard } from "@/components/GlassCard";
 import { Badge } from "@/components/ui/badge";
-import { Newspaper, Pin } from "lucide-react";
-import { mockNews } from "@/data/mockData";
+import { Button } from "@/components/ui/button";
+import { Newspaper, Pin, Plus } from "lucide-react";
 import { format } from "date-fns";
 import { nb } from "date-fns/locale";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { NewsDetailDialog } from "./NewsDetailDialog";
-import { News } from "@/types";
+import { AddNewsDialog } from "./AddNewsDialog";
+import { supabase } from "@/integrations/supabase/client";
+import { Tables } from "@/integrations/supabase/types";
+
+type News = Tables<"news">;
 
 export const NewsSection = () => {
   const [selectedNews, setSelectedNews] = useState<News | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [news, setNews] = useState<News[]>([]);
   
-  const sortedNews = [...mockNews].sort((a, b) => {
+  useEffect(() => {
+    fetchNews();
+    
+    const channel = supabase
+      .channel('news-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'news'
+        },
+        () => {
+          fetchNews();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const fetchNews = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('news')
+        .select('*')
+        .order('publisert', { ascending: false });
+
+      if (error) throw error;
+      setNews(data || []);
+    } catch (error) {
+      console.error('Error fetching news:', error);
+    }
+  };
+  
+  const sortedNews = [...news].sort((a, b) => {
     if (a.pin_on_top && !b.pin_on_top) return -1;
     if (!a.pin_on_top && b.pin_on_top) return 1;
-    return b.publisert.getTime() - a.publisert.getTime();
+    return new Date(b.publisert).getTime() - new Date(a.publisert).getTime();
   });
 
   const handleNewsClick = (news: News) => {
@@ -26,10 +69,20 @@ export const NewsSection = () => {
   return (
     <>
       <GlassCard className="h-auto">
-      <div className="flex items-center gap-2 mb-2 sm:mb-3">
-        <Newspaper className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-        <h2 className="text-sm sm:text-base font-semibold">Nyheter</h2>
-      </div>
+        <div className="flex items-center justify-between mb-2 sm:mb-3">
+          <div className="flex items-center gap-2">
+            <Newspaper className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+            <h2 className="text-sm sm:text-base font-semibold">Nyheter</h2>
+          </div>
+          <Button
+            size="sm"
+            onClick={() => setAddDialogOpen(true)}
+            className="h-7 sm:h-8 px-2 sm:px-3"
+          >
+            <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+            <span className="text-xs sm:text-sm">Legg til</span>
+          </Button>
+        </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
         {sortedNews.map((news) => (
@@ -48,7 +101,7 @@ export const NewsSection = () => {
                   {news.innhold}
                 </p>
                 <div className="flex flex-wrap items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs text-muted-foreground">
-                  <span>{format(news.publisert, "dd. MMM", { locale: nb })}</span>
+                  <span>{format(new Date(news.publisert), "dd. MMM", { locale: nb })}</span>
                   <span>•</span>
                   <span className="truncate">{news.forfatter}</span>
                   {news.synlighet !== "Alle" && (
@@ -71,6 +124,11 @@ export const NewsSection = () => {
       open={dialogOpen}
       onOpenChange={setDialogOpen}
       news={selectedNews}
+    />
+    
+    <AddNewsDialog
+      open={addDialogOpen}
+      onOpenChange={setAddDialogOpen}
     />
     </>
   );

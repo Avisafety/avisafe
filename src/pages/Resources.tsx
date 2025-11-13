@@ -40,7 +40,7 @@ const Resources = () => {
   }, [user]);
 
   const fetchDrones = async () => {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("drones")
       .select("*")
       .eq("aktiv", true)
@@ -55,7 +55,7 @@ const Resources = () => {
   };
 
   const fetchEquipment = async () => {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("equipment")
       .select("*")
       .eq("aktiv", true)
@@ -88,7 +88,7 @@ const Resources = () => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     
-    const { error } = await supabase.from("drones").insert([{
+    const { error } = await (supabase as any).from("drones").insert([{
       user_id: user?.id!,
       modell: formData.get("modell") as string,
       registrering: formData.get("registrering") as string,
@@ -113,7 +113,7 @@ const Resources = () => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     
-    const { error } = await supabase.from("equipment").insert([{
+    const { error } = await (supabase as any).from("equipment").insert([{
       user_id: user?.id!,
       navn: formData.get("navn") as string,
       type: formData.get("type") as string,
@@ -143,7 +143,7 @@ const Resources = () => {
       return;
     }
     
-    const { error } = await supabase.from("personnel_competencies").insert([{
+    const { error } = await (supabase as any).from("personnel_competencies").insert([{
       profile_id: selectedPersonId,
       type: formData.get("type") as string,
       navn: formData.get("navn") as string,

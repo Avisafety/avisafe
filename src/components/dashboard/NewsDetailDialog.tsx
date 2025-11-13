@@ -5,7 +5,7 @@ import { format } from "date-fns";
 import { nb } from "date-fns/locale";
 import { Pin, User, Calendar } from "lucide-react";
 
-type News = Tables<"news">;
+type News = any;
 
 interface NewsDetailDialogProps {
   open: boolean;

@@ -12,6 +12,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { StatusBadge } from "@/components/StatusBadge";
 import { format } from "date-fns";
 
@@ -24,6 +28,8 @@ const Resources = () => {
   const [droneDialogOpen, setDroneDialogOpen] = useState(false);
   const [equipmentDialogOpen, setEquipmentDialogOpen] = useState(false);
   const [personnelDialogOpen, setPersonnelDialogOpen] = useState(false);
+  const [selectedPersonId, setSelectedPersonId] = useState<string>("");
+  const [personSearchOpen, setPersonSearchOpen] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -132,8 +138,13 @@ const Resources = () => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     
+    if (!selectedPersonId) {
+      toast.error("Vennligst velg en person");
+      return;
+    }
+    
     const { error } = await supabase.from("personnel_competencies").insert([{
-      profile_id: user?.id!,
+      profile_id: selectedPersonId,
       type: formData.get("type") as string,
       navn: formData.get("navn") as string,
       beskrivelse: (formData.get("beskrivelse") as string) || null,
@@ -147,6 +158,7 @@ const Resources = () => {
     } else {
       toast.success("Kompetanse lagt til");
       setPersonnelDialogOpen(false);
+      setSelectedPersonId("");
       fetchPersonnel();
     }
   };
@@ -388,6 +400,52 @@ const Resources = () => {
                       <DialogTitle>Legg til kompetanse/kurs</DialogTitle>
                     </DialogHeader>
                     <form onSubmit={handleAddCompetency} className="space-y-4">
+                      <div>
+                        <Label>Person</Label>
+                        <Popover open={personSearchOpen} onOpenChange={setPersonSearchOpen}>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              aria-expanded={personSearchOpen}
+                              className="w-full justify-between"
+                            >
+                              {selectedPersonId
+                                ? personnel.find((p) => p.id === selectedPersonId)?.full_name || "Velg person..."
+                                : "Velg person..."}
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-full p-0">
+                            <Command>
+                              <CommandInput placeholder="Søk etter person..." />
+                              <CommandList>
+                                <CommandEmpty>Ingen personer funnet.</CommandEmpty>
+                                <CommandGroup>
+                                  {personnel.map((person) => (
+                                    <CommandItem
+                                      key={person.id}
+                                      value={person.full_name || ""}
+                                      onSelect={() => {
+                                        setSelectedPersonId(person.id);
+                                        setPersonSearchOpen(false);
+                                      }}
+                                    >
+                                      <Check
+                                        className={cn(
+                                          "mr-2 h-4 w-4",
+                                          selectedPersonId === person.id ? "opacity-100" : "opacity-0"
+                                        )}
+                                      />
+                                      {person.full_name || "Ukjent navn"}
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+                      </div>
                       <div>
                         <Label htmlFor="type">Type</Label>
                         <Select name="type" defaultValue="Kurs">

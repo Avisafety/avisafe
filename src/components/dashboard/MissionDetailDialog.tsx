@@ -1,9 +1,11 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Mission } from "@/types";
+import { Tables } from "@/integrations/supabase/types";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { nb } from "date-fns/locale";
-import { MapPin, Calendar, AlertTriangle, Building2 } from "lucide-react";
+import { MapPin, Calendar, AlertTriangle } from "lucide-react";
+
+type Mission = Tables<"missions">;
 
 interface MissionDetailDialogProps {
   open: boolean;
@@ -11,15 +13,13 @@ interface MissionDetailDialogProps {
   mission: Mission | null;
 }
 
-const statusColors = {
+const statusColors: Record<string, string> = {
   Planlagt: "bg-blue-500/20 text-blue-700 dark:text-blue-300 border-blue-500/30",
-  Tildelt: "bg-status-yellow/20 text-yellow-700 dark:text-yellow-300 border-status-yellow/30",
-  Pågår: "bg-status-green/20 text-green-700 dark:text-green-300 border-status-green/30",
+  Pågående: "bg-status-yellow/20 text-yellow-700 dark:text-yellow-300 border-status-yellow/30",
   Fullført: "bg-gray-500/20 text-gray-700 dark:text-gray-300 border-gray-500/30",
-  Avlyst: "bg-status-red/20 text-red-700 dark:text-red-300 border-status-red/30",
 };
 
-const riskColors = {
+const riskColors: Record<string, string> = {
   Lav: "bg-status-green/20 text-green-700 dark:text-green-300 border-status-green/30",
   Middels: "bg-status-yellow/20 text-yellow-700 dark:text-yellow-300 border-status-yellow/30",
   Høy: "bg-status-red/20 text-red-700 dark:text-red-300 border-status-red/30",
@@ -37,10 +37,10 @@ export const MissionDetailDialog = ({ open, onOpenChange, mission }: MissionDeta
         
         <div className="space-y-4">
           <div className="flex flex-wrap gap-2">
-            <Badge className={`${statusColors[mission.status]} border`}>
+            <Badge className={`${statusColors[mission.status] || ""} border`}>
               {mission.status}
             </Badge>
-            <Badge className={`${riskColors[mission.risk_nivå]} border`}>
+            <Badge className={`${riskColors[mission.risk_nivå] || ""} border`}>
               Risiko: {mission.risk_nivå}
             </Badge>
           </div>
@@ -59,18 +59,8 @@ export const MissionDetailDialog = ({ open, onOpenChange, mission }: MissionDeta
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Tidspunkt</p>
                 <p className="text-base">
-                  {format(mission.start, "dd. MMMM yyyy, HH:mm", { locale: nb })}
-                  {mission.slutt && mission.slutt !== mission.start && 
-                    ` - ${format(mission.slutt, "HH:mm", { locale: nb })}`}
+                  {format(new Date(mission.tidspunkt), "dd. MMMM yyyy, HH:mm", { locale: nb })}
                 </p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3">
-              <Building2 className="w-5 h-5 text-muted-foreground mt-0.5" />
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Kunde</p>
-                <p className="text-base">{mission.kunde}</p>
               </div>
             </div>
           </div>

@@ -10,7 +10,7 @@ import { AddNewsDialog } from "./AddNewsDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 
-type News = Tables<"news">;
+type News = any;
 
 export const NewsSection = () => {
   const [selectedNews, setSelectedNews] = useState<News | null>(null);
@@ -43,7 +43,7 @@ export const NewsSection = () => {
 
   const fetchNews = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('news')
         .select('*')
         .order('publisert', { ascending: false });

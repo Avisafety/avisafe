@@ -20,8 +20,8 @@ interface AddMissionDialogProps {
 }
 
 type Profile = Tables<"profiles">;
-type Equipment = Tables<"equipment">;
-type Customer = Tables<"customers">;
+type Equipment = any;
+type Customer = any;
 
 export const AddMissionDialog = ({ open, onOpenChange, onMissionAdded }: AddMissionDialogProps) => {
   const [loading, setLoading] = useState(false);
@@ -69,7 +69,7 @@ export const AddMissionDialog = ({ open, onOpenChange, onMissionAdded }: AddMiss
   };
 
   const fetchEquipment = async () => {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("equipment")
       .select("*")
       .eq("aktiv", true);
@@ -83,7 +83,7 @@ export const AddMissionDialog = ({ open, onOpenChange, onMissionAdded }: AddMiss
   };
 
   const fetchCustomers = async () => {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("customers")
       .select("*")
       .eq("aktiv", true)
@@ -107,7 +107,7 @@ export const AddMissionDialog = ({ open, onOpenChange, onMissionAdded }: AddMiss
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Ikke innlogget");
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("customers")
         .insert({
           navn: newCustomerName.trim(),
@@ -139,7 +139,7 @@ export const AddMissionDialog = ({ open, onOpenChange, onMissionAdded }: AddMiss
       if (!user) throw new Error("Ikke innlogget");
 
       // Insert mission
-      const { data: mission, error: missionError } = await supabase
+      const { data: mission, error: missionError } = await (supabase as any)
         .from("missions")
         .insert({
           tittel: formData.tittel,
@@ -164,7 +164,7 @@ export const AddMissionDialog = ({ open, onOpenChange, onMissionAdded }: AddMiss
           profile_id: profileId,
         }));
         
-        const { error: personnelError } = await supabase
+        const { error: personnelError } = await (supabase as any)
           .from("mission_personnel")
           .insert(personnelData);
         
@@ -178,7 +178,7 @@ export const AddMissionDialog = ({ open, onOpenChange, onMissionAdded }: AddMiss
           equipment_id: equipmentId,
         }));
         
-        const { error: equipmentError } = await supabase
+        const { error: equipmentError } = await (supabase as any)
           .from("mission_equipment")
           .insert(equipmentData);
         

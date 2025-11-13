@@ -41,7 +41,7 @@ export const AddNewsDialog = ({ open, onOpenChange }: AddNewsDialogProps) => {
         .eq('id', user.id)
         .single();
 
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('news')
         .insert({
           tittel: tittel.trim(),

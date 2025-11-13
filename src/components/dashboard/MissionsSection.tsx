@@ -10,7 +10,7 @@ import { AddMissionDialog } from "./AddMissionDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 
-type Mission = Tables<"missions">;
+type Mission = any;
 
 const statusColors: Record<string, string> = {
   Planlagt: "bg-blue-500/20 text-blue-700 dark:text-blue-300",
@@ -54,7 +54,7 @@ export const MissionsSection = () => {
   }, []);
 
   const fetchMissions = async () => {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("missions")
       .select("*")
       .neq("status", "Fullført")

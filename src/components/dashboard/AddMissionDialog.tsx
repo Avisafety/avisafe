@@ -4,11 +4,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, Check, ChevronsUpDown, Plus, X } from "lucide-react";
 import { Tables } from "@/integrations/supabase/types";
+import { cn } from "@/lib/utils";
 
 interface AddMissionDialogProps {
   open: boolean;
@@ -18,13 +21,20 @@ interface AddMissionDialogProps {
 
 type Profile = Tables<"profiles">;
 type Equipment = Tables<"equipment">;
+type Customer = Tables<"customers">;
 
 export const AddMissionDialog = ({ open, onOpenChange, onMissionAdded }: AddMissionDialogProps) => {
   const [loading, setLoading] = useState(false);
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [equipment, setEquipment] = useState<Equipment[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const [selectedPersonnel, setSelectedPersonnel] = useState<string[]>([]);
   const [selectedEquipment, setSelectedEquipment] = useState<string[]>([]);
+  const [selectedCustomer, setSelectedCustomer] = useState<string>("");
+  const [openPersonnelPopover, setOpenPersonnelPopover] = useState(false);
+  const [openCustomerPopover, setOpenCustomerPopover] = useState(false);
+  const [newCustomerName, setNewCustomerName] = useState("");
+  const [showNewCustomerInput, setShowNewCustomerInput] = useState(false);
   
   const [formData, setFormData] = useState({
     tittel: "",
@@ -40,6 +50,7 @@ export const AddMissionDialog = ({ open, onOpenChange, onMissionAdded }: AddMiss
     if (open) {
       fetchProfiles();
       fetchEquipment();
+      fetchCustomers();
     }
   }, [open]);
 
@@ -71,6 +82,54 @@ export const AddMissionDialog = ({ open, onOpenChange, onMissionAdded }: AddMiss
     }
   };
 
+  const fetchCustomers = async () => {
+    const { data, error } = await supabase
+      .from("customers")
+      .select("*")
+      .eq("aktiv", true)
+      .order("navn");
+    
+    if (error) {
+      toast.error("Kunne ikke hente kunder");
+      console.error(error);
+    } else {
+      setCustomers(data || []);
+    }
+  };
+
+  const handleCreateCustomer = async () => {
+    if (!newCustomerName.trim()) {
+      toast.error("Kundenavn kan ikke være tomt");
+      return;
+    }
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Ikke innlogget");
+
+      const { data, error } = await supabase
+        .from("customers")
+        .insert({
+          navn: newCustomerName.trim(),
+          user_id: user.id,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      toast.success("Kunde opprettet!");
+      setCustomers([...customers, data]);
+      setSelectedCustomer(data.id);
+      setNewCustomerName("");
+      setShowNewCustomerInput(false);
+      setOpenCustomerPopover(false);
+    } catch (error) {
+      console.error("Error creating customer:", error);
+      toast.error("Kunne ikke opprette kunde");
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -90,6 +149,7 @@ export const AddMissionDialog = ({ open, onOpenChange, onMissionAdded }: AddMiss
           merknader: formData.merknader,
           status: formData.status,
           risk_nivå: formData.risk_nivå,
+          customer_id: selectedCustomer || null,
           user_id: user.id,
         })
         .select()
@@ -141,6 +201,9 @@ export const AddMissionDialog = ({ open, onOpenChange, onMissionAdded }: AddMiss
       });
       setSelectedPersonnel([]);
       setSelectedEquipment([]);
+      setSelectedCustomer("");
+      setNewCustomerName("");
+      setShowNewCustomerInput(false);
     } catch (error) {
       console.error("Error creating mission:", error);
       toast.error("Kunne ikke opprette oppdrag");
@@ -155,6 +218,11 @@ export const AddMissionDialog = ({ open, onOpenChange, onMissionAdded }: AddMiss
         ? prev.filter(id => id !== profileId)
         : [...prev, profileId]
     );
+    setOpenPersonnelPopover(false);
+  };
+
+  const removePersonnel = (profileId: string) => {
+    setSelectedPersonnel(prev => prev.filter(id => id !== profileId));
   };
 
   const toggleEquipment = (equipmentId: string) => {
@@ -255,23 +323,157 @@ export const AddMissionDialog = ({ open, onOpenChange, onMissionAdded }: AddMiss
           </div>
 
           <div>
+            <Label htmlFor="kunde">Kunde</Label>
+            <Popover open={openCustomerPopover} onOpenChange={setOpenCustomerPopover}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={openCustomerPopover}
+                  className="w-full justify-between"
+                >
+                  {selectedCustomer
+                    ? customers.find((c) => c.id === selectedCustomer)?.navn
+                    : "Velg kunde..."}
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-full p-0">
+                <Command>
+                  <CommandInput placeholder="Søk kunde..." />
+                  <CommandList>
+                    <CommandEmpty>
+                      <div className="p-2">
+                        {showNewCustomerInput ? (
+                          <div className="space-y-2">
+                            <Input
+                              placeholder="Kundenavn"
+                              value={newCustomerName}
+                              onChange={(e) => setNewCustomerName(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  e.preventDefault();
+                                  handleCreateCustomer();
+                                }
+                              }}
+                            />
+                            <div className="flex gap-2">
+                              <Button size="sm" onClick={handleCreateCustomer}>
+                                Opprett
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  setShowNewCustomerInput(false);
+                                  setNewCustomerName("");
+                                }}
+                              >
+                                Avbryt
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <Button
+                            variant="ghost"
+                            className="w-full justify-start"
+                            onClick={() => setShowNewCustomerInput(true)}
+                          >
+                            <Plus className="mr-2 h-4 w-4" />
+                            Legg til ny kunde
+                          </Button>
+                        )}
+                      </div>
+                    </CommandEmpty>
+                    <CommandGroup>
+                      {customers.map((customer) => (
+                        <CommandItem
+                          key={customer.id}
+                          value={customer.navn}
+                          onSelect={() => {
+                            setSelectedCustomer(customer.id);
+                            setOpenCustomerPopover(false);
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              selectedCustomer === customer.id ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          {customer.navn}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          <div>
             <Label>Personell</Label>
-            <div className="border rounded-md p-3 space-y-2 max-h-40 overflow-y-auto">
-              {profiles.map((profile) => (
-                <label key={profile.id} className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={selectedPersonnel.includes(profile.id)}
-                    onChange={() => togglePersonnel(profile.id)}
-                    className="rounded"
-                  />
-                  <span className="text-sm">{profile.full_name || "Ukjent"}</span>
-                </label>
-              ))}
-              {profiles.length === 0 && (
-                <p className="text-sm text-muted-foreground">Ingen godkjente brukere funnet</p>
-              )}
-            </div>
+            <Popover open={openPersonnelPopover} onOpenChange={setOpenPersonnelPopover}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={openPersonnelPopover}
+                  className="w-full justify-between"
+                >
+                  Velg personell...
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-full p-0">
+                <Command>
+                  <CommandInput placeholder="Søk personell..." />
+                  <CommandList>
+                    <CommandEmpty>Ingen personell funnet.</CommandEmpty>
+                    <CommandGroup>
+                      {profiles.map((profile) => (
+                        <CommandItem
+                          key={profile.id}
+                          value={profile.full_name || "Ukjent"}
+                          onSelect={() => togglePersonnel(profile.id)}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              selectedPersonnel.includes(profile.id) ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          {profile.full_name || "Ukjent"}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+            
+            {selectedPersonnel.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {selectedPersonnel.map((id) => {
+                  const profile = profiles.find((p) => p.id === id);
+                  return (
+                    <div
+                      key={id}
+                      className="flex items-center gap-1 bg-secondary text-secondary-foreground px-2 py-1 rounded-md text-sm"
+                    >
+                      <span>{profile?.full_name || "Ukjent"}</span>
+                      <button
+                        type="button"
+                        onClick={() => removePersonnel(id)}
+                        className="hover:bg-secondary-foreground/20 rounded-full p-0.5"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           <div>

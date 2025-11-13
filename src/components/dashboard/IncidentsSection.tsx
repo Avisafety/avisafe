@@ -81,13 +81,21 @@ export const IncidentsSection = () => {
         },
         (payload) => {
           if (payload.eventType === 'INSERT') {
-            setIncidents((current) => [payload.new as Incident, ...current]);
+            const newIncident = payload.new as Incident;
+            if (newIncident.status !== 'Ferdigbehandlet') {
+              setIncidents((current) => [newIncident, ...current]);
+            }
           } else if (payload.eventType === 'UPDATE') {
-            setIncidents((current) =>
-              current.map((incident) =>
-                incident.id === (payload.new as Incident).id ? (payload.new as Incident) : incident
-              )
-            );
+            const updatedIncident = payload.new as Incident;
+            setIncidents((current) => {
+              // Remove if now Ferdigbehandlet, otherwise update
+              if (updatedIncident.status === 'Ferdigbehandlet') {
+                return current.filter((incident) => incident.id !== updatedIncident.id);
+              }
+              return current.map((incident) =>
+                incident.id === updatedIncident.id ? updatedIncident : incident
+              );
+            });
           } else if (payload.eventType === 'DELETE') {
             setIncidents((current) =>
               current.filter((incident) => incident.id !== (payload.old as Incident).id)
@@ -107,7 +115,8 @@ export const IncidentsSection = () => {
       const { data, error } = await supabase
         .from('incidents')
         .select('*')
-        .order('hendelsestidspunkt', { ascending: false });
+        .neq('status', 'Ferdigbehandlet')
+        .order('opprettet_dato', { ascending: false });
 
       if (error) throw error;
 

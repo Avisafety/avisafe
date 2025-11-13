@@ -400,7 +400,7 @@ const Resources = () => {
                       <DialogTitle>Legg til kompetanse/kurs</DialogTitle>
                     </DialogHeader>
                     <form onSubmit={handleAddCompetency} className="space-y-4">
-                      <div>
+                       <div>
                         <Label>Person</Label>
                         <Popover open={personSearchOpen} onOpenChange={setPersonSearchOpen}>
                           <PopoverTrigger asChild>
@@ -416,9 +416,9 @@ const Resources = () => {
                               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
                           </PopoverTrigger>
-                          <PopoverContent className="w-full p-0">
-                            <Command>
-                              <CommandInput placeholder="Søk etter person..." />
+                          <PopoverContent className="w-[400px] p-0 z-50 bg-popover" align="start">
+                            <Command className="bg-popover">
+                              <CommandInput placeholder="Søk etter person..." className="h-9" />
                               <CommandList>
                                 <CommandEmpty>Ingen personer funnet.</CommandEmpty>
                                 <CommandGroup>

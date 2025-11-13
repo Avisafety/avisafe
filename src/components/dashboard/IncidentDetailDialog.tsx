@@ -4,6 +4,11 @@ import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { nb } from "date-fns/locale";
 import { MapPin, Calendar, AlertTriangle, User } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { useState, useEffect } from "react";
 
 type Incident = Tables<"incidents">;
 
@@ -31,6 +36,44 @@ const statusColors = {
 };
 
 export const IncidentDetailDialog = ({ open, onOpenChange, incident }: IncidentDetailDialogProps) => {
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
+
+  useEffect(() => {
+    const checkAdmin = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data } = await supabase.rpc('has_role', {
+          _user_id: user.id,
+          _role: 'admin'
+        });
+        setIsAdmin(data || false);
+      }
+    };
+    checkAdmin();
+  }, []);
+
+  const handleStatusChange = async (newStatus: string) => {
+    if (!incident) return;
+    
+    setUpdatingStatus(true);
+    try {
+      const { error } = await supabase
+        .from('incidents')
+        .update({ status: newStatus })
+        .eq('id', incident.id);
+
+      if (error) throw error;
+
+      toast.success("Status oppdatert");
+    } catch (error) {
+      console.error("Error updating status:", error);
+      toast.error("Kunne ikke oppdatere status");
+    } finally {
+      setUpdatingStatus(false);
+    }
+  };
+
   if (!incident) return null;
 
   return (
@@ -41,6 +84,26 @@ export const IncidentDetailDialog = ({ open, onOpenChange, incident }: IncidentD
         </DialogHeader>
         
         <div className="space-y-4">
+          {isAdmin && (
+            <div className="space-y-2">
+              <Label htmlFor="status-select">Endre status (Admin)</Label>
+              <Select 
+                value={incident.status} 
+                onValueChange={handleStatusChange}
+                disabled={updatingStatus}
+              >
+                <SelectTrigger id="status-select">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Åpen">Åpen</SelectItem>
+                  <SelectItem value="Under behandling">Under behandling</SelectItem>
+                  <SelectItem value="Ferdigbehandlet">Ferdigbehandlet</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
           <div className="flex flex-wrap gap-2">
             <Badge className={`${statusColors[incident.status as keyof typeof statusColors] || 'bg-gray-500/20'} border`}>
               {incident.status}

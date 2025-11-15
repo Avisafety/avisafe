@@ -50,6 +50,48 @@ export type Database = {
         }
         Relationships: []
       }
+      customers: {
+        Row: {
+          adresse: string | null
+          aktiv: boolean
+          epost: string | null
+          id: string
+          kontaktperson: string | null
+          merknader: string | null
+          navn: string
+          oppdatert_dato: string
+          opprettet_dato: string
+          telefon: string | null
+          user_id: string
+        }
+        Insert: {
+          adresse?: string | null
+          aktiv?: boolean
+          epost?: string | null
+          id?: string
+          kontaktperson?: string | null
+          merknader?: string | null
+          navn: string
+          oppdatert_dato?: string
+          opprettet_dato?: string
+          telefon?: string | null
+          user_id: string
+        }
+        Update: {
+          adresse?: string | null
+          aktiv?: boolean
+          epost?: string | null
+          id?: string
+          kontaktperson?: string | null
+          merknader?: string | null
+          navn?: string
+          oppdatert_dato?: string
+          opprettet_dato?: string
+          telefon?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       documents: {
         Row: {
           fil_navn: string | null
@@ -98,6 +140,102 @@ export type Database = {
         }
         Relationships: []
       }
+      drones: {
+        Row: {
+          aktiv: boolean
+          flyvetimer: number
+          id: string
+          merknader: string | null
+          modell: string
+          neste_inspeksjon: string | null
+          oppdatert_dato: string
+          opprettet_dato: string
+          registrering: string
+          sist_inspeksjon: string | null
+          status: string
+          tilgjengelig: boolean
+          user_id: string
+        }
+        Insert: {
+          aktiv?: boolean
+          flyvetimer?: number
+          id?: string
+          merknader?: string | null
+          modell: string
+          neste_inspeksjon?: string | null
+          oppdatert_dato?: string
+          opprettet_dato?: string
+          registrering: string
+          sist_inspeksjon?: string | null
+          status?: string
+          tilgjengelig?: boolean
+          user_id: string
+        }
+        Update: {
+          aktiv?: boolean
+          flyvetimer?: number
+          id?: string
+          merknader?: string | null
+          modell?: string
+          neste_inspeksjon?: string | null
+          oppdatert_dato?: string
+          opprettet_dato?: string
+          registrering?: string
+          sist_inspeksjon?: string | null
+          status?: string
+          tilgjengelig?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
+      equipment: {
+        Row: {
+          aktiv: boolean
+          id: string
+          merknader: string | null
+          navn: string
+          neste_vedlikehold: string | null
+          oppdatert_dato: string
+          opprettet_dato: string
+          serienummer: string
+          sist_vedlikeholdt: string | null
+          status: string
+          tilgjengelig: boolean
+          type: string
+          user_id: string
+        }
+        Insert: {
+          aktiv?: boolean
+          id?: string
+          merknader?: string | null
+          navn: string
+          neste_vedlikehold?: string | null
+          oppdatert_dato?: string
+          opprettet_dato?: string
+          serienummer: string
+          sist_vedlikeholdt?: string | null
+          status?: string
+          tilgjengelig?: boolean
+          type: string
+          user_id: string
+        }
+        Update: {
+          aktiv?: boolean
+          id?: string
+          merknader?: string | null
+          navn?: string
+          neste_vedlikehold?: string | null
+          oppdatert_dato?: string
+          opprettet_dato?: string
+          serienummer?: string
+          sist_vedlikeholdt?: string | null
+          status?: string
+          tilgjengelig?: boolean
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       incidents: {
         Row: {
           alvorlighetsgrad: string
@@ -142,6 +280,291 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      mission_equipment: {
+        Row: {
+          equipment_id: string
+          id: string
+          mission_id: string
+        }
+        Insert: {
+          equipment_id: string
+          id?: string
+          mission_id: string
+        }
+        Update: {
+          equipment_id?: string
+          id?: string
+          mission_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mission_equipment_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "equipment"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mission_equipment_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "missions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mission_personnel: {
+        Row: {
+          id: string
+          mission_id: string
+          profile_id: string
+        }
+        Insert: {
+          id?: string
+          mission_id: string
+          profile_id: string
+        }
+        Update: {
+          id?: string
+          mission_id?: string
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mission_personnel_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "missions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mission_personnel_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mission_sora: {
+        Row: {
+          airspace_mitigations: string | null
+          approved_at: string | null
+          approved_by: string | null
+          arc_initial: string | null
+          arc_residual: string | null
+          conops_summary: string | null
+          created_at: string
+          environment: string | null
+          fgrc: number | null
+          ground_mitigations: string | null
+          id: string
+          igrc: number | null
+          mission_id: string
+          operational_limits: string | null
+          prepared_at: string | null
+          prepared_by: string | null
+          residual_risk_comment: string | null
+          residual_risk_level: string | null
+          sail: string | null
+          sora_status: string
+          updated_at: string
+        }
+        Insert: {
+          airspace_mitigations?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          arc_initial?: string | null
+          arc_residual?: string | null
+          conops_summary?: string | null
+          created_at?: string
+          environment?: string | null
+          fgrc?: number | null
+          ground_mitigations?: string | null
+          id?: string
+          igrc?: number | null
+          mission_id: string
+          operational_limits?: string | null
+          prepared_at?: string | null
+          prepared_by?: string | null
+          residual_risk_comment?: string | null
+          residual_risk_level?: string | null
+          sail?: string | null
+          sora_status?: string
+          updated_at?: string
+        }
+        Update: {
+          airspace_mitigations?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          arc_initial?: string | null
+          arc_residual?: string | null
+          conops_summary?: string | null
+          created_at?: string
+          environment?: string | null
+          fgrc?: number | null
+          ground_mitigations?: string | null
+          id?: string
+          igrc?: number | null
+          mission_id?: string
+          operational_limits?: string | null
+          prepared_at?: string | null
+          prepared_by?: string | null
+          residual_risk_comment?: string | null
+          residual_risk_level?: string | null
+          sail?: string | null
+          sora_status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mission_sora_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: true
+            referencedRelation: "missions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      missions: {
+        Row: {
+          beskrivelse: string | null
+          customer_id: string | null
+          id: string
+          lokasjon: string
+          merknader: string | null
+          oppdatert_dato: string
+          opprettet_dato: string
+          risk_nivå: string
+          slutt_tidspunkt: string | null
+          status: string
+          tidspunkt: string
+          tittel: string
+          user_id: string
+        }
+        Insert: {
+          beskrivelse?: string | null
+          customer_id?: string | null
+          id?: string
+          lokasjon: string
+          merknader?: string | null
+          oppdatert_dato?: string
+          opprettet_dato?: string
+          risk_nivå?: string
+          slutt_tidspunkt?: string | null
+          status?: string
+          tidspunkt: string
+          tittel: string
+          user_id: string
+        }
+        Update: {
+          beskrivelse?: string | null
+          customer_id?: string | null
+          id?: string
+          lokasjon?: string
+          merknader?: string | null
+          oppdatert_dato?: string
+          opprettet_dato?: string
+          risk_nivå?: string
+          slutt_tidspunkt?: string | null
+          status?: string
+          tidspunkt?: string
+          tittel?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "missions_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      news: {
+        Row: {
+          forfatter: string
+          id: string
+          innhold: string
+          oppdatert_dato: string
+          opprettet_dato: string
+          pin_on_top: boolean
+          publisert: string
+          synlighet: string
+          tittel: string
+          user_id: string
+        }
+        Insert: {
+          forfatter: string
+          id?: string
+          innhold: string
+          oppdatert_dato?: string
+          opprettet_dato?: string
+          pin_on_top?: boolean
+          publisert?: string
+          synlighet?: string
+          tittel: string
+          user_id: string
+        }
+        Update: {
+          forfatter?: string
+          id?: string
+          innhold?: string
+          oppdatert_dato?: string
+          opprettet_dato?: string
+          pin_on_top?: boolean
+          publisert?: string
+          synlighet?: string
+          tittel?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      personnel_competencies: {
+        Row: {
+          beskrivelse: string | null
+          id: string
+          navn: string
+          oppdatert_dato: string
+          opprettet_dato: string
+          profile_id: string
+          type: string
+          utloper_dato: string | null
+          utstedt_dato: string | null
+        }
+        Insert: {
+          beskrivelse?: string | null
+          id?: string
+          navn: string
+          oppdatert_dato?: string
+          opprettet_dato?: string
+          profile_id: string
+          type: string
+          utloper_dato?: string | null
+          utstedt_dato?: string | null
+        }
+        Update: {
+          beskrivelse?: string | null
+          id?: string
+          navn?: string
+          oppdatert_dato?: string
+          opprettet_dato?: string
+          profile_id?: string
+          type?: string
+          utloper_dato?: string | null
+          utstedt_dato?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personnel_competencies_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {

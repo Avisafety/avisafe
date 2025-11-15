@@ -1,16 +1,18 @@
 import { GlassCard } from "@/components/GlassCard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, MapPin, Plus } from "lucide-react";
+import { Calendar, MapPin, Plus, FileText } from "lucide-react";
 import { format } from "date-fns";
 import { nb } from "date-fns/locale";
 import { useState, useEffect } from "react";
 import { MissionDetailDialog } from "./MissionDetailDialog";
 import { AddMissionDialog } from "./AddMissionDialog";
+import { SoraAnalysisDialog } from "./SoraAnalysisDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 
 type Mission = any;
+type MissionSora = any;
 
 const statusColors: Record<string, string> = {
   Planlagt: "bg-blue-500/20 text-blue-700 dark:text-blue-300",
@@ -28,7 +30,10 @@ export const MissionsSection = () => {
   const [selectedMission, setSelectedMission] = useState<Mission | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [soraDialogOpen, setSoraDialogOpen] = useState(false);
+  const [selectedSoraMissionId, setSelectedSoraMissionId] = useState<string | undefined>(undefined);
   const [missions, setMissions] = useState<Mission[]>([]);
+  const [missionSoras, setMissionSoras] = useState<Record<string, MissionSora>>({});
 
   useEffect(() => {
     fetchMissions();
@@ -64,12 +69,61 @@ export const MissionsSection = () => {
       console.error("Error fetching missions:", error);
     } else {
       setMissions(data || []);
+      if (data && data.length > 0) {
+        fetchMissionSoras(data.map((m: any) => m.id));
+      }
+    }
+  };
+
+  const fetchMissionSoras = async (missionIds: string[]) => {
+    const { data, error } = await supabase
+      .from("mission_sora")
+      .select("*")
+      .in("mission_id", missionIds);
+
+    if (error) {
+      console.error("Error fetching mission SORAs:", error);
+    } else if (data) {
+      const soraMap: Record<string, MissionSora> = {};
+      data.forEach((sora: any) => {
+        soraMap[sora.mission_id] = sora;
+      });
+      setMissionSoras(soraMap);
     }
   };
 
   const handleMissionClick = (mission: Mission) => {
     setSelectedMission(mission);
     setDialogOpen(true);
+  };
+
+  const handleSoraClick = (missionId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedSoraMissionId(missionId);
+    setSoraDialogOpen(true);
+  };
+
+  const handleNewSora = () => {
+    setSelectedSoraMissionId(undefined);
+    setSoraDialogOpen(true);
+  };
+
+  const handleSoraSaved = () => {
+    fetchMissions();
+  };
+
+  const getSoraBadgeColor = (status: string) => {
+    switch (status) {
+      case "Ferdig":
+        return "bg-status-green/20 text-green-700 dark:text-green-300";
+      case "Under arbeid":
+        return "bg-status-yellow/20 text-yellow-700 dark:text-yellow-300";
+      case "Revidert":
+        return "bg-blue-500/20 text-blue-700 dark:text-blue-300";
+      case "Ikke startet":
+      default:
+        return "bg-gray-500/20 text-gray-700 dark:text-gray-300";
+    }
   };
 
   return (
@@ -80,9 +134,14 @@ export const MissionsSection = () => {
             <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
             <h2 className="text-sm sm:text-base font-semibold">Kommende oppdrag</h2>
           </div>
-          <Button size="sm" onClick={() => setAddDialogOpen(true)}>
-            <Plus className="w-4 h-4" />
-          </Button>
+          <div className="flex gap-2">
+            <Button size="sm" variant="outline" onClick={handleNewSora} title="Ny SORA-analyse">
+              <FileText className="w-4 h-4" />
+            </Button>
+            <Button size="sm" onClick={() => setAddDialogOpen(true)}>
+              <Plus className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
 
         <div className="space-y-1.5 sm:space-y-2 flex-1 overflow-y-auto">
@@ -96,10 +155,20 @@ export const MissionsSection = () => {
                 className="p-2 sm:p-3 bg-card/30 rounded hover:bg-card/50 transition-colors cursor-pointer"
               >
                 <div className="flex items-start justify-between gap-2 mb-1 sm:mb-1.5">
-                  <h3 className="font-semibold text-xs sm:text-sm">{mission.tittel}</h3>
-                  <Badge className={`${statusColors[mission.status] || ""} text-[10px] sm:text-xs px-1 sm:px-1.5 py-0.5 whitespace-nowrap`}>
-                    {mission.status}
-                  </Badge>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-xs sm:text-sm">{mission.tittel}</h3>
+                  </div>
+                  <div className="flex gap-1 sm:gap-2 items-center">
+                    <Badge className={`${statusColors[mission.status] || ""} text-[10px] sm:text-xs px-1 sm:px-1.5 py-0.5 whitespace-nowrap`}>
+                      {mission.status}
+                    </Badge>
+                    <Badge 
+                      onClick={(e) => handleSoraClick(mission.id, e)}
+                      className={`${getSoraBadgeColor(missionSoras[mission.id]?.sora_status || "Ikke startet")} text-[10px] sm:text-xs px-1 sm:px-1.5 py-0.5 whitespace-nowrap cursor-pointer hover:opacity-80`}
+                    >
+                      SORA: {missionSoras[mission.id]?.sora_status || "Ingen"}
+                    </Badge>
+                  </div>
                 </div>
                 
                 <div className="flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm text-muted-foreground mb-1 sm:mb-1.5">
@@ -131,6 +200,13 @@ export const MissionsSection = () => {
         open={addDialogOpen}
         onOpenChange={setAddDialogOpen}
         onMissionAdded={fetchMissions}
+      />
+      
+      <SoraAnalysisDialog
+        open={soraDialogOpen}
+        onOpenChange={setSoraDialogOpen}
+        missionId={selectedSoraMissionId}
+        onSaved={handleSoraSaved}
       />
     </>
   );

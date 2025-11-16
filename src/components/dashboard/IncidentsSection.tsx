@@ -189,16 +189,16 @@ export const IncidentsSection = () => {
 
   return (
     <>
-      <GlassCard className="h-full flex flex-col">
-      <div className="flex items-center justify-between mb-2 sm:mb-3">
-        <div className="flex items-center gap-1.5 sm:gap-2">
-          <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-destructive" />
-          <h2 className="text-sm sm:text-base font-semibold">Hendelser</h2>
+      <GlassCard className="h-full flex flex-col overflow-hidden">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2 sm:mb-3 gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+          <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-destructive flex-shrink-0" />
+          <h2 className="text-sm sm:text-base font-semibold truncate">Hendelser</h2>
         </div>
         <Button 
           size="sm" 
           variant="destructive" 
-          className="gap-1 h-7 sm:h-8 text-xs sm:text-sm px-2 sm:px-3"
+          className="gap-1 h-7 sm:h-8 text-xs sm:text-sm px-2 sm:px-3 flex-shrink-0"
           onClick={() => setDialogOpen(true)}
         >
           <AlertTriangle className="w-3 h-3 sm:w-4 sm:h-4" />

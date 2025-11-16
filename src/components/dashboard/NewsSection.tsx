@@ -82,11 +82,11 @@ export const NewsSection = () => {
 
   return (
     <>
-      <GlassCard className="h-auto">
-        <div className="flex items-center justify-between mb-2 sm:mb-3">
-          <div className="flex items-center gap-2">
-            <Newspaper className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-            <h2 className="text-sm sm:text-base font-semibold">Nyheter</h2>
+      <GlassCard className="h-auto overflow-hidden">
+        <div className="flex items-center justify-between mb-2 sm:mb-3 gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <Newspaper className="w-4 h-4 sm:w-5 sm:h-5 text-primary flex-shrink-0" />
+            <h2 className="text-sm sm:text-base font-semibold truncate">Nyheter</h2>
           </div>
           <Button
             size="sm"

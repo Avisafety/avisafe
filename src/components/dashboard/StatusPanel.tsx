@@ -61,18 +61,18 @@ const StatusCard = ({
       
       <div className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2">{total}</div>
       
-      <div className="flex gap-1 sm:gap-2 text-xs sm:text-sm">
+      <div className="flex flex-wrap gap-1 sm:gap-2 text-[10px] sm:text-xs">
         <div className="flex items-center gap-0.5 sm:gap-1">
-          <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-status-green" />
-          <span>{counts.Grønn}</span>
+          <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-status-green flex-shrink-0" />
+          <span className="whitespace-nowrap">{counts.Grønn}</span>
         </div>
         <div className="flex items-center gap-0.5 sm:gap-1">
-          <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-status-yellow" />
-          <span>{counts.Gul}</span>
+          <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-status-yellow flex-shrink-0" />
+          <span className="whitespace-nowrap">{counts.Gul}</span>
         </div>
         <div className="flex items-center gap-0.5 sm:gap-1">
-          <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-status-red" />
-          <span>{counts.Rød}</span>
+          <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-status-red flex-shrink-0" />
+          <span className="whitespace-nowrap">{counts.Rød}</span>
         </div>
       </div>
     </div>
@@ -90,9 +90,9 @@ export const StatusPanel = () => {
 
   return (
     <>
-      <GlassCard>
+      <GlassCard className="overflow-hidden">
         <h2 className="text-sm sm:text-base font-semibold mb-3">Ressursstatus (RAG)</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3 w-full">
           <StatusCard 
             title="Droner" 
             icon={Plane} 

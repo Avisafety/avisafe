@@ -128,13 +128,13 @@ export const MissionsSection = () => {
 
   return (
     <>
-      <GlassCard className="h-[400px] flex flex-col">
-        <div className="flex items-center justify-between mb-2 sm:mb-3">
-          <div className="flex items-center gap-2">
-            <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-            <h2 className="text-sm sm:text-base font-semibold">Kommende oppdrag</h2>
+      <GlassCard className="h-[400px] flex flex-col overflow-hidden">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2 sm:mb-3 gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-primary flex-shrink-0" />
+            <h2 className="text-sm sm:text-base font-semibold truncate">Kommende oppdrag</h2>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-shrink-0">
             <Button size="sm" variant="outline" onClick={handleNewSora} title="Ny SORA-analyse">
               <FileText className="w-4 h-4" />
             </Button>
@@ -155,10 +155,10 @@ export const MissionsSection = () => {
                 className="p-2 sm:p-3 bg-card/30 rounded hover:bg-card/50 transition-colors cursor-pointer"
               >
                 <div className="flex items-start justify-between gap-2 mb-1 sm:mb-1.5">
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-xs sm:text-sm">{mission.tittel}</h3>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-xs sm:text-sm truncate">{mission.tittel}</h3>
                   </div>
-                  <div className="flex gap-1 sm:gap-2 items-center">
+                  <div className="flex flex-wrap gap-1 sm:gap-2 items-center flex-shrink-0">
                     <Badge className={`${statusColors[mission.status] || ""} text-[10px] sm:text-xs px-1 sm:px-1.5 py-0.5 whitespace-nowrap`}>
                       {mission.status}
                     </Badge>

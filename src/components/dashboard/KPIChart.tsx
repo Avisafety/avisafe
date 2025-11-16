@@ -13,10 +13,10 @@ const data = [
 
 export const KPIChart = () => {
   return (
-    <GlassCard className="h-auto">
-      <div className="flex items-center gap-2 mb-3">
-        <TrendingUp className="w-5 h-5 text-primary" />
-        <h2 className="text-base font-semibold">Hendelser siste 6 mnd</h2>
+    <GlassCard className="h-auto overflow-hidden">
+      <div className="flex items-center gap-2 mb-3 min-w-0">
+        <TrendingUp className="w-5 h-5 text-primary flex-shrink-0" />
+        <h2 className="text-sm sm:text-base font-semibold truncate">Hendelser siste 6 mnd</h2>
       </div>
 
       <ResponsiveContainer width="100%" height={200}>

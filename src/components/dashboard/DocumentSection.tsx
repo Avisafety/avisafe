@@ -211,13 +211,13 @@ export const DocumentSection = () => {
 
   return (
     <>
-      <GlassCard className="h-[400px] flex flex-col">
-      <div className="flex items-center justify-between mb-2 sm:mb-3">
-        <div className="flex items-center gap-1.5 sm:gap-2">
-          <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-          <h2 className="text-sm sm:text-base font-semibold">Dokumenter</h2>
+      <GlassCard className="h-[400px] flex flex-col overflow-hidden">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2 sm:mb-3 gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+          <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-primary flex-shrink-0" />
+          <h2 className="text-sm sm:text-base font-semibold truncate">Dokumenter</h2>
         </div>
-        <Button size="sm" className="gap-1 h-7 sm:h-8 text-xs sm:text-sm px-2 sm:px-3" onClick={() => setDialogOpen(true)}>
+        <Button size="sm" className="gap-1 h-7 sm:h-8 text-xs sm:text-sm px-2 sm:px-3 flex-shrink-0" onClick={() => setDialogOpen(true)}>
           <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
           <span className="hidden xs:inline">Legg til</span>
         </Button>

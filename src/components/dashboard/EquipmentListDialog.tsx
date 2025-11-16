@@ -13,7 +13,7 @@ interface EquipmentListDialogProps {
 export const EquipmentListDialog = ({ open, onOpenChange, equipment }: EquipmentListDialogProps) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle>Utstyr ({equipment.length})</DialogTitle>
         </DialogHeader>

@@ -274,7 +274,7 @@ export const DocumentSection = () => {
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-md mx-4 sm:mx-auto">
+        <DialogContent className="w-[95vw] max-w-md max-h-[90vh] overflow-y-auto p-4 sm:p-6">
           <DialogHeader>
             <DialogTitle>Last opp dokument</DialogTitle>
             <DialogDescription>

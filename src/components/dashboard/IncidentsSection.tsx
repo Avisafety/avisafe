@@ -287,7 +287,7 @@ export const IncidentsSection = () => {
       </Tabs>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto mx-4 sm:mx-auto">
+        <DialogContent className="w-[95vw] max-w-md max-h-[90vh] overflow-y-auto p-4 sm:p-6">
           <DialogHeader>
             <DialogTitle>Rapporter hendelse</DialogTitle>
             <DialogDescription>

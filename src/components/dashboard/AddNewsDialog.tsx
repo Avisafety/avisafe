@@ -98,7 +98,7 @@ export const AddNewsDialog = ({ open, onOpenChange, news }: AddNewsDialogProps) 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="w-[95vw] max-w-md max-h-[90vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle>{news ? "Rediger nyhet" : "Legg til nyhet"}</DialogTitle>
         </DialogHeader>

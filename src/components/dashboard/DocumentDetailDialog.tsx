@@ -225,7 +225,7 @@ export const DocumentDetailDialog = ({ open, onOpenChange, document, status }: D
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto mx-4 sm:mx-auto">
+      <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
           <div className="flex items-start justify-between gap-2">
             <DialogTitle className="text-lg sm:text-xl">{document.tittel}</DialogTitle>

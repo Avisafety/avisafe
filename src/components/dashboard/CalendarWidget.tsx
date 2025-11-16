@@ -294,11 +294,11 @@ export const CalendarWidget = () => {
       </GlassCard>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              {selectedDate && format(selectedDate, "dd. MMMM yyyy", { locale: nb })}
-            </DialogTitle>
+      <DialogContent className="w-[95vw] max-w-md max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+        <DialogHeader>
+          <DialogTitle>
+            {selectedDate && format(selectedDate, "dd. MMMM yyyy", { locale: nb })}
+          </DialogTitle>
             <DialogDescription>
               Hendelser og aktiviteter for denne dagen
             </DialogDescription>

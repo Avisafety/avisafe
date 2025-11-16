@@ -16,6 +16,7 @@ export const NewsSection = () => {
   const [selectedNews, setSelectedNews] = useState<News | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [editingNews, setEditingNews] = useState<News | null>(null);
   const [news, setNews] = useState<News[]>([]);
   
   useEffect(() => {
@@ -64,6 +65,19 @@ export const NewsSection = () => {
   const handleNewsClick = (news: News) => {
     setSelectedNews(news);
     setDialogOpen(true);
+  };
+
+  const handleEdit = (news: News) => {
+    setEditingNews(news);
+    setDialogOpen(false);
+    setAddDialogOpen(true);
+  };
+
+  const handleAddDialogClose = (open: boolean) => {
+    setAddDialogOpen(open);
+    if (!open) {
+      setEditingNews(null);
+    }
   };
 
   return (
@@ -120,16 +134,18 @@ export const NewsSection = () => {
       </div>
     </GlassCard>
     
-    <NewsDetailDialog 
-      open={dialogOpen}
-      onOpenChange={setDialogOpen}
-      news={selectedNews}
-    />
-    
-    <AddNewsDialog
-      open={addDialogOpen}
-      onOpenChange={setAddDialogOpen}
-    />
+      <NewsDetailDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        news={selectedNews}
+        onEdit={handleEdit}
+      />
+      
+      <AddNewsDialog
+        open={addDialogOpen}
+        onOpenChange={handleAddDialogClose}
+        news={editingNews}
+      />
     </>
   );
 };

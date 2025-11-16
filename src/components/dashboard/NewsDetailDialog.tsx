@@ -1,9 +1,11 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tables } from "@/integrations/supabase/types";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { nb } from "date-fns/locale";
-import { Pin, User, Calendar } from "lucide-react";
+import { Pin, User, Calendar, Pencil } from "lucide-react";
+import { useAdminCheck } from "@/hooks/useAdminCheck";
 
 type News = any;
 
@@ -11,20 +13,40 @@ interface NewsDetailDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   news: News | null;
+  onEdit?: (news: News) => void;
 }
 
-export const NewsDetailDialog = ({ open, onOpenChange, news }: NewsDetailDialogProps) => {
+export const NewsDetailDialog = ({ open, onOpenChange, news, onEdit }: NewsDetailDialogProps) => {
+  const { isAdmin } = useAdminCheck();
+  
   if (!news) return null;
+
+  const handleEdit = () => {
+    onEdit?.(news);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <div className="flex items-start gap-2">
-            {news.pin_on_top && (
-              <Pin className="w-5 h-5 text-primary flex-shrink-0 mt-1" />
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex items-start gap-2 flex-1">
+              {news.pin_on_top && (
+                <Pin className="w-5 h-5 text-primary flex-shrink-0 mt-1" />
+              )}
+              <DialogTitle className="text-xl">{news.tittel}</DialogTitle>
+            </div>
+            {isAdmin && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleEdit}
+                className="flex-shrink-0"
+              >
+                <Pencil className="w-4 h-4 mr-1" />
+                Rediger
+              </Button>
             )}
-            <DialogTitle className="text-xl">{news.tittel}</DialogTitle>
           </div>
         </DialogHeader>
         

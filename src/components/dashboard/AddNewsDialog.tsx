@@ -6,18 +6,32 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface AddNewsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  news?: any | null;
 }
 
-export const AddNewsDialog = ({ open, onOpenChange }: AddNewsDialogProps) => {
+export const AddNewsDialog = ({ open, onOpenChange, news }: AddNewsDialogProps) => {
   const [tittel, setTittel] = useState("");
   const [innhold, setInnhold] = useState("");
   const [pinOnTop, setPinOnTop] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  // Initialize form with news data when editing
+  useEffect(() => {
+    if (news && open) {
+      setTittel(news.tittel || "");
+      setInnhold(news.innhold || "");
+      setPinOnTop(news.pin_on_top || false);
+    } else if (!open) {
+      setTittel("");
+      setInnhold("");
+      setPinOnTop(false);
+    }
+  }, [news, open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,19 +55,35 @@ export const AddNewsDialog = ({ open, onOpenChange }: AddNewsDialogProps) => {
         .eq('id', user.id)
         .single();
 
-      const { error } = await (supabase as any)
-        .from('news')
-        .insert({
-          tittel: tittel.trim(),
-          innhold: innhold.trim(),
-          pin_on_top: pinOnTop,
-          user_id: user.id,
-          forfatter: profile?.full_name || 'Ukjent'
-        });
+      if (news) {
+        // Update existing news
+        const { error } = await (supabase as any)
+          .from('news')
+          .update({
+            tittel: tittel.trim(),
+            innhold: innhold.trim(),
+            pin_on_top: pinOnTop,
+            oppdatert_dato: new Date().toISOString()
+          })
+          .eq('id', news.id);
 
-      if (error) throw error;
+        if (error) throw error;
+        toast.success("Nyhet oppdatert");
+      } else {
+        // Insert new news
+        const { error } = await (supabase as any)
+          .from('news')
+          .insert({
+            tittel: tittel.trim(),
+            innhold: innhold.trim(),
+            pin_on_top: pinOnTop,
+            user_id: user.id,
+            forfatter: profile?.full_name || 'Ukjent'
+          });
 
-      toast.success("Nyhet lagt til");
+        if (error) throw error;
+        toast.success("Nyhet lagt til");
+      }
       setTittel("");
       setInnhold("");
       setPinOnTop(false);
@@ -70,7 +100,7 @@ export const AddNewsDialog = ({ open, onOpenChange }: AddNewsDialogProps) => {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Legg til nyhet</DialogTitle>
+          <DialogTitle>{news ? "Rediger nyhet" : "Legg til nyhet"}</DialogTitle>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -119,7 +149,7 @@ export const AddNewsDialog = ({ open, onOpenChange }: AddNewsDialogProps) => {
               Avbryt
             </Button>
             <Button type="submit" disabled={submitting}>
-              {submitting ? "Legger til..." : "Legg til"}
+              {submitting ? (news ? "Lagrer..." : "Legger til...") : (news ? "Lagre" : "Legg til")}
             </Button>
           </div>
         </form>

@@ -21,13 +21,13 @@ export function OpenAIPMap() {
       subdomains: "abc",
     }).addTo(map);
 
-    // OpenAIP-luftrom (hvis apiKey/tiles.airspace er satt)
+    // OpenAIP-luftrom (bygger URL med apiKey i stedet for {key}-option)
     if (openAipConfig.apiKey && openAipConfig.tiles.airspace) {
-      L.tileLayer(openAipConfig.tiles.airspace, {
+      const airspaceUrl = openAipConfig.tiles.airspace.replace("{key}", openAipConfig.apiKey);
+
+      L.tileLayer(airspaceUrl, {
         opacity: 0.55,
         subdomains: "abc",
-        // brukes til {key} i URL-templaten
-        key: openAipConfig.apiKey,
       }).addTo(map);
     } else if (!openAipConfig.apiKey) {
       console.warn("OpenAIP API key mangler – viser kun OSM-bakgrunn (ingen luftromslag).");

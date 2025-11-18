@@ -8,6 +8,7 @@ const DEFAULT_POS: [number, number] = [63.7, 9.6];
 
 export function OpenAIPMap() {
   const mapRef = useRef<HTMLDivElement | null>(null);
+  const userMarkerRef = useRef<L.CircleMarker | null>(null);
 
   useEffect(() => {
     if (!mapRef.current) return;
@@ -39,6 +40,21 @@ export function OpenAIPMap() {
         (pos) => {
           const coords: [number, number] = [pos.coords.latitude, pos.coords.longitude];
           map.setView(coords, 9);
+          
+          // Legg til brukerens posisjon som blå sirkel
+          if (userMarkerRef.current) {
+            userMarkerRef.current.setLatLng(coords);
+          } else {
+            userMarkerRef.current = L.circleMarker(coords, {
+              radius: 8,
+              fillColor: '#3b82f6',
+              fillOpacity: 1,
+              color: '#ffffff',
+              weight: 2,
+            }).addTo(map);
+            
+            userMarkerRef.current.bindPopup("Din posisjon");
+          }
         },
         () => {
           console.log("Geolokasjon nektet, bruker default posisjon");

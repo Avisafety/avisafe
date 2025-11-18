@@ -26,7 +26,7 @@ export function OpenAIPMap() {
       L.tileLayer(openAipConfig.tiles.airspace, {
         opacity: 0.55,
         subdomains: "abc",
-        // VIKTIG: brukes til {key} i URL-templaten
+        // brukes til {key} i URL-templaten
         key: openAipConfig.apiKey,
       }).addTo(map);
     } else if (!openAipConfig.apiKey) {
@@ -65,7 +65,10 @@ export function OpenAIPMap() {
         }
 
         const json = await response.json();
-        const aircraft = json.aircraft || [];
+        console.log("Airplanes.live response:", json);
+
+        // Airplanes.live bruker typisk "ac" som liste med fly
+        const aircraft = json.ac || json.aircraft || [];
 
         aircraftLayer.clearLayers();
 
@@ -123,6 +126,5 @@ export function OpenAIPMap() {
     };
   }, []);
 
-  // ÉN enkel return – ingen ekstra variant og ingen Aviationstack-tekst
   return <div ref={mapRef} style={{ width: "100%", height: "100vh" }} />;
 }

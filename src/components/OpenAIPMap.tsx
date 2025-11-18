@@ -56,8 +56,6 @@ export function OpenAIPMap() {
 
         const url = `${airplanesLiveConfig.baseUrl}/point/` + `${center.lat}/${center.lng}/${radiusNm}`;
 
-        console.log("Airplanes.live URL:", url);
-
         const response = await fetch(url);
         if (!response.ok) {
           console.warn("Airplanes.live error:", response.status, response.statusText);
@@ -65,7 +63,6 @@ export function OpenAIPMap() {
         }
 
         const json = await response.json();
-        console.log("Airplanes.live response:", json);
 
         // Airplanes.live bruker typisk "ac" som liste med fly
         const aircraft = json.ac || json.aircraft || [];
@@ -77,12 +74,20 @@ export function OpenAIPMap() {
           const lon = ac.lon;
           if (lat == null || lon == null) continue;
 
-          const marker = L.circleMarker([lat, lon], {
-            radius: 4,
-            color: "#ffdd00",
-            weight: 1,
-            fillOpacity: 0.9,
+          const track = typeof ac.track === "number" ? ac.track : 0;
+
+          // Lite fly-ikon (✈️), rotert etter heading
+          const icon = L.divIcon({
+            className: "", // vi styler direkte i HTML
+            html: `<div style="
+              font-size: 18px;
+              transform: translate(-50%, -50%) rotate(${track}deg);
+              transform-origin: center center;
+            ">✈️</div>`,
+            iconSize: [18, 18],
           });
+
+          const marker = L.marker([lat, lon], { icon });
 
           const popup = `
             <div>

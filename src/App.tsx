@@ -14,28 +14,31 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <ErrorBoundary>
-        <AuthProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/" element={<Index />} />
-              <Route path="/admin" element={<Admin />} />
-              <Route path="/ressurser" element={<Resources />} />
-              <Route path="/kart" element={<Kart />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </AuthProvider>
-      </ErrorBoundary>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+// FIX: Refactored to explicit function body to avoid render2 error with provider nesting
+const App = () => {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <ErrorBoundary>
+          <AuthProvider>
+            <BrowserRouter>
+              <Toaster />
+              <Sonner />
+              <Routes>
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/" element={<Index />} />
+                <Route path="/admin" element={<Admin />} />
+                <Route path="/ressurser" element={<Resources />} />
+                <Route path="/kart" element={<Kart />} />
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </AuthProvider>
+        </ErrorBoundary>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;

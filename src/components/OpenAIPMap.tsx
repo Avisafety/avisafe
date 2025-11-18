@@ -2,9 +2,9 @@ import { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { openAipConfig } from "@/lib/openaip";
-import { aviationStackConfig } from "@/lib/aviationstack";
+import { airplanesLiveConfig } from "@/lib/airplaneslive";
 
-const DEFAULT_POSITION: [number, number] = [63.7, 9.6];
+const DEFAULT_POS: [number, number] = [63.7, 9.6];
 
 export function OpenAIPMap() {
   const mapRef = useRef<HTMLDivElement | null>(null);
@@ -13,26 +13,26 @@ export function OpenAIPMap() {
     if (!mapRef.current) return;
 
     // Init Leaflet-kart
-    const map = L.map(mapRef.current).setView(DEFAULT_POSITION, 8);
+    const map = L.map(mapRef.current).setView(DEFAULT_POS, 8);
 
-    // OSM bakgrunn
+    // OSM base
     L.tileLayer(openAipConfig.tiles.base, {
       attribution: openAipConfig.attribution,
       subdomains: "abc",
     }).addTo(map);
 
-    // OpenAIP-luftrom
+    // OpenAIP luftrom-overlay (hvis API-key finnes)
     if (openAipConfig.apiKey) {
       const airspaceUrl = openAipConfig.tiles.airspace.replace('{key}', openAipConfig.apiKey);
       L.tileLayer(airspaceUrl, {
-        opacity: 0.6,
+        opacity: 0.55,
         subdomains: "abc",
       }).addTo(map);
     } else {
-      console.warn("Mangler VITE_OPENAIP_API_KEY – viser kun OSM.");
+      console.warn("Mangler VITE_OPENAIP_API_KEY – viser kun OSM uten luftromslag.");
     }
 
-    // Geolokasjon med fallback
+    // Prøv å sette kartet til brukerens posisjon
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
@@ -40,7 +40,7 @@ export function OpenAIPMap() {
             pos.coords.latitude,
             pos.coords.longitude,
           ];
-          map.setView(coords, 10);
+          map.setView(coords, 9);
         },
         () => {
           console.log("Geolokasjon nektet, bruker default posisjon");
@@ -48,96 +48,78 @@ export function OpenAIPMap() {
       );
     }
 
-    // 🔹 Aviationstack: layer for live flights
-    const flightsLayer = L.layerGroup().addTo(map);
+    // Lag et eget lag for flytrafikk
+    const aircraftLayer = L.layerGroup().addTo(map);
 
-    async function fetchFlights() {
+    async function fetchAircraft() {
       try {
-        if (!aviationStackConfig.accessKey) {
-          console.warn("VITE_AVIATIONSTACK_ACCESS_KEY mangler – hopper over flights.");
-          return;
-        }
+        const center = map.getCenter();
+        const radiusNm = 150; // radius i nautiske mil rundt kartets sentrum
 
-        // Vi henter et globalt sett med aktive flights (begrenset til f.eks. 100)
         const url =
-          `${aviationStackConfig.baseUrl}/flights` +
-          `?access_key=${encodeURIComponent(aviationStackConfig.accessKey)}` +
-          `&flight_status=active&limit=100`;
+          `${airplanesLiveConfig.baseUrl}/point/` +
+          `${center.lat}/${center.lng}/${radiusNm}`;
 
-        const res = await fetch(url);
+        console.log("Airplanes.live URL:", url);
 
-        if (!res.ok) {
-          console.warn("Aviationstack error:", res.status, res.statusText);
+        const response = await fetch(url);
+        if (!response.ok) {
+          console.warn("Airplanes.live error:", response.status, response.statusText);
           return;
         }
 
-        const json = await res.json();
-        const data = json.data || [];
+        const json = await response.json();
 
-        flightsLayer.clearLayers();
+        // JSON-format er typisk { aircraft: [ {...}, {...} ] }
+        const aircraft = json.aircraft || [];
 
-        const bounds = map.getBounds();
+        aircraftLayer.clearLayers();
 
-        for (const flight of data) {
-          const live = flight.live;
-          if (!live) continue;
-          if (live.is_ground) continue;
-
-          const lat = live.latitude;
-          const lon = live.longitude;
+        for (const ac of aircraft) {
+          const lat = ac.lat;
+          const lon = ac.lon;
 
           if (lat == null || lon == null) continue;
 
-          // Filtrer til det kartutsnittet brukeren faktisk ser
-          if (!bounds.contains([lat, lon])) continue;
-
-          const callsign =
-            (flight.flight && (flight.flight.iata || flight.flight.icao || flight.flight.number)) ||
-            "Ukjent flight";
-
-          const airlineName = flight.airline?.name || "";
-          const altitude = live.altitude;
-          const speed = live.speed_horizontal;
-          const direction = live.direction;
-
           const marker = L.circleMarker([lat, lon], {
             radius: 4,
+            color: "#ffdd00",
             weight: 1,
             fillOpacity: 0.9,
           });
 
-          const infoParts: string[] = [];
-          infoParts.push(`<div><strong>${callsign}</strong></div>`);
-          if (airlineName) infoParts.push(`<div>${airlineName}</div>`);
-          if (altitude != null) {
-            infoParts.push(`<div>Høyde: ${Math.round(altitude)} m</div>`);
-          }
-          if (speed != null) {
-            infoParts.push(`<div>Fart: ${Math.round(speed)} km/t</div>`);
-          }
-          if (direction != null) {
-            infoParts.push(`<div>Kurs: ${Math.round(direction)}°</div>`);
-          }
+          const popup = `
+            <div>
+              <strong>${ac.call || "Ukjent callsign"}</strong><br/>
+              ICAO24: ${ac.hex || "?"}<br/>
+              Høyde: ${ac.alt_baro ?? "?"} ft<br/>
+              Fart: ${ac.gs ?? "?"} kt<br/>
+              Heading: ${ac.track ?? "?"}°<br/>
+              Type: ${ac.t || "?"}
+            </div>
+          `;
 
-          marker.bindPopup(`<div>${infoParts.join("")}</div>`);
-          marker.addTo(flightsLayer);
+          marker.bindPopup(popup);
+          marker.addTo(aircraftLayer);
         }
       } catch (err) {
-        console.error("Feil ved henting av Aviationstack-data:", err);
+        console.error("Feil ved henting av Airplanes.live:", err);
       }
     }
 
     // Første kall
-    fetchFlights();
+    fetchAircraft();
 
-    // Oppdater hvert 30. sekund (tilpass mht. request-kvote)
-    const interval = setInterval(fetchFlights, 30000);
+    // Oppdater hvert 10. sekund (API er rate limited til 1 request/sek)
+    const interval = setInterval(fetchAircraft, 10000);
 
-    // Oppdater også når brukeren panorerer/zoomer (men ikke spam)
-    let panTimeout: number | undefined;
+    // Oppdater når bruker panorerer/zoomer (med enkel debounce)
+    let refreshTimer: number | undefined;
     map.on("moveend", () => {
-      if (panTimeout) window.clearTimeout(panTimeout);
-      panTimeout = window.setTimeout(fetchFlights, 1000);
+      if (refreshTimer) {
+        clearTimeout(refreshTimer);
+      }
+      refreshTimer = window.setTimeout(fetchAircraft, 800);
     });
 
     // Rydd opp ved unmount
@@ -148,31 +130,5 @@ export function OpenAIPMap() {
     };
   }, []);
 
-  // Hvis OpenAIP key mangler, viser vi fortsatt kart (kun OSM + flights)
-  if (!openAipConfig.apiKey) {
-    return (
-      <div style={{ width: "100%", height: "100vh" }}>
-        <div style={{ padding: 16 }}>
-          <h2>OpenAIP API key mangler</h2>
-          <p>
-            Sett miljøvariabelen <code>VITE_OPENAIP_API_KEY</code> for luftromslag.
-            Flight-laget fra Aviationstack vil fortsatt forsøkes vist hvis
-            <code>VITE_AVIATIONSTACK_ACCESS_KEY</code> er satt.
-          </p>
-        </div>
-        <div
-          ref={mapRef}
-          style={{ width: "100%", height: "70vh", marginTop: "1rem" }}
-        />
-      </div>
-    );
-  }
-
-  // Normal visning: fullskjermkart med luftrom + flights
-  return (
-    <div
-      ref={mapRef}
-      style={{ width: "100%", height: "100vh" }}
-    />
-  );
+  return <div ref={mapRef} style={{ width: "100%", height: "100vh" }} />;
 }

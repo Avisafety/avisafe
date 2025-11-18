@@ -156,22 +156,28 @@ export function OpenAIPMap({ onMissionClick }: OpenAIPMapProps = {}) {
           if (!mission.latitude || !mission.longitude) return;
 
           // Velg farge basert på status
-          let markerColor = '#3b82f6'; // blå (default)
+          let markerColor = '#3b82f6'; // blå (default/Planlagt)
           if (mission.status === 'Pågående') markerColor = '#eab308'; // gul
           else if (mission.status === 'Fullført') markerColor = '#6b7280'; // grå
           
-          // Opprett en pin med divIcon (lokasjon emoji)
+          // Opprett en pin med divIcon (SVG MapPin)
           const icon = L.divIcon({
-            className: '', // tom className for å unngå default Leaflet styles
+            className: '',
             html: `<div style="
-              font-size: 32px;
-              line-height: 1;
-              text-align: center;
+              width: 32px;
+              height: 32px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
               filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
-              color: ${markerColor};
-            ">📍</div>`,
+            ">
+              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="${markerColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
+                <circle cx="12" cy="10" r="3" fill="${markerColor}"/>
+              </svg>
+            </div>`,
             iconSize: [32, 32],
-            iconAnchor: [16, 32], // bunnen av pinnen er ankerpunktet
+            iconAnchor: [16, 32],
           });
 
           const marker = L.marker([mission.latitude, mission.longitude], { icon });

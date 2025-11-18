@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, useMap } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
-import { openAipConfig } from '@/lib/openaip';
+import { useEffect, useState } from "react";
+import { MapContainer, TileLayer, useMap } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import { openAipConfig } from "@/lib/openaip";
 
 interface MapPosition {
   lat: number;
@@ -9,8 +9,8 @@ interface MapPosition {
 }
 
 const DEFAULT_POSITION: MapPosition = {
-  lat: 63.7000,
-  lng: 9.6000,
+  lat: 63.7,
+  lng: 9.6,
 };
 
 function LocationMarker() {
@@ -19,20 +19,24 @@ function LocationMarker() {
 
   useEffect(() => {
     map.locate();
-    
-    map.on('locationfound', (e) => {
+
+    function onLocationFound(e: any) {
       setPosition(e.latlng);
       map.flyTo(e.latlng, map.getZoom());
-    });
+    }
 
-    map.on('locationerror', () => {
-      console.log('Location access denied, using default position');
+    function onLocationError() {
+      console.log("Location access denied, using default position");
       setPosition(DEFAULT_POSITION);
-    });
+      map.setView(DEFAULT_POSITION, map.getZoom());
+    }
+
+    map.on("locationfound", onLocationFound);
+    map.on("locationerror", onLocationError);
 
     return () => {
-      map.off('locationfound');
-      map.off('locationerror');
+      map.off("locationfound", onLocationFound);
+      map.off("locationerror", onLocationError);
     };
   }, [map]);
 
@@ -40,15 +44,23 @@ function LocationMarker() {
 }
 
 export function OpenAIPMap() {
-  const [center] = useState<[number, number]>([DEFAULT_POSITION.lat, DEFAULT_POSITION.lng]);
+  const [center] = useState<[number, number]>([
+    DEFAULT_POSITION.lat,
+    DEFAULT_POSITION.lng,
+  ]);
+
+  console.log("OpenAIP API key:", openAipConfig.apiKey);
 
   if (!openAipConfig.apiKey) {
     return (
       <div className="w-full h-screen flex items-center justify-center bg-background">
         <div className="text-center p-8 bg-card rounded-lg shadow-lg max-w-md">
-          <h2 className="text-2xl font-bold text-foreground mb-4">OpenAIP API Key Required</h2>
+          <h2 className="text-2xl font-bold text-foreground mb-4">
+            OpenAIP API Key Required
+          </h2>
           <p className="text-muted-foreground">
-            Please add your OpenAIP API key to the environment variables as VITE_OPENAIP_API_KEY
+            Please add your OpenAIP API key to the environment variables as
+            VITE_OPENAIP_API_KEY
           </p>
         </div>
       </div>
@@ -70,10 +82,7 @@ export function OpenAIPMap() {
           attribution='&copy; <a href="https://www.openaip.net">OpenAIP</a>'
           url={baseTileUrl}
         />
-        <TileLayer
-          url={airspaceTileUrl}
-          opacity={0.5}
-        />
+        <TileLayer url={airspaceTileUrl} opacity={0.5} />
         <LocationMarker />
       </MapContainer>
     </div>

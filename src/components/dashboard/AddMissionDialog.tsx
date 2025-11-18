@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { Loader2, Check, ChevronsUpDown, Plus, X } from "lucide-react";
 import { Tables } from "@/integrations/supabase/types";
 import { cn } from "@/lib/utils";
+import { AddressAutocomplete } from "@/components/AddressAutocomplete";
 
 interface AddMissionDialogProps {
   open: boolean;
@@ -252,12 +253,11 @@ export const AddMissionDialog = ({ open, onOpenChange, onMissionAdded }: AddMiss
           </div>
 
           <div>
-            <Label htmlFor="lokasjon">Lokasjon *</Label>
-            <Input
-              id="lokasjon"
+            <AddressAutocomplete
+              label="Adresse / lokasjon *"
               value={formData.lokasjon}
-              onChange={(e) => setFormData({ ...formData, lokasjon: e.target.value })}
-              required
+              onChange={(value) => setFormData({ ...formData, lokasjon: value })}
+              placeholder="Søk etter adresse..."
             />
           </div>
 

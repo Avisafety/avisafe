@@ -2,8 +2,15 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Shield, Check, X, UserCog, Trash2 } from "lucide-react";
+import { Shield, LogOut, Trash2, Check, X, Menu, Settings, UserCog } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ProfileDialog } from "@/components/ProfileDialog";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -235,19 +242,56 @@ const Admin = () => {
 
   return (
     <div className="min-h-screen bg-background w-full overflow-x-hidden">
-      <header className="bg-card border-b sticky top-0 z-50 w-full">
-        <div className="w-full px-4 py-4">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-3 flex-shrink-0">
-              <Shield className="w-8 h-8 text-primary" />
-              <div>
-                <h1 className="text-lg sm:text-xl font-bold whitespace-nowrap">Administrator Panel</h1>
-                <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">Brukergodkjenning og rolletildeling</p>
+      <header className="bg-card/20 backdrop-blur-md border-b border-glass sticky top-0 z-50 w-full">
+        <div className="w-full px-3 sm:px-4 py-2 sm:py-3">
+          <div className="flex items-center justify-between gap-1 sm:gap-2">
+            <Button 
+              variant="ghost" 
+              className="flex items-center gap-1 sm:gap-2 lg:gap-3 hover:bg-transparent p-0 flex-shrink-0"
+              onClick={() => navigate("/")}
+            >
+              <Shield className="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 text-primary" />
+              <div className="text-left">
+                <h1 className="text-sm sm:text-base lg:text-xl xl:text-2xl font-bold whitespace-nowrap">SMS Admin</h1>
+                <p className="text-xs lg:text-sm text-primary hidden lg:block">Brukergodkjenning</p>
               </div>
-            </div>
-            <Button variant="outline" onClick={() => navigate("/")} className="flex-shrink-0">
-              Tilbake til Dashboard
             </Button>
+            
+            {/* Mobile Navigation - Hamburger Menu */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild className="md:hidden">
+                <Button variant="ghost" size="sm">
+                  <Menu className="w-5 h-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="bg-card/95 backdrop-blur-md border-glass z-50">
+                <DropdownMenuItem onClick={() => navigate("/kart")}>Kart</DropdownMenuItem>
+                <DropdownMenuItem>Dokumenter</DropdownMenuItem>
+                <DropdownMenuItem>Kalender</DropdownMenuItem>
+                <DropdownMenuItem>Hendelser</DropdownMenuItem>
+                <DropdownMenuItem>Status</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/ressurser")}>Ressurser</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            
+            <nav className="flex items-center gap-1 sm:gap-2 lg:gap-4 flex-shrink-0">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate("/")}
+              >
+                Tilbake
+              </Button>
+              <ProfileDialog />
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate("/auth")}
+                title="Logg ut"
+              >
+                <LogOut className="w-4 h-4" />
+              </Button>
+            </nav>
           </div>
         </div>
       </header>

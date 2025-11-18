@@ -164,7 +164,7 @@ const Resources = () => {
   };
 
   return (
-    <div className="min-h-screen relative">
+    <div className="min-h-screen relative w-full overflow-x-hidden">
       {/* Background with gradient overlay */}
       <div 
         className="fixed inset-0 z-0"
@@ -178,16 +178,16 @@ const Resources = () => {
       />
 
       {/* Content */}
-      <div className="relative z-10">
+      <div className="relative z-10 w-full">
         {/* Header */}
-        <header className="bg-card/20 backdrop-blur-md border-b border-glass sticky top-0 z-50">
-          <div className="container mx-auto px-3 sm:px-4 py-2 sm:py-3 max-w-[1800px]">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 sm:gap-3">
+        <header className="bg-card/20 backdrop-blur-md border-b border-glass sticky top-0 z-50 w-full">
+          <div className="w-full px-3 sm:px-4 py-2 sm:py-3">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
                 <Shield className="w-8 h-8 sm:w-10 sm:h-10 text-primary" />
                 <div>
-                  <h1 className="text-lg sm:text-2xl font-bold">Ressurser</h1>
-                  <p className="text-xs sm:text-base text-primary hidden sm:block">Administrer droner, utstyr og personell</p>
+                  <h1 className="text-base sm:text-xl lg:text-2xl font-bold whitespace-nowrap">Ressurser</h1>
+                  <p className="text-xs sm:text-sm lg:text-base text-primary hidden sm:block">Administrer droner, utstyr og personell</p>
                 </div>
               </div>
               
@@ -195,7 +195,7 @@ const Resources = () => {
                 variant="ghost"
                 size="sm"
                 onClick={() => navigate("/")}
-                className="gap-2"
+                className="gap-2 flex-shrink-0"
               >
                 <ArrowLeft className="w-4 h-4" />
                 Tilbake
@@ -205,7 +205,7 @@ const Resources = () => {
         </header>
 
         {/* Main Content */}
-        <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 max-w-[1800px]">
+        <main className="w-full px-3 sm:px-4 py-4 sm:py-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
             {/* Droner Section */}
             <GlassCard>

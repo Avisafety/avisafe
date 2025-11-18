@@ -234,25 +234,25 @@ const Admin = () => {
   const approvedUsers = profiles.filter((p) => p.approved);
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="bg-card border-b sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+    <div className="min-h-screen bg-background w-full overflow-x-hidden">
+      <header className="bg-card border-b sticky top-0 z-50 w-full">
+        <div className="w-full px-4 py-4">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-3 flex-shrink-0">
               <Shield className="w-8 h-8 text-primary" />
               <div>
-                <h1 className="text-xl font-bold">Administrator Panel</h1>
-                <p className="text-sm text-muted-foreground">Brukergodkjenning og rolletildeling</p>
+                <h1 className="text-lg sm:text-xl font-bold whitespace-nowrap">Administrator Panel</h1>
+                <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">Brukergodkjenning og rolletildeling</p>
               </div>
             </div>
-            <Button variant="outline" onClick={() => navigate("/")}>
+            <Button variant="outline" onClick={() => navigate("/")} className="flex-shrink-0">
               Tilbake til Dashboard
             </Button>
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="w-full px-4 py-8">
         <div className="space-y-6">
           {/* Pending Users */}
           {pendingUsers.length > 0 && (

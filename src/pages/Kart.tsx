@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ProfileDialog } from "@/components/ProfileDialog";
 import { PendingApprovalsBadge } from "@/components/PendingApprovalsBadge";
+import { MissionDetailDialog } from "@/components/dashboard/MissionDetailDialog";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
@@ -18,6 +19,8 @@ export default function KartPage() {
   const navigate = useNavigate();
   const { signOut, user } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
+  const [selectedMission, setSelectedMission] = useState<any>(null);
+  const [missionDialogOpen, setMissionDialogOpen] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -43,6 +46,11 @@ export default function KartPage() {
   const handleSignOut = async () => {
     await signOut();
     navigate("/auth");
+  };
+
+  const handleMissionClick = (mission: any) => {
+    setSelectedMission(mission);
+    setMissionDialogOpen(true);
   };
 
   return (
@@ -119,8 +127,15 @@ export default function KartPage() {
 
       {/* Map Content */}
       <div className="flex-1 relative overflow-hidden">
-        <OpenAIPMap />
+        <OpenAIPMap onMissionClick={handleMissionClick} />
       </div>
+
+      {/* Mission Detail Dialog */}
+      <MissionDetailDialog
+        open={missionDialogOpen}
+        onOpenChange={setMissionDialogOpen}
+        mission={selectedMission}
+      />
     </div>
   );
 }

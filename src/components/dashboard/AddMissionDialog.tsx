@@ -45,6 +45,8 @@ export const AddMissionDialog = ({ open, onOpenChange, onMissionAdded }: AddMiss
     merknader: "",
     status: "Planlagt",
     risk_nivå: "Lav",
+    latitude: null as number | null,
+    longitude: null as number | null,
   });
 
   useEffect(() => {
@@ -152,6 +154,8 @@ export const AddMissionDialog = ({ open, onOpenChange, onMissionAdded }: AddMiss
           risk_nivå: formData.risk_nivå,
           customer_id: selectedCustomer || null,
           user_id: user.id,
+          latitude: formData.latitude,
+          longitude: formData.longitude,
         })
         .select()
         .single();
@@ -199,6 +203,8 @@ export const AddMissionDialog = ({ open, onOpenChange, onMissionAdded }: AddMiss
         merknader: "",
         status: "Planlagt",
         risk_nivå: "Lav",
+        latitude: null,
+        longitude: null,
       });
       setSelectedPersonnel([]);
       setSelectedEquipment([]);
@@ -257,6 +263,14 @@ export const AddMissionDialog = ({ open, onOpenChange, onMissionAdded }: AddMiss
               label="Adresse / lokasjon *"
               value={formData.lokasjon}
               onChange={(value) => setFormData({ ...formData, lokasjon: value })}
+              onSelectLocation={(location) => {
+                setFormData({ 
+                  ...formData, 
+                  lokasjon: location.address,
+                  latitude: location.lat,
+                  longitude: location.lon
+                });
+              }}
               placeholder="Søk etter adresse..."
             />
           </div>

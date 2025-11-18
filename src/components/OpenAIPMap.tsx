@@ -3,12 +3,18 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { openAipConfig } from "@/lib/openaip";
 import { airplanesLiveConfig } from "@/lib/airplaneslive";
+import { supabase } from "@/integrations/supabase/client";
 
 const DEFAULT_POS: [number, number] = [63.7, 9.6];
 
-export function OpenAIPMap() {
+interface OpenAIPMapProps {
+  onMissionClick?: (mission: any) => void;
+}
+
+export function OpenAIPMap({ onMissionClick }: OpenAIPMapProps = {}) {
   const mapRef = useRef<HTMLDivElement | null>(null);
   const userMarkerRef = useRef<L.CircleMarker | null>(null);
+  const missionsLayerRef = useRef<L.LayerGroup | null>(null);
 
   useEffect(() => {
     if (!mapRef.current) return;
@@ -64,6 +70,10 @@ export function OpenAIPMap() {
 
     // Eget lag for flytrafikk (Airplanes.live)
     const aircraftLayer = L.layerGroup().addTo(map);
+
+    // Eget lag for oppdrag/missions
+    const missionsLayer = L.layerGroup().addTo(map);
+    missionsLayerRef.current = missionsLayer;
 
     async function fetchAircraft() {
       try {
@@ -124,11 +134,91 @@ export function OpenAIPMap() {
       }
     }
 
+    // Funksjon for å hente og vise oppdrag
+    async function fetchAndDisplayMissions() {
+      try {
+        const { data: missions, error } = await supabase
+          .from("missions")
+          .select("*")
+          .not("latitude", "is", null)
+          .not("longitude", "is", null);
+
+        if (error) {
+          console.error("Feil ved henting av oppdrag:", error);
+          return;
+        }
+
+        if (!missionsLayerRef.current) return;
+        
+        missionsLayerRef.current.clearLayers();
+
+        missions?.forEach((mission) => {
+          if (!mission.latitude || !mission.longitude) return;
+
+          // Velg farge basert på status
+          let markerColor = '#3b82f6'; // blå (default)
+          if (mission.status === 'Pågående') markerColor = '#eab308'; // gul
+          else if (mission.status === 'Fullført') markerColor = '#6b7280'; // grå
+          
+          // Opprett en pin med L.circleMarker
+          const marker = L.circleMarker([mission.latitude, mission.longitude], {
+            radius: 10,
+            fillColor: markerColor,
+            fillOpacity: 0.8,
+            color: '#ffffff',
+            weight: 2,
+          });
+
+          // Popup med oppdragsinformasjon
+          const popupContent = `
+            <div style="min-width: 200px;">
+              <strong style="font-size: 14px;">${mission.tittel}</strong><br/>
+              <span style="color: #666; font-size: 12px;">📍 ${mission.lokasjon}</span><br/>
+              <span style="color: #666; font-size: 12px;">🕐 ${new Date(mission.tidspunkt).toLocaleString('nb-NO')}</span><br/>
+              <span style="display: inline-block; margin-top: 4px; padding: 2px 8px; background: ${markerColor}20; border: 1px solid ${markerColor}; border-radius: 4px; font-size: 11px;">
+                ${mission.status}
+              </span>
+            </div>
+          `;
+
+          marker.bindPopup(popupContent);
+
+          // Klikk-handler for å åpne detalj-dialog
+          marker.on('click', () => {
+            if (onMissionClick) {
+              onMissionClick(mission);
+            }
+          });
+
+          marker.addTo(missionsLayerRef.current!);
+        });
+      } catch (err) {
+        console.error("Feil ved henting av oppdrag:", err);
+      }
+    }
+
     // Første kall
     fetchAircraft();
+    fetchAndDisplayMissions();
 
     // Oppdater hvert 10. sekund (API er rate limited til 1 request/sek)
     const interval = setInterval(fetchAircraft, 10000);
+
+    // Lytt til endringer i missions-tabellen (realtime)
+    const missionsChannel = supabase
+      .channel('missions-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'missions'
+        },
+        () => {
+          fetchAndDisplayMissions(); // Oppdater pins ved endringer
+        }
+      )
+      .subscribe();
 
     // Oppdater etter pan/zoom (med enkel debounce)
     let refreshTimer: number | undefined;
@@ -143,6 +233,7 @@ export function OpenAIPMap() {
     return () => {
       clearInterval(interval);
       map.off("moveend");
+      missionsChannel.unsubscribe();
       map.remove();
     };
   }, []);

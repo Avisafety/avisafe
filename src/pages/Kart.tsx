@@ -1,7 +1,9 @@
-import { OpenAIPMap } from '@/components/OpenAIPMap';
+import { OpenAIPMap } from "@/components/OpenAIPMap";
 
-const Kart = () => {
-  return <OpenAIPMap />;
-};
-
-export default Kart;
+export default function KartPage() {
+  return (
+    <div className="w-full h-screen">
+      <OpenAIPMap />
+    </div>
+  );
+}

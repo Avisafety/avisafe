@@ -219,23 +219,26 @@ const Index = () => {
         <header className="bg-card/20 backdrop-blur-md border-b border-glass sticky top-0 z-50">
           <div className="container mx-auto px-3 sm:px-4 py-2 sm:py-3 max-w-[1800px]">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 sm:gap-3">
+              <Button 
+                variant="ghost" 
+                className="flex items-center gap-2 sm:gap-3 hover:bg-transparent p-0"
+                onClick={() => navigate("/")}
+              >
                 <Shield className="w-8 h-8 sm:w-10 sm:h-10 text-primary" />
-                <div>
+                <div className="text-left">
                   <h1 className="text-lg sm:text-2xl font-bold">Sikkerhetsstyringssystem</h1>
                   <p className="text-xs sm:text-base text-primary hidden sm:block">Drone Operations Management</p>
                 </div>
-              </div>
+              </Button>
               
               {/* Desktop Navigation */}
               <nav className="hidden md:flex items-center gap-1">
-                <Button variant="ghost" size="sm">Dashboard</Button>
+                <Button variant="ghost" size="sm" onClick={() => navigate("/kart")}>Kart</Button>
                 <Button variant="ghost" size="sm">Dokumenter</Button>
                 <Button variant="ghost" size="sm">Kalender</Button>
                 <Button variant="ghost" size="sm">Hendelser</Button>
                 <Button variant="ghost" size="sm">Status</Button>
                 <Button variant="ghost" size="sm" onClick={() => navigate("/ressurser")}>Ressurser</Button>
-                <Button variant="ghost" size="sm" onClick={() => navigate("/kart")}>Kart</Button>
               </nav>
               
               <nav className="flex items-center gap-2 sm:gap-4">

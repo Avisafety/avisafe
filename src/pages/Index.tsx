@@ -235,6 +235,7 @@ const Index = () => {
                 <Button variant="ghost" size="sm">Hendelser</Button>
                 <Button variant="ghost" size="sm">Status</Button>
                 <Button variant="ghost" size="sm" onClick={() => navigate("/ressurser")}>Ressurser</Button>
+                <Button variant="ghost" size="sm" onClick={() => navigate("/kart")}>Kart</Button>
               </nav>
               
               <nav className="flex items-center gap-2 sm:gap-4">

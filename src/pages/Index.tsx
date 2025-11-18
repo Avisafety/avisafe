@@ -200,7 +200,7 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen relative">
+    <div className="min-h-screen relative w-full overflow-x-hidden">
       {/* Background with gradient overlay */}
       <div 
         className="fixed inset-0 z-0"
@@ -214,25 +214,25 @@ const Index = () => {
       />
 
       {/* Content */}
-      <div className="relative z-10">
+      <div className="relative z-10 w-full">
         {/* Header */}
-        <header className="bg-card/20 backdrop-blur-md border-b border-glass sticky top-0 z-50">
-          <div className="container mx-auto px-3 sm:px-4 py-2 sm:py-3 max-w-[1800px]">
-            <div className="flex items-center justify-between">
+        <header className="bg-card/20 backdrop-blur-md border-b border-glass sticky top-0 z-50 w-full">
+          <div className="w-full px-3 sm:px-4 py-2 sm:py-3">
+            <div className="flex items-center justify-between gap-2">
               <Button 
                 variant="ghost" 
-                className="flex items-center gap-2 sm:gap-3 hover:bg-transparent p-0"
+                className="flex items-center gap-2 sm:gap-3 hover:bg-transparent p-0 flex-shrink-0"
                 onClick={() => navigate("/")}
               >
                 <Shield className="w-8 h-8 sm:w-10 sm:h-10 text-primary" />
                 <div className="text-left">
-                  <h1 className="text-lg sm:text-2xl font-bold">Sikkerhetsstyringssystem</h1>
-                  <p className="text-xs sm:text-base text-primary hidden sm:block">Drone Operations Management</p>
+                  <h1 className="text-base sm:text-xl lg:text-2xl font-bold whitespace-nowrap">Sikkerhetsstyringssystem</h1>
+                  <p className="text-xs sm:text-sm lg:text-base text-primary hidden sm:block">Drone Operations Management</p>
                 </div>
               </Button>
               
               {/* Desktop Navigation */}
-              <nav className="hidden md:flex items-center gap-1">
+              <nav className="hidden md:flex items-center gap-1 flex-shrink">
                 <Button variant="ghost" size="sm" onClick={() => navigate("/kart")}>Kart</Button>
                 <Button variant="ghost" size="sm">Dokumenter</Button>
                 <Button variant="ghost" size="sm">Kalender</Button>
@@ -241,7 +241,7 @@ const Index = () => {
                 <Button variant="ghost" size="sm" onClick={() => navigate("/ressurser")}>Ressurser</Button>
               </nav>
               
-              <nav className="flex items-center gap-2 sm:gap-4">
+              <nav className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
                 {isAdmin && (
                   <Button
                     variant="ghost"
@@ -269,7 +269,7 @@ const Index = () => {
         </header>
 
         {/* Main Content */}
-        <main className="container mx-auto px-3 sm:px-4 py-3 sm:py-5 max-w-[1800px]">
+        <main className="w-full px-3 sm:px-4 py-3 sm:py-5">
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}

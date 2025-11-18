@@ -35,11 +35,6 @@ export function OpenAIPMap({ onMissionClick }: OpenAIPMapProps = {}) {
       L.tileLayer(airspaceUrl, {
         opacity: 0.55,
         subdomains: "abc",
-        maxNativeZoom: 12,        // OpenAIP tiles finnes typisk opp til zoom 12
-        maxZoom: 18,              // Tillat kartet å zoome til 18, men skalerer tiles fra zoom 12
-        keepBuffer: 4,            // Behold tiles utenfor viewport for smidigere pan/zoom
-        updateWhenZooming: false, // Ikke oppdater tiles mens zoom pågår (glattere animasjon)
-        errorTileUrl: '',         // Tom tile ved feil i stedet for placeholder
       }).addTo(map);
     } else if (!openAipConfig.apiKey) {
       console.warn("OpenAIP API key mangler – viser kun OSM-bakgrunn (ingen luftromslag).");

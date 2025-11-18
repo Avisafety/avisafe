@@ -30,7 +30,7 @@ export const MissionDetailDialog = ({ open, onOpenChange, mission }: MissionDeta
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+      <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-6 !z-[1000]">
         <DialogHeader>
           <DialogTitle className="text-lg sm:text-xl">{mission.tittel}</DialogTitle>
         </DialogHeader>

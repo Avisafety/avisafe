@@ -160,14 +160,21 @@ export function OpenAIPMap({ onMissionClick }: OpenAIPMapProps = {}) {
           if (mission.status === 'Pågående') markerColor = '#eab308'; // gul
           else if (mission.status === 'Fullført') markerColor = '#6b7280'; // grå
           
-          // Opprett en pin med L.circleMarker
-          const marker = L.circleMarker([mission.latitude, mission.longitude], {
-            radius: 10,
-            fillColor: markerColor,
-            fillOpacity: 0.8,
-            color: '#ffffff',
-            weight: 2,
+          // Opprett en pin med divIcon (lokasjon emoji)
+          const icon = L.divIcon({
+            className: '', // tom className for å unngå default Leaflet styles
+            html: `<div style="
+              font-size: 32px;
+              line-height: 1;
+              text-align: center;
+              filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+              color: ${markerColor};
+            ">📍</div>`,
+            iconSize: [32, 32],
+            iconAnchor: [16, 32], // bunnen av pinnen er ankerpunktet
           });
+
+          const marker = L.marker([mission.latitude, mission.longitude], { icon });
 
           // Popup med oppdragsinformasjon
           const popupContent = `

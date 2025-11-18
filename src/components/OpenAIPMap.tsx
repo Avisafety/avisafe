@@ -15,40 +15,36 @@ export function OpenAIPMap() {
     // Init Leaflet-kart
     const map = L.map(mapRef.current).setView(DEFAULT_POS, 8);
 
-    // OSM base
+    // OSM-bakgrunn
     L.tileLayer(openAipConfig.tiles.base, {
       attribution: openAipConfig.attribution,
       subdomains: "abc",
     }).addTo(map);
 
-    // OpenAIP luftrom-overlay (hvis API-key finnes)
-    if (openAipConfig.apiKey) {
-      const airspaceUrl = openAipConfig.tiles.airspace.replace('{key}', openAipConfig.apiKey);
-      L.tileLayer(airspaceUrl, {
+    // OpenAIP-luftrom (hvis apiKey/tiles.airspace er satt)
+    if (openAipConfig.apiKey && openAipConfig.tiles.airspace) {
+      L.tileLayer(openAipConfig.tiles.airspace, {
         opacity: 0.55,
         subdomains: "abc",
       }).addTo(map);
-    } else {
-      console.warn("Mangler VITE_OPENAIP_API_KEY – viser kun OSM uten luftromslag.");
+    } else if (!openAipConfig.apiKey) {
+      console.warn("OpenAIP API key mangler – viser kun OSM-bakgrunn (ingen luftromslag).");
     }
 
-    // Prøv å sette kartet til brukerens posisjon
+    // Geolokasjon med fallback
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
-          const coords: [number, number] = [
-            pos.coords.latitude,
-            pos.coords.longitude,
-          ];
+          const coords: [number, number] = [pos.coords.latitude, pos.coords.longitude];
           map.setView(coords, 9);
         },
         () => {
           console.log("Geolokasjon nektet, bruker default posisjon");
-        }
+        },
       );
     }
 
-    // Lag et eget lag for flytrafikk
+    // Eget lag for flytrafikk (Airplanes.live)
     const aircraftLayer = L.layerGroup().addTo(map);
 
     async function fetchAircraft() {
@@ -56,9 +52,7 @@ export function OpenAIPMap() {
         const center = map.getCenter();
         const radiusNm = 150; // radius i nautiske mil rundt kartets sentrum
 
-        const url =
-          `${airplanesLiveConfig.baseUrl}/point/` +
-          `${center.lat}/${center.lng}/${radiusNm}`;
+        const url = `${airplanesLiveConfig.baseUrl}/point/` + `${center.lat}/${center.lng}/${radiusNm}`;
 
         console.log("Airplanes.live URL:", url);
 
@@ -69,8 +63,6 @@ export function OpenAIPMap() {
         }
 
         const json = await response.json();
-
-        // JSON-format er typisk { aircraft: [ {...}, {...} ] }
         const aircraft = json.aircraft || [];
 
         aircraftLayer.clearLayers();
@@ -78,7 +70,6 @@ export function OpenAIPMap() {
         for (const ac of aircraft) {
           const lat = ac.lat;
           const lon = ac.lon;
-
           if (lat == null || lon == null) continue;
 
           const marker = L.circleMarker([lat, lon], {
@@ -113,7 +104,7 @@ export function OpenAIPMap() {
     // Oppdater hvert 10. sekund (API er rate limited til 1 request/sek)
     const interval = setInterval(fetchAircraft, 10000);
 
-    // Oppdater når bruker panorerer/zoomer (med enkel debounce)
+    // Oppdater etter pan/zoom (med enkel debounce)
     let refreshTimer: number | undefined;
     map.on("moveend", () => {
       if (refreshTimer) {
@@ -130,5 +121,6 @@ export function OpenAIPMap() {
     };
   }, []);
 
+  // ÉN enkel return – ingen ekstra variant og ingen Aviationstack-tekst
   return <div ref={mapRef} style={{ width: "100%", height: "100vh" }} />;
 }

@@ -188,20 +188,6 @@ export function OpenAIPMap({ onMissionClick }: OpenAIPMapProps = {}) {
 
           const marker = L.marker([mission.latitude, mission.longitude], { icon });
 
-          // Popup med oppdragsinformasjon
-          const popupContent = `
-            <div style="min-width: 200px;">
-              <strong style="font-size: 14px;">${mission.tittel}</strong><br/>
-              <span style="color: #666; font-size: 12px;">📍 ${mission.lokasjon}</span><br/>
-              <span style="color: #666; font-size: 12px;">🕐 ${new Date(mission.tidspunkt).toLocaleString('nb-NO')}</span><br/>
-              <span style="display: inline-block; margin-top: 4px; padding: 2px 8px; background: ${markerColor}20; border: 1px solid ${markerColor}; border-radius: 4px; font-size: 11px;">
-                ${mission.status}
-              </span>
-            </div>
-          `;
-
-          marker.bindPopup(popupContent);
-
           // Klikk-handler for å åpne detalj-dialog
           marker.on('click', () => {
             if (onMissionClick) {

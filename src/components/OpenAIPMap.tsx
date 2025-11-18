@@ -80,7 +80,7 @@ export function OpenAIPMap() {
           const icon = L.divIcon({
             className: "", // vi styler direkte i HTML
             html: `<div style="
-              font-size: 18px;
+              font-size: 26px;
               transform: translate(-50%, -50%) rotate(${track}deg);
               transform-origin: center center;
             ">✈️</div>`,

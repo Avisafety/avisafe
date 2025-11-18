@@ -432,7 +432,9 @@ export type Database = {
           beskrivelse: string | null
           customer_id: string | null
           id: string
+          latitude: number | null
           lokasjon: string
+          longitude: number | null
           merknader: string | null
           oppdatert_dato: string
           opprettet_dato: string
@@ -447,7 +449,9 @@ export type Database = {
           beskrivelse?: string | null
           customer_id?: string | null
           id?: string
+          latitude?: number | null
           lokasjon: string
+          longitude?: number | null
           merknader?: string | null
           oppdatert_dato?: string
           opprettet_dato?: string
@@ -462,7 +466,9 @@ export type Database = {
           beskrivelse?: string | null
           customer_id?: string | null
           id?: string
+          latitude?: number | null
           lokasjon?: string
+          longitude?: number | null
           merknader?: string | null
           oppdatert_dato?: string
           opprettet_dato?: string

@@ -26,6 +26,8 @@ export function OpenAIPMap() {
       L.tileLayer(openAipConfig.tiles.airspace, {
         opacity: 0.55,
         subdomains: "abc",
+        // VIKTIG: brukes til {key} i URL-templaten
+        key: openAipConfig.apiKey,
       }).addTo(map);
     } else if (!openAipConfig.apiKey) {
       console.warn("OpenAIP API key mangler – viser kun OSM-bakgrunn (ingen luftromslag).");

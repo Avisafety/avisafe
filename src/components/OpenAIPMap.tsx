@@ -1,87 +1,81 @@
-import { useEffect, useState } from "react";
-import { MapContainer, TileLayer, useMap } from "react-leaflet";
+import { useEffect, useRef } from "react";
+import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { openAipConfig } from "@/lib/openaip";
 
-interface MapPosition {
-  lat: number;
-  lng: number;
-}
-
-const DEFAULT_POSITION: MapPosition = {
-  lat: 63.7,
-  lng: 9.6,
-};
-
-function LocationMarker() {
-  const map = useMap();
-  const [position, setPosition] = useState<MapPosition | null>(null);
-
-  useEffect(() => {
-    map.locate();
-
-    function onLocationFound(e: any) {
-      setPosition(e.latlng);
-      map.flyTo(e.latlng, map.getZoom());
-    }
-
-    function onLocationError() {
-      console.log("Location access denied, using default position");
-      setPosition(DEFAULT_POSITION);
-      map.setView(DEFAULT_POSITION, map.getZoom());
-    }
-
-    map.on("locationfound", onLocationFound);
-    map.on("locationerror", onLocationError);
-
-    return () => {
-      map.off("locationfound", onLocationFound);
-      map.off("locationerror", onLocationError);
-    };
-  }, [map]);
-
-  return null;
-}
+const DEFAULT_POSITION: [number, number] = [63.7, 9.6];
 
 export function OpenAIPMap() {
-  const [center] = useState<[number, number]>([
-    DEFAULT_POSITION.lat,
-    DEFAULT_POSITION.lng,
-  ]);
+  const mapRef = useRef<HTMLDivElement | null>(null);
 
-  console.log("OpenAIP API key:", openAipConfig.apiKey);
+  useEffect(() => {
+    if (!mapRef.current) return;
 
+    // Init Leaflet-kart
+    const map = L.map(mapRef.current).setView(DEFAULT_POSITION, 8);
+
+    // OSM bakgrunn
+    L.tileLayer(openAipConfig.tiles.base, {
+      attribution: openAipConfig.attribution,
+      subdomains: "abc",
+    }).addTo(map);
+
+    // OpenAIP overlay (hvis apiKey finnes)
+    if (openAipConfig.apiKey) {
+      const airspaceUrl = openAipConfig.tiles.airspace.replace('{key}', openAipConfig.apiKey);
+      L.tileLayer(airspaceUrl, {
+        opacity: 0.6,
+        subdomains: "abc",
+      }).addTo(map);
+    } else {
+      console.warn("Mangler VITE_OPENAIP_API_KEY – viser kun OSM.");
+    }
+
+    // Geolokasjon med fallback
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const coords: [number, number] = [
+            pos.coords.latitude,
+            pos.coords.longitude,
+          ];
+          map.setView(coords, 10);
+        },
+        () => {
+          console.log("Geolokasjon nektet, bruker default posisjon");
+        }
+      );
+    }
+
+    // Rydd opp når komponenten unmountes
+    return () => {
+      map.remove();
+    };
+  }, []);
+
+  // Hvis API-key mangler, viser vi OSM-kart + liten info
   if (!openAipConfig.apiKey) {
     return (
-      <div className="w-full h-screen flex items-center justify-center bg-background">
-        <div className="text-center p-8 bg-card rounded-lg shadow-lg max-w-md">
-          <h2 className="text-2xl font-bold text-foreground mb-4">
-            OpenAIP API Key Required
-          </h2>
-          <p className="text-muted-foreground">
-            Legg til OpenAIP API-nøkkelen i miljøvariabler som
-            VITE_OPENAIP_API_KEY.
+      <div style={{ width: "100%", height: "100vh" }}>
+        <div style={{ padding: 16 }}>
+          <h2>OpenAIP API key mangler</h2>
+          <p>
+            Sett miljøvariabelen <code>VITE_OPENAIP_API_KEY</code> i Lovable Environment Settings.
           </p>
         </div>
+        <div
+          ref={mapRef}
+          style={{ width: "100%", height: "70vh", marginTop: "1rem" }}
+        />
       </div>
     );
   }
 
-  const baseTileUrl = openAipConfig.tiles.base;
-  const airspaceTileUrl = `${openAipConfig.tiles.airspace}?apiKey=${openAipConfig.apiKey}`;
-
+  // Normal visning: fullskjermkart
   return (
-    <div className="w-full h-screen">
-      <MapContainer
-        center={center}
-        zoom={8}
-        className="w-full h-full"
-        zoomControl={true}
-      >
-        <TileLayer attribution={openAipConfig.attribution} url={baseTileUrl} />
-        <TileLayer url={airspaceTileUrl} opacity={0.6} />
-        <LocationMarker />
-      </MapContainer>
-    </div>
+    <div
+      ref={mapRef}
+      style={{ width: "100%", height: "100vh" }}
+    />
   );
 }

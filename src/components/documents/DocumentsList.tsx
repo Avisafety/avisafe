@@ -50,7 +50,7 @@ const DocumentsList = ({
                   {CATEGORY_LABELS[doc.kategori] || doc.kategori}
                 </Badge>
               </TableCell>
-              <TableCell className="bg-slate-200">
+              <TableCell className="bg-slate-200 opacity-50">
                 {doc.gyldig_til ? format(new Date(doc.gyldig_til), "dd.MM.yyyy", {
               locale: nb
             }) : "Ingen utløpsdato"}

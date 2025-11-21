@@ -7,15 +7,8 @@ import { MissionsSection } from "@/components/dashboard/MissionsSection";
 import { KPIChart } from "@/components/dashboard/KPIChart";
 import { NewsSection } from "@/components/dashboard/NewsSection";
 import { DraggableSection } from "@/components/dashboard/DraggableSection";
-import { Shield, LogOut, Settings, Menu } from "lucide-react";
-import { ProfileDialog } from "@/components/ProfileDialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { PendingApprovalsBadge } from "@/components/PendingApprovalsBadge";
+import { Shield } from "lucide-react";
+import { Header } from "@/components/Header";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -52,7 +45,6 @@ const Index = () => {
   const { user, loading, signOut } = useAuth();
   const navigate = useNavigate();
   const [layout, setLayout] = useState(defaultLayout);
-  const [isAdmin, setIsAdmin] = useState(false);
   const [isApproved, setIsApproved] = useState(false);
   const [checkingApproval, setCheckingApproval] = useState(true);
 
@@ -92,27 +84,6 @@ const Index = () => {
     }
   };
 
-  useEffect(() => {
-    if (user) {
-      checkAdminStatus();
-    }
-  }, [user]);
-
-  const checkAdminStatus = async () => {
-    try {
-      const { data } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", user?.id)
-        .eq("role", "admin")
-        .maybeSingle();
-
-      setIsAdmin(!!data);
-    } catch (error) {
-      console.error("Error checking admin status:", error);
-    }
-  };
-
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor)
@@ -147,13 +118,6 @@ const Index = () => {
         return newLayout;
       });
     }
-  };
-
-
-  const handleSignOut = async () => {
-    await signOut();
-    toast.success("Logget ut");
-    navigate("/auth");
   };
 
   if (loading || checkingApproval) {
@@ -221,75 +185,7 @@ const Index = () => {
 
       {/* Content */}
       <div className="relative z-10 w-full">
-        {/* Header */}
-        <header className="bg-card/20 backdrop-blur-md border-b border-glass sticky top-0 z-50 w-full">
-          <div className="w-full px-3 sm:px-4 py-2 sm:py-3">
-            <div className="flex items-center justify-between gap-1 sm:gap-2">
-              <Button 
-                variant="ghost" 
-                className="flex items-center gap-1 sm:gap-2 lg:gap-3 hover:bg-transparent p-0 flex-shrink-0"
-                onClick={() => navigate("/")}
-              >
-                <Shield className="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 text-primary" />
-                <div className="text-left">
-                  <h1 className="text-sm sm:text-base lg:text-xl xl:text-2xl font-bold whitespace-nowrap">SMS</h1>
-                  <p className="text-xs lg:text-sm text-primary hidden lg:block">Drone Operations</p>
-                </div>
-              </Button>
-              
-              {/* Mobile Navigation - Hamburger Menu */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild className="md:hidden">
-                  <Button variant="ghost" size="sm">
-                    <Menu className="w-5 h-5" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="bg-card/95 backdrop-blur-md border-glass z-50">
-                  <DropdownMenuItem onClick={() => navigate("/kart")}>Kart</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate("/dokumenter")}>Dokumenter</DropdownMenuItem>
-                  <DropdownMenuItem>Kalender</DropdownMenuItem>
-                  <DropdownMenuItem>Hendelser</DropdownMenuItem>
-                  <DropdownMenuItem>Status</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate("/ressurser")}>Ressurser</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-              
-              {/* Desktop Navigation */}
-              <nav className="hidden md:flex items-center gap-1 flex-shrink">
-                <Button variant="ghost" size="sm" onClick={() => navigate("/kart")}>Kart</Button>
-                <Button variant="ghost" size="sm" onClick={() => navigate("/dokumenter")}>Dokumenter</Button>
-                <Button variant="ghost" size="sm">Kalender</Button>
-                <Button variant="ghost" size="sm">Hendelser</Button>
-                <Button variant="ghost" size="sm">Status</Button>
-                <Button variant="ghost" size="sm" onClick={() => navigate("/ressurser")}>Ressurser</Button>
-              </nav>
-              
-              <nav className="flex items-center gap-1 sm:gap-2 lg:gap-4 flex-shrink-0">
-                {isAdmin && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => navigate("/admin")}
-                    className="gap-2 relative"
-                    title="Administrator"
-                  >
-                    <Settings className="w-4 h-4" />
-                    <PendingApprovalsBadge isAdmin={isAdmin} />
-                  </Button>
-                )}
-                <ProfileDialog />
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleSignOut}
-                  title="Logg ut"
-                >
-                  <LogOut className="w-4 h-4" />
-                </Button>
-              </nav>
-            </div>
-          </div>
-        </header>
+        <Header />
 
         {/* Main Content */}
         <main className="w-full px-3 sm:px-4 py-3 sm:py-5">

@@ -47,7 +47,7 @@ export const DocumentSection = () => {
   const [uploadType, setUploadType] = useState<"file" | "url">("file");
   const [formData, setFormData] = useState({
     tittel: "",
-    kategori: "Policy",
+    kategori: "annet",
     gyldig_til: "",
     varsel_dager_for_utløp: "30",
     url: "",
@@ -186,7 +186,7 @@ export const DocumentSection = () => {
       setUploadType("file");
       setFormData({
         tittel: "",
-        kategori: "Policy",
+        kategori: "annet",
         gyldig_til: "",
         varsel_dager_for_utløp: "30",
         url: "",
@@ -371,11 +371,12 @@ export const DocumentSection = () => {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Policy">Policy</SelectItem>
-                  <SelectItem value="Prosedyre">Prosedyre</SelectItem>
-                  <SelectItem value="Sertifikat">Sertifikat</SelectItem>
-                  <SelectItem value="Forsikring">Forsikring</SelectItem>
-                  <SelectItem value="Annet">Annet</SelectItem>
+                  <SelectItem value="regelverk">Regelverk</SelectItem>
+                  <SelectItem value="prosedyrer">Prosedyrer</SelectItem>
+                  <SelectItem value="sjekklister">Sjekklister</SelectItem>
+                  <SelectItem value="rapporter">Rapporter</SelectItem>
+                  <SelectItem value="nettsider">Nettsider</SelectItem>
+                  <SelectItem value="annet">Annet</SelectItem>
                 </SelectContent>
               </Select>
             </div>

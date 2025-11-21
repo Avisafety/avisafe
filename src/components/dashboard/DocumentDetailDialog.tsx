@@ -64,9 +64,19 @@ export const DocumentDetailDialog = ({ open, onOpenChange, document, status }: D
   if (!document) return null;
 
   const handleOpenDocument = async () => {
-    if (!document.fil_url) return;
-    
     try {
+      // Priority 1: Check for nettside_url (website URL)
+      if (document.nettside_url) {
+        const url = document.nettside_url.startsWith('http://') || document.nettside_url.startsWith('https://')
+          ? document.nettside_url
+          : `https://${document.nettside_url}`;
+        window.open(url, '_blank');
+        return;
+      }
+      
+      // Priority 2: Check for fil_url (file in storage or external URL)
+      if (!document.fil_url) return;
+      
       // Check if it's an external URL
       if (document.fil_url.startsWith('http://') || document.fil_url.startsWith('https://')) {
         window.open(document.fil_url, '_blank');
@@ -167,29 +177,32 @@ export const DocumentDetailDialog = ({ open, onOpenChange, document, status }: D
   };
 
   const handleDeleteDocument = async () => {
-    if (!document.id || !document.fil_url || deleting) return;
+    if (!document.id || deleting) return;
+    if (!document.fil_url && !document.nettside_url) return;
 
     setDeleting(true);
     try {
-      // Only delete from storage if it's not an external URL
-      const isExternalUrl = document.fil_url.startsWith('http://') || document.fil_url.startsWith('https://');
-      
-      if (!isExternalUrl) {
-        // Extract path from URL if it's a full URL
-        let filePath = document.fil_url;
-        if (filePath.includes('/storage/v1/object/')) {
-          const parts = filePath.split('/documents/');
-          if (parts.length > 1) {
-            filePath = parts[1];
+      // Only delete from storage if there's a fil_url and it's not an external URL
+      if (document.fil_url) {
+        const isExternalUrl = document.fil_url.startsWith('http://') || document.fil_url.startsWith('https://');
+        
+        if (!isExternalUrl) {
+          // Extract path from URL if it's a full URL
+          let filePath = document.fil_url;
+          if (filePath.includes('/storage/v1/object/')) {
+            const parts = filePath.split('/documents/');
+            if (parts.length > 1) {
+              filePath = parts[1];
+            }
           }
+
+          // Delete from storage
+          const { error: storageError } = await supabase.storage
+            .from('documents')
+            .remove([filePath]);
+
+          if (storageError) throw storageError;
         }
-
-        // Delete from storage
-        const { error: storageError } = await supabase.storage
-          .from('documents')
-          .remove([filePath]);
-
-        if (storageError) throw storageError;
       }
 
       // Delete from database (works for both files and URLs)
@@ -365,26 +378,28 @@ export const DocumentDetailDialog = ({ open, onOpenChange, document, status }: D
             </div>
           )}
 
-          {document.fil_url && (
+          {(document.fil_url || document.nettside_url) && (
             <div className="space-y-2 pt-4 border-t border-border">
               <div className="flex gap-2">
                 <Button
                   variant="outline"
-                  className="flex-1"
+                  className={document.nettside_url ? "w-full" : "flex-1"}
                   onClick={handleOpenDocument}
                 >
                   <ExternalLink className="w-4 h-4 mr-2" />
                   Åpne dokument
                 </Button>
-                <Button
-                  variant="default"
-                  className="flex-1"
-                  onClick={handleDownloadDocument}
-                  disabled={downloading}
-                >
-                  <Download className="w-4 h-4 mr-2" />
-                  {downloading ? "Laster ned..." : "Last ned"}
-                </Button>
+                {document.fil_url && !document.nettside_url && (
+                  <Button
+                    variant="default"
+                    className="flex-1"
+                    onClick={handleDownloadDocument}
+                    disabled={downloading}
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    {downloading ? "Laster ned..." : "Last ned"}
+                  </Button>
+                )}
               </div>
               
               {isAdmin && (

@@ -84,6 +84,7 @@ export const DocumentSection = () => {
         synlighet: "Intern" as any,
         fil_url: doc.fil_url,
         fil_navn: doc.fil_navn,
+        nettside_url: doc.nettside_url,
         utsteder: doc.opprettet_av,
         merknader: undefined,
       }));
@@ -159,9 +160,7 @@ export const DocumentSection = () => {
         fileName = selectedFile.name;
         fileSize = selectedFile.size;
       } else if (uploadType === "url") {
-        // For URL, store the URL directly in fil_url
-        filePath = formData.url;
-        fileName = formData.tittel; // Use title as filename for URLs
+        // URL upload - no file path or name needed
       }
       
       // Insert document metadata into database
@@ -173,9 +172,10 @@ export const DocumentSection = () => {
           kategori: formData.kategori,
           gyldig_til: formData.gyldig_til || null,
           varsel_dager_for_utløp: parseInt(formData.varsel_dager_for_utløp),
-          fil_url: filePath,
-          fil_navn: fileName,
-          fil_storrelse: fileSize,
+          fil_url: uploadType === "file" ? filePath : null,
+          nettside_url: uploadType === "url" ? formData.url : null,
+          fil_navn: uploadType === "file" ? fileName : null,
+          fil_storrelse: uploadType === "file" ? fileSize : null,
         });
 
       if (dbError) throw dbError;

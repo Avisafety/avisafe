@@ -5,15 +5,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, FileText, Download, Eye } from "lucide-react";
+import { ExternalLink, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 const openUrl = (url: string) => {
   let finalUrl = url;
@@ -40,28 +34,6 @@ const DocumentsList = ({
   isLoading,
   onDocumentClick
 }: DocumentsListProps) => {
-  const handleOpenFile = async (filUrl: string) => {
-    try {
-      // Check if it's an external URL
-      if (filUrl.startsWith('http://') || filUrl.startsWith('https://')) {
-        window.open(filUrl, '_blank');
-        return;
-      }
-      
-      // It's a storage path - generate signed URL
-      const { data, error } = await supabase.storage
-        .from('documents')
-        .createSignedUrl(filUrl, 3600); // Valid for 1 hour
-
-      if (error) throw error;
-      if (data?.signedUrl) {
-        window.open(data.signedUrl, '_blank');
-      }
-    } catch (error) {
-      console.error('Error opening file:', error);
-      toast.error('Kunne ikke åpne dokumentet');
-    }
-  };
 
   const handleDownloadFile = async (filUrl: string, originalFileName?: string) => {
     try {
@@ -136,27 +108,14 @@ const DocumentsList = ({
               <TableCell className="bg-slate-200/50 text-slate-950 text-right">
                 <div className="flex gap-2 justify-end" onClick={(e) => e.stopPropagation()}>
                   {doc.fil_url && (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          title="Vis alternativ for dokument"
-                        >
-                          <FileText className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="bg-background">
-                        <DropdownMenuItem onClick={() => handleOpenFile(doc.fil_url!)}>
-                          <Eye className="h-4 w-4 mr-2" />
-                          Åpne
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleDownloadFile(doc.fil_url!, doc.fil_navn || undefined)}>
-                          <Download className="h-4 w-4 mr-2" />
-                          Last ned
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDownloadFile(doc.fil_url!, doc.fil_navn || undefined)}
+                      title="Last ned dokument"
+                    >
+                      <Download className="h-4 w-4" />
+                    </Button>
                   )}
                   {doc.nettside_url && (
                     <Button

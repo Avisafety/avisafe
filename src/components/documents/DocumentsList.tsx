@@ -47,23 +47,23 @@ const DocumentsList = ({
         </TableHeader>
         <TableBody>
           {documents.map(doc => <TableRow key={doc.id} className="cursor-pointer hover:bg-accent" onClick={() => onDocumentClick(doc)}>
-              <TableCell className="font-medium bg-slate-200 shadow-sm opacity-50 rounded-none">{doc.tittel}</TableCell>
-              <TableCell className="bg-slate-200 opacity-50">
+              <TableCell className="font-medium bg-slate-200/50 text-slate-950 shadow-sm rounded-none">{doc.tittel}</TableCell>
+              <TableCell className="bg-slate-200/50 text-slate-950">
                 <Badge variant="secondary">
                   {CATEGORY_LABELS[doc.kategori] || doc.kategori}
                 </Badge>
               </TableCell>
-              <TableCell className="bg-slate-200 opacity-50">
+              <TableCell className="bg-slate-200/50 text-slate-950">
                 {doc.gyldig_til ? format(new Date(doc.gyldig_til), "dd.MM.yyyy", {
               locale: nb
             }) : "Ingen utløpsdato"}
               </TableCell>
-              <TableCell className="text-muted-foreground bg-slate-200 opacity-50">
+              <TableCell className="bg-slate-200/50 text-slate-950">
                 {format(new Date(doc.opprettet_dato), "dd.MM.yyyy", {
               locale: nb
             })}
               </TableCell>
-              <TableCell className="bg-slate-200 opacity-50 text-right">
+              <TableCell className="bg-slate-200/50 text-slate-950 text-right">
                 <div className="flex gap-2 justify-end" onClick={(e) => e.stopPropagation()}>
                   {doc.fil_url && (
                     <Button

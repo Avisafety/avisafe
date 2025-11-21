@@ -7,6 +7,7 @@ import { Plus } from "lucide-react";
 import DocumentsFilterBar from "@/components/documents/DocumentsFilterBar";
 import DocumentsList from "@/components/documents/DocumentsList";
 import DocumentCardModal from "@/components/documents/DocumentCardModal";
+import { DocumentUploadDialog } from "@/components/documents/DocumentUploadDialog";
 import { toast } from "sonner";
 import droneBackground from "@/assets/drone-background.png";
 import { Header } from "@/components/Header";
@@ -31,6 +32,7 @@ const Documents = () => {
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const {
     data: documents,
     isLoading,
@@ -98,7 +100,7 @@ const Documents = () => {
           <div className="max-w-7xl mx-auto space-y-6">
             <div className="flex items-center justify-between">
               <h1 className="text-4xl font-bold text-foreground">Dokumenter</h1>
-              {isAdmin && <Button onClick={handleCreateNew} size="lg">
+              {isAdmin && <Button onClick={() => setCreateDialogOpen(true)} size="lg">
                   <Plus className="mr-2" />
                   Nytt dokument
                 </Button>}
@@ -107,6 +109,15 @@ const Documents = () => {
             <DocumentsFilterBar searchQuery={searchQuery} onSearchChange={setSearchQuery} selectedCategories={selectedCategories} onCategoriesChange={setSelectedCategories} />
 
             <DocumentsList documents={filteredDocuments || []} isLoading={isLoading} onDocumentClick={handleOpenDocument} />
+
+            <DocumentUploadDialog
+              open={createDialogOpen}
+              onOpenChange={setCreateDialogOpen}
+              onSuccess={() => {
+                refetch();
+                toast.success("Dokument opprettet");
+              }}
+            />
 
             <DocumentCardModal document={selectedDocument} isOpen={isModalOpen} onClose={handleCloseModal} onSaveSuccess={handleSaveSuccess} onDeleteSuccess={handleDeleteSuccess} isAdmin={isAdmin} isCreating={isCreating} />
           </div>

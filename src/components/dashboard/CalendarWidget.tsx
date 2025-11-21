@@ -22,6 +22,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { MissionDetailDialog } from "./MissionDetailDialog";
+import { DocumentUploadDialog } from "@/components/documents/DocumentUploadDialog";
 import DocumentCardModal from "@/components/documents/DocumentCardModal";
 import { IncidentDetailDialog } from "./IncidentDetailDialog";
 import { AddIncidentDialog } from "./AddIncidentDialog";
@@ -592,14 +593,14 @@ export const CalendarWidget = () => {
                   >
                     Hendelse
                   </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => {
-                      setCreateDocumentOpen(true);
-                      setDialogOpen(false);
-                    }}
-                  >
-                    Dokument
-                  </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        setCreateDocumentOpen(true);
+                        setDialogOpen(false);
+                      }}
+                    >
+                      Dokument
+                    </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => {
                       setCreateMissionOpen(true);
@@ -732,14 +733,14 @@ export const CalendarWidget = () => {
         onMissionAdded={handleMissionAdded}
       />
 
-      <DocumentCardModal
-        isOpen={createDocumentOpen}
-        onClose={() => setCreateDocumentOpen(false)}
-        document={null}
-        onSaveSuccess={handleDocumentAdded}
-        onDeleteSuccess={() => {}}
-        isAdmin={isAdmin}
-        isCreating={true}
+      <DocumentUploadDialog
+        open={createDocumentOpen}
+        onOpenChange={setCreateDocumentOpen}
+        onSuccess={() => {
+          fetchRealCalendarEvents();
+          toast.success("Dokument opprettet og lagt til i kalenderen");
+        }}
+        defaultExpiryDate={selectedDate || undefined}
       />
 
       <AddNewsDialog

@@ -1,20 +1,11 @@
 import { GlassCard } from "@/components/GlassCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { FileText, Plus, Search, AlertCircle, Upload, X, Link } from "lucide-react";
+import { FileText, Plus, Search, AlertCircle } from "lucide-react";
 import { Document } from "@/types";
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { DocumentDetailDialog } from "./DocumentDetailDialog";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { DocumentUploadDialog } from "@/components/documents/DocumentUploadDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -41,19 +32,7 @@ const StatusDot = ({ status }: { status: string }) => {
 };
 
 export const DocumentSection = () => {
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [uploadType, setUploadType] = useState<"file" | "url">("file");
-  const [formData, setFormData] = useState({
-    tittel: "",
-    kategori: "annet",
-    gyldig_til: "",
-    varsel_dager_for_utløp: "30",
-    url: "",
-  });
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedDocStatus, setSelectedDocStatus] = useState<string>("Grønn");
@@ -98,110 +77,6 @@ export const DocumentSection = () => {
     }
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      // Check file size (max 10MB)
-      if (file.size > 10 * 1024 * 1024) {
-        toast.error("Filen er for stor. Maksimal størrelse er 10MB");
-        return;
-      }
-      setSelectedFile(file);
-      // Auto-fill title from filename if empty
-      if (!formData.tittel) {
-        const nameWithoutExt = file.name.replace(/\.[^/.]+$/, "");
-        setFormData({ ...formData, tittel: nameWithoutExt });
-      }
-    }
-  };
-
-  const handleUpload = async () => {
-    if (!formData.tittel) {
-      toast.error("Vennligst fyll ut tittel");
-      return;
-    }
-
-    if (uploadType === "file" && !selectedFile) {
-      toast.error("Vennligst velg en fil");
-      return;
-    }
-
-    if (uploadType === "url" && !formData.url) {
-      toast.error("Vennligst legg inn en URL");
-      return;
-    }
-
-    setUploading(true);
-
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        toast.error("Du må være logget inn for å laste opp dokumenter");
-        setUploading(false);
-        return;
-      }
-
-      let filePath = "";
-      let fileName = "";
-      let fileSize = 0;
-
-      if (uploadType === "file" && selectedFile) {
-        // Upload file to storage
-        const fileExt = selectedFile.name.split('.').pop();
-        filePath = `${user.id}/${Date.now()}.${fileExt}`;
-        
-        const { error: uploadError } = await supabase.storage
-          .from('documents')
-          .upload(filePath, selectedFile);
-
-        if (uploadError) throw uploadError;
-
-        fileName = selectedFile.name;
-        fileSize = selectedFile.size;
-      } else if (uploadType === "url") {
-        // URL upload - no file path or name needed
-      }
-      
-      // Insert document metadata into database
-      const { error: dbError } = await supabase
-        .from('documents')
-        .insert({
-          user_id: user.id,
-          tittel: formData.tittel,
-          kategori: formData.kategori,
-          gyldig_til: formData.gyldig_til || null,
-          varsel_dager_for_utløp: parseInt(formData.varsel_dager_for_utløp),
-          fil_url: uploadType === "file" ? filePath : null,
-          nettside_url: uploadType === "url" ? formData.url : null,
-          fil_navn: uploadType === "file" ? fileName : null,
-          fil_storrelse: uploadType === "file" ? fileSize : null,
-        });
-
-      if (dbError) throw dbError;
-
-      toast.success(uploadType === "file" ? "Dokument lastet opp!" : "Dokument lenke lagt til!");
-      setDialogOpen(false);
-      setSelectedFile(null);
-      setUploadType("file");
-      setFormData({
-        tittel: "",
-        kategori: "annet",
-        gyldig_til: "",
-        varsel_dager_for_utløp: "30",
-        url: "",
-      });
-      
-      // Refresh document list
-      fetchDocuments();
-      
-    } catch (error: any) {
-      console.error('Upload error:', error);
-      toast.error(`Feil ved opplasting: ${error.message}`);
-    } finally {
-      setUploading(false);
-    }
-  };
 
   const handleDocumentClick = (doc: Document, status: string) => {
     setSelectedDocument(doc);
@@ -217,7 +92,7 @@ export const DocumentSection = () => {
           <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-primary flex-shrink-0" />
           <h2 className="text-sm sm:text-base font-semibold truncate">Dokumenter</h2>
         </div>
-        <Button size="sm" className="gap-1 h-7 sm:h-8 text-xs sm:text-sm px-2 sm:px-3 flex-shrink-0" onClick={() => setDialogOpen(true)}>
+        <Button size="sm" className="gap-1 h-7 sm:h-8 text-xs sm:text-sm px-2 sm:px-3 flex-shrink-0" onClick={() => setUploadDialogOpen(true)}>
           <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
           <span className="hidden xs:inline">Legg til</span>
         </Button>
@@ -273,159 +148,13 @@ export const DocumentSection = () => {
         )}
       </div>
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="w-[95vw] max-w-md max-h-[90vh] overflow-y-auto p-4 sm:p-6">
-          <DialogHeader>
-            <DialogTitle>Last opp dokument</DialogTitle>
-            <DialogDescription>
-              Last opp et nytt dokument til systemet
-            </DialogDescription>
-          </DialogHeader>
+      <DocumentUploadDialog
+        open={uploadDialogOpen}
+        onOpenChange={setUploadDialogOpen}
+        onSuccess={fetchDocuments}
+      />
 
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Type *</Label>
-              <RadioGroup value={uploadType} onValueChange={(value: "file" | "url") => setUploadType(value)}>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="file" id="file-option" />
-                  <Label htmlFor="file-option" className="font-normal cursor-pointer">Last opp fil</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="url" id="url-option" />
-                  <Label htmlFor="url-option" className="font-normal cursor-pointer">Lenke til dokument</Label>
-                </div>
-              </RadioGroup>
-            </div>
-
-            {uploadType === "file" ? (
-              <div className="space-y-2">
-                <Label htmlFor="file">Fil *</Label>
-                <input
-                  ref={fileInputRef}
-                  id="file"
-                  type="file"
-                  onChange={handleFileSelect}
-                  className="hidden"
-                  accept=".pdf,.doc,.docx,.xls,.xlsx,.txt"
-                />
-                
-                {!selectedFile ? (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    <Upload className="w-4 h-4 mr-2" />
-                    Velg fil
-                  </Button>
-                ) : (
-                  <div className="flex items-center gap-2 p-3 border rounded-lg">
-                    <FileText className="w-4 h-4" />
-                    <span className="flex-1 text-sm truncate">{selectedFile.name}</span>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setSelectedFile(null)}
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <Label htmlFor="url">Dokument URL *</Label>
-                <div className="relative">
-                  <Link className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    id="url"
-                    type="url"
-                    value={formData.url}
-                    onChange={(e) => setFormData({ ...formData, url: e.target.value })}
-                    placeholder="https://eksempel.no/dokument.pdf"
-                    className="pl-9"
-                  />
-                </div>
-              </div>
-            )}
-
-            <div className="space-y-2">
-              <Label htmlFor="tittel">Tittel *</Label>
-              <Input
-                id="tittel"
-                value={formData.tittel}
-                onChange={(e) => setFormData({ ...formData, tittel: e.target.value })}
-                placeholder="F.eks. Sikkerhetsmanual"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="kategori">Kategori</Label>
-              <Select
-                value={formData.kategori}
-                onValueChange={(value) => setFormData({ ...formData, kategori: value })}
-              >
-                <SelectTrigger id="kategori">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="regelverk">Regelverk</SelectItem>
-                  <SelectItem value="prosedyrer">Prosedyrer</SelectItem>
-                  <SelectItem value="sjekklister">Sjekklister</SelectItem>
-                  <SelectItem value="rapporter">Rapporter</SelectItem>
-                  <SelectItem value="nettsider">Nettsider</SelectItem>
-                  <SelectItem value="annet">Annet</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="gyldig_til">Utløpsdato (valgfritt)</Label>
-              <Input
-                id="gyldig_til"
-                type="date"
-                value={formData.gyldig_til}
-                onChange={(e) => setFormData({ ...formData, gyldig_til: e.target.value })}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="varsel">Varsel dager før utløp</Label>
-              <Input
-                id="varsel"
-                type="number"
-                value={formData.varsel_dager_for_utløp}
-                onChange={(e) => setFormData({ ...formData, varsel_dager_for_utløp: e.target.value })}
-              />
-            </div>
-
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  setDialogOpen(false);
-                  setSelectedFile(null);
-                }}
-                className="flex-1"
-              >
-                Avbryt
-              </Button>
-              <Button
-                onClick={handleUpload}
-                disabled={uploading || !formData.tittel || (uploadType === "file" && !selectedFile) || (uploadType === "url" && !formData.url)}
-                className="flex-1"
-              >
-                {uploading ? "Lagrer..." : uploadType === "file" ? "Last opp" : "Legg til"}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-      
-      <DocumentDetailDialog 
+      <DocumentDetailDialog
         open={detailDialogOpen}
         onOpenChange={setDetailDialogOpen}
         document={selectedDocument}

@@ -20,6 +20,7 @@ export interface Document {
   gyldig_til: string | null;
   varsel_dager_for_utløp: number | null;
   fil_url: string | null;
+  fil_navn: string | null;
   nettside_url: string | null;
   opprettet_dato: string;
   oppdatert_dato: string | null;

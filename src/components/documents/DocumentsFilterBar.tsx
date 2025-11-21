@@ -2,64 +2,58 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Search } from "lucide-react";
 import { DocumentCategory } from "@/pages/Documents";
-
 interface DocumentsFilterBarProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
   selectedCategories: DocumentCategory[];
   onCategoriesChange: (categories: DocumentCategory[]) => void;
 }
-
-const CATEGORIES: { value: DocumentCategory; label: string }[] = [
-  { value: "regelverk", label: "Regelverk" },
-  { value: "prosedyrer", label: "Prosedyrer" },
-  { value: "sjekklister", label: "Sjekklister" },
-  { value: "rapporter", label: "Rapporter" },
-  { value: "nettsider", label: "Nettsider" },
-  { value: "annet", label: "Annet" },
-];
-
+const CATEGORIES: {
+  value: DocumentCategory;
+  label: string;
+}[] = [{
+  value: "regelverk",
+  label: "Regelverk"
+}, {
+  value: "prosedyrer",
+  label: "Prosedyrer"
+}, {
+  value: "sjekklister",
+  label: "Sjekklister"
+}, {
+  value: "rapporter",
+  label: "Rapporter"
+}, {
+  value: "nettsider",
+  label: "Nettsider"
+}, {
+  value: "annet",
+  label: "Annet"
+}];
 const DocumentsFilterBar = ({
   searchQuery,
   onSearchChange,
   selectedCategories,
-  onCategoriesChange,
+  onCategoriesChange
 }: DocumentsFilterBarProps) => {
   const toggleCategory = (category: DocumentCategory) => {
     if (selectedCategories.includes(category)) {
-      onCategoriesChange(selectedCategories.filter((c) => c !== category));
+      onCategoriesChange(selectedCategories.filter(c => c !== category));
     } else {
       onCategoriesChange([...selectedCategories, category]);
     }
   };
-
-  return (
-    <div className="space-y-4">
+  return <div className="space-y-4">
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          type="text"
-          placeholder="Søk i dokumenter..."
-          value={searchQuery}
-          onChange={(e) => onSearchChange(e.target.value)}
-          className="pl-10"
-        />
+        <Input type="text" placeholder="Søk i dokumenter..." value={searchQuery} onChange={e => onSearchChange(e.target.value)} className="pl-10" />
       </div>
 
       <div className="flex flex-wrap gap-2">
-        {CATEGORIES.map((category) => (
-          <Badge
-            key={category.value}
-            variant={selectedCategories.includes(category.value) ? "default" : "outline"}
-            className="cursor-pointer"
-            onClick={() => toggleCategory(category.value)}
-          >
+        {CATEGORIES.map(category => <Badge key={category.value} variant={selectedCategories.includes(category.value) ? "default" : "outline"} onClick={() => toggleCategory(category.value)} className="cursor-pointer bg-slate-50">
             {category.label}
-          </Badge>
-        ))}
+          </Badge>)}
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default DocumentsFilterBar;

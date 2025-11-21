@@ -396,6 +396,21 @@ const DocumentCardModal = ({
                 </div>
               )}
 
+              {document?.nettside_url && readOnly && (
+                <div className="space-y-2">
+                  <FormLabel>Nettside</FormLabel>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => window.open(document.nettside_url!, "_blank")}
+                    className="w-full"
+                  >
+                    <Upload className="mr-2 h-4 w-4" />
+                    Åpne nettside
+                  </Button>
+                </div>
+              )}
+
               <DialogFooter className="gap-2">
                 {isAdmin && !isCreating && (
                   <Button

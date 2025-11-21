@@ -10,6 +10,7 @@ import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
 import Resources from "./pages/Resources";
 import KartPage from "./pages/Kart";
+import Documents from "./pages/Documents";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +31,7 @@ const App = () => {
                 <Route path="/admin" element={<Admin />} />
                 <Route path="/ressurser" element={<Resources />} />
                 <Route path="/kart" element={<KartPage />} />
+                <Route path="/dokumenter" element={<Documents />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

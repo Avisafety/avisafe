@@ -12,6 +12,7 @@ import Resources from "./pages/Resources";
 import KartPage from "./pages/Kart";
 import Documents from "./pages/Documents";
 import Kalender from "./pages/Kalender";
+import Hendelser from "./pages/Hendelser";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +35,7 @@ const App = () => {
                 <Route path="/kart" element={<KartPage />} />
                 <Route path="/dokumenter" element={<Documents />} />
                 <Route path="/kalender" element={<Kalender />} />
+                <Route path="/hendelser" element={<Hendelser />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

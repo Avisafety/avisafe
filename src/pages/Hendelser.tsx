@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import droneBackground from "@/assets/drone-background.png";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -124,20 +125,24 @@ const Hendelser = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
+    <div className="min-h-screen relative w-full overflow-x-hidden">
+      {/* Background with gradient overlay */}
       <div 
-        className="fixed inset-0 -z-10 opacity-20"
+        className="fixed inset-0 z-0"
         style={{
-          backgroundImage: "url('/src/assets/drone-background.png')",
+          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.5)), url(${droneBackground})`,
           backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundRepeat: "no-repeat"
+          backgroundPosition: "center center",
+          backgroundAttachment: "fixed",
+          backgroundRepeat: "no-repeat",
         }}
       />
-      
-      <Header />
-      
-      <main className="container mx-auto px-4 py-8">
+
+      {/* Content */}
+      <div className="relative z-10 w-full">
+        <Header />
+        
+        <main className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2">Hendelser</h1>
           <p className="text-muted-foreground">Oversikt over alle rapporterte hendelser</p>
@@ -234,7 +239,8 @@ const Hendelser = () => {
             ))}
           </div>
         )}
-      </main>
+        </main>
+      </div>
 
       <AddIncidentDialog
         open={addDialogOpen}

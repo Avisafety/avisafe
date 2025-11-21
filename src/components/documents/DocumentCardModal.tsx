@@ -41,7 +41,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Upload, Trash2, ExternalLink, FileText } from "lucide-react";
+import { CalendarIcon, Upload, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { nb } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -338,43 +338,19 @@ const DocumentCardModal = ({
                 )}
               />
 
-              {!readOnly ? (
-                <FormField
-                  control={form.control}
-                  name="nettside_url"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nettside URL</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="https://..." />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              ) : document?.nettside_url ? (
-                <div className="space-y-2">
-                  <FormLabel>Nettside</FormLabel>
-                  <div className="flex items-center gap-2 p-3 border rounded-md bg-muted">
-                    <a
-                      href={document.nettside_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-primary hover:underline flex-1 truncate"
-                    >
-                      {document.nettside_url}
-                    </a>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => window.open(document.nettside_url!, "_blank")}
-                    >
-                      <ExternalLink className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              ) : null}
+              <FormField
+                control={form.control}
+                name="nettside_url"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nettside URL</FormLabel>
+                    <FormControl>
+                      <Input {...field} disabled={readOnly} placeholder="https://..." />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               {!readOnly && (
                 <div className="space-y-2">
@@ -408,18 +384,30 @@ const DocumentCardModal = ({
               {document?.fil_url && readOnly && (
                 <div className="space-y-2">
                   <FormLabel>Dokument</FormLabel>
-                  <div className="flex items-center gap-2 p-3 border rounded-md bg-muted">
-                    <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                    <span className="text-sm flex-1 truncate">Opplastet dokument</span>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => window.open(document.fil_url!, "_blank")}
-                    >
-                      <ExternalLink className="h-4 w-4" />
-                    </Button>
-                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => window.open(document.fil_url!, "_blank")}
+                    className="w-full"
+                  >
+                    <Upload className="mr-2 h-4 w-4" />
+                    Åpne dokument
+                  </Button>
+                </div>
+              )}
+
+              {document?.nettside_url && readOnly && (
+                <div className="space-y-2">
+                  <FormLabel>Nettside</FormLabel>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => window.open(document.nettside_url!, "_blank")}
+                    className="w-full"
+                  >
+                    <Upload className="mr-2 h-4 w-4" />
+                    Åpne nettside
+                  </Button>
                 </div>
               )}
 

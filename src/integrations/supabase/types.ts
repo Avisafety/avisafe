@@ -287,6 +287,7 @@ export type Database = {
           lokasjon: string | null
           mission_id: string | null
           oppdatert_dato: string | null
+          oppfolgingsansvarlig_id: string | null
           opprettet_dato: string | null
           rapportert_av: string | null
           status: string
@@ -302,6 +303,7 @@ export type Database = {
           lokasjon?: string | null
           mission_id?: string | null
           oppdatert_dato?: string | null
+          oppfolgingsansvarlig_id?: string | null
           opprettet_dato?: string | null
           rapportert_av?: string | null
           status?: string
@@ -317,6 +319,7 @@ export type Database = {
           lokasjon?: string | null
           mission_id?: string | null
           oppdatert_dato?: string | null
+          oppfolgingsansvarlig_id?: string | null
           opprettet_dato?: string | null
           rapportert_av?: string | null
           status?: string
@@ -329,6 +332,13 @@ export type Database = {
             columns: ["mission_id"]
             isOneToOne: false
             referencedRelation: "missions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "incidents_oppfolgingsansvarlig_id_fkey"
+            columns: ["oppfolgingsansvarlig_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]

@@ -23,6 +23,7 @@ interface AddIncidentDialogProps {
 export const AddIncidentDialog = ({ open, onOpenChange, defaultDate }: AddIncidentDialogProps) => {
   const [submitting, setSubmitting] = useState(false);
   const [missions, setMissions] = useState<Array<{ id: string; tittel: string; status: string; tidspunkt: string; lokasjon: string }>>([]);
+  const [users, setUsers] = useState<Array<{ id: string; full_name: string }>>([]);
   const [formData, setFormData] = useState({
     tittel: "",
     beskrivelse: "",
@@ -32,11 +33,13 @@ export const AddIncidentDialog = ({ open, onOpenChange, defaultDate }: AddIncide
     kategori: "",
     lokasjon: "",
     mission_id: "",
+    oppfolgingsansvarlig_id: "",
   });
 
   useEffect(() => {
     if (open) {
       fetchMissions();
+      fetchUsers();
       if (defaultDate) {
         // Format date to datetime-local format
         const year = defaultDate.getFullYear();
@@ -56,22 +59,38 @@ export const AddIncidentDialog = ({ open, onOpenChange, defaultDate }: AddIncide
         kategori: "",
         lokasjon: "",
         mission_id: "",
+        oppfolgingsansvarlig_id: "",
       });
     }
   }, [open, defaultDate]);
 
   const fetchMissions = async () => {
     try {
-    const { data, error } = await supabase
-      .from('missions')
-      .select('id, tittel, status, tidspunkt, lokasjon')
-      .in('status', ['Planlagt', 'Tildelt', 'Pågår'])
-      .order('tidspunkt', { ascending: true });
+      const { data, error } = await supabase
+        .from('missions')
+        .select('id, tittel, status, tidspunkt, lokasjon')
+        .in('status', ['Planlagt', 'Tildelt', 'Pågår'])
+        .order('tidspunkt', { ascending: true });
 
       if (error) throw error;
       setMissions(data || []);
     } catch (error) {
       console.error('Error fetching missions:', error);
+    }
+  };
+
+  const fetchUsers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, full_name')
+        .eq('approved', true)
+        .order('full_name', { ascending: true });
+
+      if (error) throw error;
+      setUsers(data || []);
+    } catch (error) {
+      console.error('Error fetching users:', error);
     }
   };
 
@@ -128,6 +147,7 @@ export const AddIncidentDialog = ({ open, onOpenChange, defaultDate }: AddIncide
           lokasjon: formData.lokasjon || null,
           rapportert_av: user.email || 'Ukjent',
           mission_id: formData.mission_id || null,
+          oppfolgingsansvarlig_id: formData.oppfolgingsansvarlig_id || null,
         });
 
       if (error) throw error;
@@ -258,6 +278,25 @@ export const AddIncidentDialog = ({ open, onOpenChange, defaultDate }: AddIncide
               onChange={(e) => setFormData({ ...formData, lokasjon: e.target.value })}
               placeholder="F.eks. Oslo, Hangar A, etc."
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="oppfolgingsansvarlig">Oppfølgingsansvarlig (valgfritt)</Label>
+            <Select
+              value={formData.oppfolgingsansvarlig_id}
+              onValueChange={(value) => setFormData({ ...formData, oppfolgingsansvarlig_id: value })}
+            >
+              <SelectTrigger id="oppfolgingsansvarlig">
+                <SelectValue placeholder="Velg ansvarlig..." />
+              </SelectTrigger>
+              <SelectContent className="bg-background z-50">
+                {users.map((user) => (
+                  <SelectItem key={user.id} value={user.id}>
+                    {user.full_name || 'Ukjent bruker'}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="flex gap-2">

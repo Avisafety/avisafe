@@ -48,6 +48,7 @@ export const IncidentDetailDialog = ({ open, onOpenChange, incident }: IncidentD
   const [isAdmin, setIsAdmin] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [relatedMission, setRelatedMission] = useState<{ id: string; tittel: string; lokasjon: string; status: string } | null>(null);
+  const [oppfolgingsansvarlig, setOppfolgingsansvarlig] = useState<{ id: string; full_name: string } | null>(null);
   const [comments, setComments] = useState<IncidentComment[]>([]);
   const [newComment, setNewComment] = useState("");
   const [submittingComment, setSubmittingComment] = useState(false);
@@ -100,6 +101,31 @@ export const IncidentDetailDialog = ({ open, onOpenChange, incident }: IncidentD
 
     fetchRelatedMission();
   }, [incident?.mission_id]);
+
+  useEffect(() => {
+    const fetchOppfolgingsansvarlig = async () => {
+      if (!incident?.oppfolgingsansvarlig_id) {
+        setOppfolgingsansvarlig(null);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('id, full_name')
+          .eq('id', incident.oppfolgingsansvarlig_id)
+          .maybeSingle();
+
+        if (error) throw error;
+        setOppfolgingsansvarlig(data);
+      } catch (error) {
+        console.error('Error fetching oppfolgingsansvarlig:', error);
+        setOppfolgingsansvarlig(null);
+      }
+    };
+
+    fetchOppfolgingsansvarlig();
+  }, [incident?.oppfolgingsansvarlig_id]);
 
   useEffect(() => {
     const fetchComments = async () => {
@@ -291,6 +317,16 @@ export const IncidentDetailDialog = ({ open, onOpenChange, incident }: IncidentD
                   <p className="text-base">
                     {format(new Date(incident.opprettet_dato), "dd. MMMM yyyy, HH:mm", { locale: nb })}
                   </p>
+                </div>
+              </div>
+            )}
+
+            {oppfolgingsansvarlig && (
+              <div className="flex items-start gap-3">
+                <User className="w-5 h-5 text-muted-foreground mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Oppfølgingsansvarlig</p>
+                  <p className="text-base">{oppfolgingsansvarlig.full_name || 'Ukjent bruker'}</p>
                 </div>
               </div>
             )}

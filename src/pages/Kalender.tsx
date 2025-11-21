@@ -564,6 +564,7 @@ export default function Kalender() {
                     return (
                       <button
                         {...props}
+                        onClick={() => handleDateClick(dayDate)}
                         className={cn(
                           "h-full w-full p-2 font-normal hover:bg-accent/30 hover:text-accent-foreground rounded-md",
                           "flex flex-col items-start justify-start gap-1 text-left"
@@ -575,7 +576,6 @@ export default function Kalender() {
                             key={event.id || idx}
                             className="text-xs truncate w-full px-1 py-0.5 bg-primary/10 rounded text-foreground hover:bg-primary/20 cursor-pointer transition-colors font-medium"
                             title={event.title}
-                            onClick={(e) => handleEventClick(event, e)}
                           >
                             {event.title}
                           </div>

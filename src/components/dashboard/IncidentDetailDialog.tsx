@@ -3,14 +3,23 @@ import type { Tables } from "@/integrations/supabase/types";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { nb } from "date-fns/locale";
-import { MapPin, Calendar, AlertTriangle, User } from "lucide-react";
+import { MapPin, Calendar, AlertTriangle, User, MessageSquare, Send } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
 
 type Incident = Tables<"incidents">;
+
+type IncidentComment = {
+  id: string;
+  comment_text: string;
+  created_by_name: string;
+  created_at: string;
+};
 
 interface IncidentDetailDialogProps {
   open: boolean;
@@ -39,6 +48,10 @@ export const IncidentDetailDialog = ({ open, onOpenChange, incident }: IncidentD
   const [isAdmin, setIsAdmin] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [relatedMission, setRelatedMission] = useState<{ id: string; tittel: string; lokasjon: string; status: string } | null>(null);
+  const [comments, setComments] = useState<IncidentComment[]>([]);
+  const [newComment, setNewComment] = useState("");
+  const [submittingComment, setSubmittingComment] = useState(false);
+  const [currentUserName, setCurrentUserName] = useState("");
 
   useEffect(() => {
     const checkAdmin = async () => {
@@ -49,6 +62,15 @@ export const IncidentDetailDialog = ({ open, onOpenChange, incident }: IncidentD
           _role: 'admin'
         });
         setIsAdmin(data || false);
+        
+        // Hent brukerens navn
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', user.id)
+          .single();
+        
+        setCurrentUserName(profile?.full_name || 'Ukjent bruker');
       }
     };
     checkAdmin();
@@ -79,6 +101,53 @@ export const IncidentDetailDialog = ({ open, onOpenChange, incident }: IncidentD
     fetchRelatedMission();
   }, [incident?.mission_id]);
 
+  useEffect(() => {
+    const fetchComments = async () => {
+      if (!incident?.id) {
+        setComments([]);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('incident_comments')
+          .select('id, comment_text, created_by_name, created_at')
+          .eq('incident_id', incident.id)
+          .order('created_at', { ascending: true });
+
+        if (error) throw error;
+        setComments(data || []);
+      } catch (error) {
+        console.error('Error fetching comments:', error);
+        setComments([]);
+      }
+    };
+
+    fetchComments();
+    
+    if (!incident?.id) return;
+    
+    const channel = supabase
+      .channel(`incident_comments_${incident.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'incident_comments',
+          filter: `incident_id=eq.${incident.id}`
+        },
+        (payload) => {
+          setComments(prev => [...prev, payload.new as IncidentComment]);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [incident?.id]);
+
   const handleStatusChange = async (newStatus: string) => {
     if (!incident) return;
     
@@ -97,6 +166,35 @@ export const IncidentDetailDialog = ({ open, onOpenChange, incident }: IncidentD
       toast.error("Kunne ikke oppdatere status");
     } finally {
       setUpdatingStatus(false);
+    }
+  };
+
+  const handleAddComment = async () => {
+    if (!incident || !newComment.trim()) return;
+    
+    setSubmittingComment(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      const { error } = await supabase
+        .from('incident_comments')
+        .insert({
+          incident_id: incident.id,
+          user_id: user.id,
+          comment_text: newComment.trim(),
+          created_by_name: currentUserName
+        });
+
+      if (error) throw error;
+
+      setNewComment("");
+      toast.success("Kommentar lagt til");
+    } catch (error) {
+      console.error("Error adding comment:", error);
+      toast.error("Kunne ikke legge til kommentar");
+    } finally {
+      setSubmittingComment(false);
     }
   };
 
@@ -220,6 +318,64 @@ export const IncidentDetailDialog = ({ open, onOpenChange, incident }: IncidentD
               </div>
             </div>
           )}
+        </div>
+
+        {/* Kommentarer-seksjon */}
+        <div className="border-t border-border pt-4 mt-4">
+          <div className="flex items-center gap-2 mb-4">
+            <MessageSquare className="w-5 h-5 text-muted-foreground" />
+            <h3 className="text-base font-medium">
+              Kommentarer {comments.length > 0 && `(${comments.length})`}
+            </h3>
+          </div>
+
+          {/* Eksisterende kommentarer */}
+          <div className="space-y-3 mb-4 max-h-60 overflow-y-auto">
+            {comments.length === 0 ? (
+              <p className="text-sm text-muted-foreground italic">
+                Ingen kommentarer ennå
+              </p>
+            ) : (
+              comments.map((comment) => (
+                <div 
+                  key={comment.id} 
+                  className="bg-muted/50 rounded-lg p-3 border border-border"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium">
+                      {comment.created_by_name}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {format(new Date(comment.created_at), "d. MMM yyyy HH:mm", { locale: nb })}
+                    </span>
+                  </div>
+                  <p className="text-sm whitespace-pre-wrap">
+                    {comment.comment_text}
+                  </p>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Legg til ny kommentar */}
+          <div className="space-y-2">
+            <Textarea
+              placeholder="Skriv en kommentar..."
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              disabled={submittingComment}
+              className="min-h-[80px] resize-none"
+            />
+            <Button
+              onClick={handleAddComment}
+              disabled={!newComment.trim() || submittingComment}
+              className="w-full gap-2"
+              size="sm"
+            >
+              <Send className="w-4 h-4" />
+              {submittingComment ? "Legger til..." : "Legg til kommentar"}
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

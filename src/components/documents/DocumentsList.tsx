@@ -5,9 +5,15 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, FileText } from "lucide-react";
+import { ExternalLink, FileText, Download, Eye } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const openUrl = (url: string) => {
   let finalUrl = url;
@@ -57,6 +63,37 @@ const DocumentsList = ({
     }
   };
 
+  const handleDownloadFile = async (filUrl: string, originalFileName?: string) => {
+    try {
+      if (filUrl.startsWith('http://') || filUrl.startsWith('https://')) {
+        // External URL - just open it
+        window.open(filUrl, '_blank');
+        return;
+      }
+      
+      // Storage path - download with original filename
+      const { data, error } = await supabase.storage
+        .from('documents')
+        .download(filUrl);
+
+      if (error) throw error;
+      
+      if (data) {
+        const url = URL.createObjectURL(data);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = originalFileName || filUrl.split('/').pop() || 'document';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      }
+    } catch (error) {
+      console.error('Error downloading file:', error);
+      toast.error('Kunne ikke laste ned dokumentet');
+    }
+  };
+
   if (isLoading) {
     return <div className="space-y-2">
         {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-16 w-full" />)}
@@ -99,14 +136,27 @@ const DocumentsList = ({
               <TableCell className="bg-slate-200/50 text-slate-950 text-right">
                 <div className="flex gap-2 justify-end" onClick={(e) => e.stopPropagation()}>
                   {doc.fil_url && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleOpenFile(doc.fil_url!)}
-                      title="Åpne dokument"
-                    >
-                      <FileText className="h-4 w-4" />
-                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          title="Vis alternativ for dokument"
+                        >
+                          <FileText className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="bg-background">
+                        <DropdownMenuItem onClick={() => handleOpenFile(doc.fil_url!)}>
+                          <Eye className="h-4 w-4 mr-2" />
+                          Åpne
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleDownloadFile(doc.fil_url!, doc.fil_navn || undefined)}>
+                          <Download className="h-4 w-4 mr-2" />
+                          Last ned
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   )}
                   {doc.nettside_url && (
                     <Button

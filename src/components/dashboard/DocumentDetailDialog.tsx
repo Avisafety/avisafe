@@ -381,23 +381,25 @@ export const DocumentDetailDialog = ({ open, onOpenChange, document, status }: D
           {(document.fil_url || document.nettside_url) && (
             <div className="space-y-2 pt-4 border-t border-border">
               <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  className={document.nettside_url ? "w-full" : "flex-1"}
-                  onClick={handleOpenDocument}
-                >
-                  <ExternalLink className="w-4 h-4 mr-2" />
-                  Åpne dokument
-                </Button>
+                {document.nettside_url && (
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={handleOpenDocument}
+                  >
+                    <ExternalLink className="w-4 h-4 mr-2" />
+                    Åpne nettside
+                  </Button>
+                )}
                 {document.fil_url && !document.nettside_url && (
                   <Button
                     variant="default"
-                    className="flex-1"
+                    className="w-full"
                     onClick={handleDownloadDocument}
                     disabled={downloading}
                   >
                     <Download className="w-4 h-4 mr-2" />
-                    {downloading ? "Laster ned..." : "Last ned"}
+                    {downloading ? "Laster ned..." : "Last ned dokument"}
                   </Button>
                 )}
               </div>

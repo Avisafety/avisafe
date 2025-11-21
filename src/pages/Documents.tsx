@@ -9,9 +9,7 @@ import DocumentsList from "@/components/documents/DocumentsList";
 import DocumentCardModal from "@/components/documents/DocumentCardModal";
 import { toast } from "sonner";
 import droneBackground from "@/assets/drone-background.png";
-
 export type DocumentCategory = "regelverk" | "prosedyrer" | "sjekklister" | "rapporter" | "nettsider" | "annet";
-
 export interface Document {
   id: string;
   tittel: string;
@@ -25,126 +23,90 @@ export interface Document {
   oppdatert_dato: string | null;
   opprettet_av: string | null;
 }
-
 const Documents = () => {
-  const { isAdmin } = useAdminCheck();
+  const {
+    isAdmin
+  } = useAdminCheck();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<DocumentCategory[]>([]);
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
-
-  const { data: documents, isLoading, refetch } = useQuery({
+  const {
+    data: documents,
+    isLoading,
+    refetch
+  } = useQuery({
     queryKey: ["documents"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("documents")
-        .select("*")
-        .order("opprettet_dato", { ascending: false });
-
+      const {
+        data,
+        error
+      } = await supabase.from("documents").select("*").order("opprettet_dato", {
+        ascending: false
+      });
       if (error) throw error;
       return data as Document[];
-    },
+    }
   });
-
-  const filteredDocuments = documents?.filter((doc) => {
-    const matchesSearch =
-      searchQuery === "" ||
-      doc.tittel.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      doc.beskrivelse?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      doc.fil_url?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      doc.nettside_url?.toLowerCase().includes(searchQuery.toLowerCase());
-
-    const matchesCategory =
-      selectedCategories.length === 0 ||
-      selectedCategories.includes(doc.kategori as DocumentCategory);
-
+  const filteredDocuments = documents?.filter(doc => {
+    const matchesSearch = searchQuery === "" || doc.tittel.toLowerCase().includes(searchQuery.toLowerCase()) || doc.beskrivelse?.toLowerCase().includes(searchQuery.toLowerCase()) || doc.fil_url?.toLowerCase().includes(searchQuery.toLowerCase()) || doc.nettside_url?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(doc.kategori as DocumentCategory);
     return matchesSearch && matchesCategory;
   });
-
   const handleOpenDocument = (document: Document) => {
     setSelectedDocument(document);
     setIsCreating(false);
     setIsModalOpen(true);
   };
-
   const handleCreateNew = () => {
     setSelectedDocument(null);
     setIsCreating(true);
     setIsModalOpen(true);
   };
-
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setSelectedDocument(null);
     setIsCreating(false);
   };
-
   const handleSaveSuccess = () => {
     refetch();
     handleCloseModal();
     toast.success(isCreating ? "Dokument opprettet" : "Dokument oppdatert");
   };
-
   const handleDeleteSuccess = () => {
     refetch();
     handleCloseModal();
     toast.success("Dokument slettet");
   };
-
-  return (
-    <div className="min-h-screen relative w-full overflow-x-hidden">
+  return <div className="min-h-screen relative w-full overflow-x-hidden">
       {/* Background with gradient overlay */}
-      <div 
-        className="fixed inset-0 z-0"
-        style={{
-          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.5)), url(${droneBackground})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center center",
-          backgroundAttachment: "fixed",
-          backgroundRepeat: "no-repeat",
-        }}
-      />
+      <div className="fixed inset-0 z-0" style={{
+      backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.5)), url(${droneBackground})`,
+      backgroundSize: "cover",
+      backgroundPosition: "center center",
+      backgroundAttachment: "fixed",
+      backgroundRepeat: "no-repeat"
+    }} />
 
       {/* Content */}
       <div className="relative z-10 w-full p-6">
         <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-4xl font-bold text-foreground">Dokumenter</h1>
-          {isAdmin && (
-            <Button onClick={handleCreateNew} size="lg">
+          {isAdmin && <Button onClick={handleCreateNew} size="lg">
               <Plus className="mr-2" />
               Nytt dokument
-            </Button>
-          )}
+            </Button>}
         </div>
 
-        <DocumentsFilterBar
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          selectedCategories={selectedCategories}
-          onCategoriesChange={setSelectedCategories}
-        />
+        <DocumentsFilterBar searchQuery={searchQuery} onSearchChange={setSearchQuery} selectedCategories={selectedCategories} onCategoriesChange={setSelectedCategories} />
 
-        <DocumentsList
-          documents={filteredDocuments || []}
-          isLoading={isLoading}
-          onDocumentClick={handleOpenDocument}
-        />
+        <DocumentsList documents={filteredDocuments || []} isLoading={isLoading} onDocumentClick={handleOpenDocument} className="text-slate-950" />
 
-        <DocumentCardModal
-          document={selectedDocument}
-          isOpen={isModalOpen}
-          onClose={handleCloseModal}
-          onSaveSuccess={handleSaveSuccess}
-          onDeleteSuccess={handleDeleteSuccess}
-          isAdmin={isAdmin}
-          isCreating={isCreating}
-        />
+        <DocumentCardModal document={selectedDocument} isOpen={isModalOpen} onClose={handleCloseModal} onSaveSuccess={handleSaveSuccess} onDeleteSuccess={handleDeleteSuccess} isAdmin={isAdmin} isCreating={isCreating} />
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default Documents;

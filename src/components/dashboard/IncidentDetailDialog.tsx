@@ -263,6 +263,18 @@ export const IncidentDetailDialog = ({ open, onOpenChange, incident }: IncidentD
 
       if (error) throw error;
 
+      // Optimistisk UI-oppdatering
+      setSelectedResponsibleId(newUserId);
+      
+      if (newUserId) {
+        const user = users.find(u => u.id === newUserId);
+        if (user) {
+          setOppfolgingsansvarlig(user);
+        }
+      } else {
+        setOppfolgingsansvarlig(null);
+      }
+
       toast.success("Oppfølgingsansvarlig oppdatert");
     } catch (error) {
       console.error("Error updating responsible:", error);

@@ -14,7 +14,7 @@ import { nb } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { mockDocuments, mockMissions, mockDrones, mockEquipment } from "@/data/mockData";
+
 import type { Tables } from "@/integrations/supabase/types";
 import { AddMissionDialog } from "@/components/dashboard/AddMissionDialog";
 import { MissionDetailDialog } from "@/components/dashboard/MissionDetailDialog";
@@ -35,39 +35,6 @@ interface CalendarEvent {
 
 type CalendarEventDB = Tables<"calendar_events">;
 
-// Generate calendar events from mock data
-const getMockCalendarEvents = (): CalendarEvent[] => [
-  ...mockDocuments
-    .filter((doc) => doc.gyldig_til)
-    .map((doc) => ({
-      type: "Dokument",
-      title: `${doc.tittel} utgår`,
-      date: doc.gyldig_til!,
-      color: "text-blue-500",
-    })),
-  ...mockMissions.map((mission) => ({
-    type: "Oppdrag",
-    title: mission.tittel,
-    date: mission.start,
-    color: "text-primary",
-  })),
-  ...mockDrones
-    .filter((drone) => drone.neste_inspeksjon)
-    .map((drone) => ({
-      type: "Vedlikehold",
-      title: `${drone.modell} - inspeksjon`,
-      date: drone.neste_inspeksjon!,
-      color: "text-orange-500",
-    })),
-  ...mockEquipment
-    .filter((eq) => eq.neste_vedlikehold)
-    .map((eq) => ({
-      type: "Vedlikehold",
-      title: `${eq.navn} - vedlikehold`,
-      date: eq.neste_vedlikehold!,
-      color: "text-orange-500",
-    })),
-];
 
 const getColorForType = (type: string): string => {
   switch (type) {
@@ -189,27 +156,24 @@ export default function Kalender() {
     }
   };
 
-  // Combine mock and custom events
-  const allEvents: CalendarEvent[] = [
-    ...getMockCalendarEvents(),
-    ...customEvents.map((event) => {
+  // Map custom events from database
+  const allEvents: CalendarEvent[] = customEvents.map((event) => {
       const eventDate = new Date(event.event_date);
       if (event.event_time) {
         const [hours, minutes] = event.event_time.split(':');
         eventDate.setHours(parseInt(hours), parseInt(minutes));
       }
       
-      return {
-        id: event.id,
-        type: event.type,
-        title: event.title,
-        date: eventDate,
-        description: event.description || undefined,
-        color: getColorForType(event.type),
-        isCustom: true,
-      };
-    }),
-  ];
+    return {
+      id: event.id,
+      type: event.type,
+      title: event.title,
+      date: eventDate,
+      description: event.description || undefined,
+      color: getColorForType(event.type),
+      isCustom: true,
+    };
+  });
 
   const getEventsForDate = (checkDate: Date) => {
     return allEvents.filter((event) => isSameDay(event.date, checkDate));

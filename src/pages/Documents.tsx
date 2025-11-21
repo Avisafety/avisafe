@@ -8,6 +8,7 @@ import DocumentsFilterBar from "@/components/documents/DocumentsFilterBar";
 import DocumentsList from "@/components/documents/DocumentsList";
 import DocumentCardModal from "@/components/documents/DocumentCardModal";
 import { toast } from "sonner";
+import droneBackground from "@/assets/drone-background.png";
 
 export type DocumentCategory = "regelverk" | "prosedyrer" | "sjekklister" | "rapporter" | "nettsider" | "annet";
 
@@ -92,8 +93,22 @@ const Documents = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen relative w-full overflow-x-hidden">
+      {/* Background with gradient overlay */}
+      <div 
+        className="fixed inset-0 z-0"
+        style={{
+          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.5)), url(${droneBackground})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center center",
+          backgroundAttachment: "fixed",
+          backgroundRepeat: "no-repeat",
+        }}
+      />
+
+      {/* Content */}
+      <div className="relative z-10 w-full p-6">
+        <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-4xl font-bold text-foreground">Dokumenter</h1>
           {isAdmin && (
@@ -126,6 +141,7 @@ const Documents = () => {
           isAdmin={isAdmin}
           isCreating={isCreating}
         />
+        </div>
       </div>
     </div>
   );

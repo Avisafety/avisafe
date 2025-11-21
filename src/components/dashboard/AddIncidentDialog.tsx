@@ -141,7 +141,6 @@ export const AddIncidentDialog = ({ open, onOpenChange, defaultDate }: AddIncide
                 <SelectValue placeholder="Velg oppdrag..." />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Ingen oppdrag</SelectItem>
                 {missions.map((mission) => (
                   <SelectItem key={mission.id} value={mission.id}>
                     {mission.tittel} ({mission.status})

@@ -27,7 +27,7 @@ export const DocumentUploadDialog = ({
   const [uploadType, setUploadType] = useState<"file" | "url">("file");
   const [formData, setFormData] = useState({
     title: "",
-    category: "Forsikring",
+    category: "annet",
     expiryDate: defaultExpiryDate ? defaultExpiryDate.toISOString().split("T")[0] : "",
     notificationDays: "30",
     websiteUrl: "",
@@ -113,7 +113,7 @@ export const DocumentUploadDialog = ({
       setSelectedFile(null);
       setFormData({
         title: "",
-        category: "Forsikring",
+        category: "annet",
         expiryDate: "",
         notificationDays: "30",
         websiteUrl: "",
@@ -211,13 +211,12 @@ export const DocumentUploadDialog = ({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Forsikring">Forsikring</SelectItem>
-                <SelectItem value="Tillatelser">Tillatelser</SelectItem>
-                <SelectItem value="Operativ">Operativ</SelectItem>
-                <SelectItem value="HMS">HMS</SelectItem>
-                <SelectItem value="Kompetanse">Kompetanse</SelectItem>
-                <SelectItem value="Vedlikehold">Vedlikehold</SelectItem>
-                <SelectItem value="Annet">Annet</SelectItem>
+                <SelectItem value="regelverk">Regelverk</SelectItem>
+                <SelectItem value="prosedyrer">Prosedyrer</SelectItem>
+                <SelectItem value="sjekklister">Sjekklister</SelectItem>
+                <SelectItem value="rapporter">Rapporter</SelectItem>
+                <SelectItem value="nettsider">Nettsider</SelectItem>
+                <SelectItem value="annet">Annet</SelectItem>
               </SelectContent>
             </Select>
           </div>

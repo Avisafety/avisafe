@@ -347,6 +347,20 @@ const DocumentCardModal = ({
                     <FormControl>
                       <Input {...field} disabled={readOnly} placeholder="https://..." />
                     </FormControl>
+                    {!readOnly && document?.nettside_url && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <span>Eksisterende URL:</span>
+                        <Button
+                          type="button"
+                          variant="link"
+                          size="sm"
+                          className="h-auto p-0"
+                          onClick={() => window.open(document.nettside_url!, "_blank")}
+                        >
+                          Åpne eksisterende URL
+                        </Button>
+                      </div>
+                    )}
                     <FormMessage />
                   </FormItem>
                 )}
@@ -374,9 +388,18 @@ const DocumentCardModal = ({
                     )}
                   </div>
                   {document?.fil_url && !selectedFile && (
-                    <p className="text-sm text-muted-foreground">
-                      Fil lastet opp tidligere
-                    </p>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <span>Eksisterende fil:</span>
+                      <Button
+                        type="button"
+                        variant="link"
+                        size="sm"
+                        className="h-auto p-0"
+                        onClick={() => window.open(document.fil_url!, "_blank")}
+                      >
+                        Åpne eksisterende fil
+                      </Button>
+                    </div>
                   )}
                 </div>
               )}

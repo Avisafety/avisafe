@@ -547,7 +547,7 @@ export default function Kalender() {
                     "[&:has([aria-selected])]:bg-accent [&:has([aria-selected].day-outside)]:bg-accent/50"
                   ),
                   day: cn(
-                    "h-full w-full p-2 font-normal hover:bg-accent hover:text-accent-foreground rounded-md",
+                    "h-full w-full p-2 font-normal hover:bg-accent/30 hover:text-accent-foreground rounded-md",
                     "flex flex-col items-start justify-start gap-1"
                   ),
                   day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground",
@@ -565,7 +565,7 @@ export default function Kalender() {
                       <button
                         {...props}
                         className={cn(
-                          "h-full w-full p-2 font-normal hover:bg-accent hover:text-accent-foreground rounded-md",
+                          "h-full w-full p-2 font-normal hover:bg-accent/30 hover:text-accent-foreground rounded-md",
                           "flex flex-col items-start justify-start gap-1 text-left"
                         )}
                       >
@@ -573,7 +573,7 @@ export default function Kalender() {
                         {displayEvents.map((event, idx) => (
                           <div
                             key={event.id || idx}
-                            className="text-[10px] truncate w-full px-1 py-0.5 bg-primary/10 rounded text-primary hover:bg-primary/20 cursor-pointer transition-colors"
+                            className="text-xs truncate w-full px-1 py-0.5 bg-primary/10 rounded text-foreground hover:bg-primary/20 cursor-pointer transition-colors font-medium"
                             title={event.title}
                             onClick={(e) => handleEventClick(event, e)}
                           >

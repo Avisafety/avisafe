@@ -48,6 +48,7 @@ const statusColors: Record<string, string> = {
 const Hendelser = () => {
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [filteredIncidents, setFilteredIncidents] = useState<Incident[]>([]);
+  const [oppfolgingsansvarlige, setOppfolgingsansvarlige] = useState<Record<string, string>>({});
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("Alle");
   const [addDialogOpen, setAddDialogOpen] = useState(false);
@@ -91,6 +92,24 @@ const Hendelser = () => {
 
       if (error) throw error;
       setIncidents(data || []);
+      
+      // Hent oppfølgingsansvarlige for hendelser som har det
+      const incidentsWithResponsible = (data || []).filter(inc => inc.oppfolgingsansvarlig_id);
+      if (incidentsWithResponsible.length > 0) {
+        const userIds = [...new Set(incidentsWithResponsible.map(inc => inc.oppfolgingsansvarlig_id))];
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, full_name')
+          .in('id', userIds);
+        
+        if (profiles) {
+          const responsibleMap: Record<string, string> = {};
+          profiles.forEach(profile => {
+            responsibleMap[profile.id] = profile.full_name || 'Ukjent bruker';
+          });
+          setOppfolgingsansvarlige(responsibleMap);
+        }
+      }
     } catch (error) {
       console.error('Error fetching incidents:', error);
     } finally {
@@ -232,6 +251,9 @@ const Hendelser = () => {
                         </span>
                         {incident.rapportert_av && (
                           <span>👤 {incident.rapportert_av}</span>
+                        )}
+                        {incident.oppfolgingsansvarlig_id && oppfolgingsansvarlige[incident.oppfolgingsansvarlig_id] && (
+                          <span>🔔 Ansvarlig: {oppfolgingsansvarlige[incident.oppfolgingsansvarlig_id]}</span>
                         )}
                       </div>
                     </div>

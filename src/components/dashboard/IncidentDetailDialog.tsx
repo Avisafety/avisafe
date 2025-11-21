@@ -49,6 +49,8 @@ export const IncidentDetailDialog = ({ open, onOpenChange, incident }: IncidentD
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [relatedMission, setRelatedMission] = useState<{ id: string; tittel: string; lokasjon: string; status: string } | null>(null);
   const [oppfolgingsansvarlig, setOppfolgingsansvarlig] = useState<{ id: string; full_name: string } | null>(null);
+  const [users, setUsers] = useState<Array<{ id: string; full_name: string }>>([]);
+  const [updatingResponsible, setUpdatingResponsible] = useState(false);
   const [comments, setComments] = useState<IncidentComment[]>([]);
   const [newComment, setNewComment] = useState("");
   const [submittingComment, setSubmittingComment] = useState(false);
@@ -74,7 +76,24 @@ export const IncidentDetailDialog = ({ open, onOpenChange, incident }: IncidentD
         setCurrentUserName(profile?.full_name || 'Ukjent bruker');
       }
     };
+    
+    const fetchUsers = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('id, full_name')
+          .eq('approved', true)
+          .order('full_name', { ascending: true });
+
+        if (error) throw error;
+        setUsers(data || []);
+      } catch (error) {
+        console.error('Error fetching users:', error);
+      }
+    };
+    
     checkAdmin();
+    fetchUsers();
   }, []);
 
   useEffect(() => {
@@ -224,6 +243,39 @@ export const IncidentDetailDialog = ({ open, onOpenChange, incident }: IncidentD
     }
   };
 
+  const handleResponsibleChange = async (userId: string) => {
+    if (!incident) return;
+    
+    setUpdatingResponsible(true);
+    try {
+      const newUserId = userId === "ingen" ? null : userId;
+      
+      const { error } = await supabase
+        .from('incidents')
+        .update({ oppfolgingsansvarlig_id: newUserId })
+        .eq('id', incident.id);
+
+      if (error) throw error;
+
+      toast.success("Oppfølgingsansvarlig oppdatert");
+      
+      // Oppdater lokal state
+      if (newUserId) {
+        const user = users.find(u => u.id === newUserId);
+        if (user) {
+          setOppfolgingsansvarlig(user);
+        }
+      } else {
+        setOppfolgingsansvarlig(null);
+      }
+    } catch (error) {
+      console.error("Error updating responsible:", error);
+      toast.error("Kunne ikke oppdatere ansvarlig");
+    } finally {
+      setUpdatingResponsible(false);
+    }
+  };
+
   if (!incident) return null;
 
   return (
@@ -235,22 +287,45 @@ export const IncidentDetailDialog = ({ open, onOpenChange, incident }: IncidentD
         
         <div className="space-y-4">
           {isAdmin && (
-            <div className="space-y-2">
-              <Label htmlFor="status-select">Endre status (Admin)</Label>
-              <Select 
-                value={incident.status} 
-                onValueChange={handleStatusChange}
-                disabled={updatingStatus}
-              >
-                <SelectTrigger id="status-select">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Åpen">Åpen</SelectItem>
-                  <SelectItem value="Under behandling">Under behandling</SelectItem>
-                  <SelectItem value="Ferdigbehandlet">Ferdigbehandlet</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="status-select">Endre status (Admin)</Label>
+                <Select 
+                  value={incident.status} 
+                  onValueChange={handleStatusChange}
+                  disabled={updatingStatus}
+                >
+                  <SelectTrigger id="status-select">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Åpen">Åpen</SelectItem>
+                    <SelectItem value="Under behandling">Under behandling</SelectItem>
+                    <SelectItem value="Ferdigbehandlet">Ferdigbehandlet</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="responsible-select">Oppfølgingsansvarlig (Admin)</Label>
+                <Select 
+                  value={incident.oppfolgingsansvarlig_id || "ingen"} 
+                  onValueChange={handleResponsibleChange}
+                  disabled={updatingResponsible}
+                >
+                  <SelectTrigger id="responsible-select">
+                    <SelectValue placeholder="Velg ansvarlig..." />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background z-50">
+                    <SelectItem value="ingen">Ingen ansvarlig</SelectItem>
+                    {users.map((user) => (
+                      <SelectItem key={user.id} value={user.id}>
+                        {user.full_name || 'Ukjent bruker'}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           )}
 

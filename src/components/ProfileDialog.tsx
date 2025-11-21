@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { IncidentDetailDialog } from "./dashboard/IncidentDetailDialog";
 
 
 interface Profile {
@@ -38,7 +39,24 @@ interface Incident {
   tittel: string;
   hendelsestidspunkt: string;
   status: string;
+  alvorlighetsgrad: string;
+  beskrivelse: string | null;
+  kategori: string | null;
+  lokasjon: string | null;
+  mission_id: string | null;
+  oppdatert_dato: string | null;
+  oppfolgingsansvarlig_id: string | null;
+  opprettet_dato: string | null;
+  rapportert_av: string | null;
+  user_id: string | null;
 }
+
+const severityColors = {
+  Lav: "bg-blue-500/20 text-blue-700 dark:text-blue-300 border-blue-500/30",
+  Middels: "bg-status-yellow/20 text-yellow-700 dark:text-yellow-300 border-status-yellow/30",
+  Høy: "bg-orange-500/20 text-orange-700 dark:text-orange-300 border-orange-500/30",
+  Kritisk: "bg-status-red/20 text-red-700 dark:text-red-300 border-status-red/30",
+};
 
 export const ProfileDialog = () => {
   const { user } = useAuth();
@@ -46,6 +64,9 @@ export const ProfileDialog = () => {
   const [roles, setRoles] = useState<UserRole[]>([]);
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
   const [incidents, setIncidents] = useState<Incident[]>([]);
+  const [followUpIncidents, setFollowUpIncidents] = useState<Incident[]>([]);
+  const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
+  const [incidentDialogOpen, setIncidentDialogOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
 
@@ -96,12 +117,24 @@ export const ProfileDialog = () => {
       // Fetch incidents
       const { data: incidentsData } = await supabase
         .from("incidents")
-        .select("id, tittel, hendelsestidspunkt, status")
+        .select("*")
         .eq("user_id", user.id)
         .order("hendelsestidspunkt", { ascending: false });
 
       if (incidentsData) {
         setIncidents(incidentsData);
+      }
+
+      // Fetch follow-up incidents
+      const { data: followUpIncidentsData } = await supabase
+        .from("incidents")
+        .select("*")
+        .eq("oppfolgingsansvarlig_id", user.id)
+        .neq("status", "Ferdigbehandlet")
+        .order("hendelsestidspunkt", { ascending: false });
+
+      if (followUpIncidentsData) {
+        setFollowUpIncidents(followUpIncidentsData);
       }
     } catch (error) {
       console.error("Error fetching user data:", error);
@@ -141,6 +174,11 @@ export const ProfileDialog = () => {
       month: "short",
       year: "numeric",
     });
+  };
+
+  const handleIncidentClick = (incident: Incident) => {
+    setSelectedIncident(incident);
+    setIncidentDialogOpen(true);
   };
 
   return (
@@ -263,10 +301,55 @@ export const ProfileDialog = () => {
                   )}
                 </CardContent>
               </Card>
+
+              {/* Follow-up Incidents */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Hendelser til oppfølging ({followUpIncidents.length})</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {followUpIncidents.length > 0 ? (
+                    <div className="space-y-2">
+                      {followUpIncidents.slice(0, 5).map((incident) => (
+                        <div 
+                          key={incident.id} 
+                          className="flex justify-between items-center py-2 cursor-pointer hover:bg-accent/50 rounded-md px-2 transition-colors"
+                          onClick={() => handleIncidentClick(incident)}
+                        >
+                          <div>
+                            <p className="font-medium">{incident.tittel}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {incident.status} • {formatDate(incident.hendelsestidspunkt)}
+                            </p>
+                          </div>
+                          <Badge 
+                            variant="outline"
+                            className={severityColors[incident.alvorlighetsgrad as keyof typeof severityColors]}
+                          >
+                            {incident.alvorlighetsgrad}
+                          </Badge>
+                        </div>
+                      ))}
+                      {followUpIncidents.length > 5 && (
+                        <p className="text-xs text-muted-foreground pt-2">
+                          + {followUpIncidents.length - 5} flere hendelser
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">Ingen hendelser til oppfølging</p>
+                  )}
+                </CardContent>
+              </Card>
             </div>
           )}
         </ScrollArea>
       </DialogContent>
+      <IncidentDetailDialog 
+        open={incidentDialogOpen}
+        onOpenChange={setIncidentDialogOpen}
+        incident={selectedIncident}
+      />
     </Dialog>
   );
 };

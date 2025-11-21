@@ -4,8 +4,21 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { nb } from "date-fns/locale";
-import { Pin, User, Calendar, Pencil } from "lucide-react";
+import { Pin, User, Calendar, Pencil, Trash2 } from "lucide-react";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { useState } from "react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 type News = any;
 
@@ -18,11 +31,34 @@ interface NewsDetailDialogProps {
 
 export const NewsDetailDialog = ({ open, onOpenChange, news, onEdit }: NewsDetailDialogProps) => {
   const { isAdmin } = useAdminCheck();
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   
   if (!news) return null;
 
   const handleEdit = () => {
     onEdit?.(news);
+  };
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      const { error } = await supabase
+        .from('news')
+        .delete()
+        .eq('id', news.id);
+
+      if (error) throw error;
+
+      toast.success('Nyheten ble slettet');
+      onOpenChange(false);
+      setShowDeleteDialog(false);
+    } catch (error) {
+      console.error('Error deleting news:', error);
+      toast.error('Kunne ikke slette nyheten');
+    } finally {
+      setDeleting(false);
+    }
   };
 
   return (
@@ -39,15 +75,26 @@ export const NewsDetailDialog = ({ open, onOpenChange, news, onEdit }: NewsDetai
         
         <div className="space-y-4">
           {isAdmin && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleEdit}
-              className="w-full sm:w-auto"
-            >
-              <Pencil className="w-4 h-4 mr-1" />
-              Rediger
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleEdit}
+                className="flex-1 sm:flex-initial"
+              >
+                <Pencil className="w-4 h-4 mr-1" />
+                Rediger
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => setShowDeleteDialog(true)}
+                className="flex-1 sm:flex-initial"
+              >
+                <Trash2 className="w-4 h-4 mr-1" />
+                Slett
+              </Button>
+            </div>
           )}
           <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground border-b border-border pb-3">
             <div className="flex items-center gap-1.5">
@@ -72,6 +119,26 @@ export const NewsDetailDialog = ({ open, onOpenChange, news, onEdit }: NewsDetai
           </div>
         </div>
       </DialogContent>
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Er du sikker?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Dette vil permanent slette nyheten "{news.tittel}". Denne handlingen kan ikke angres.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Avbryt</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? 'Sletter...' : 'Slett'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 };

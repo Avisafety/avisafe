@@ -22,7 +22,7 @@ interface AddIncidentDialogProps {
 
 export const AddIncidentDialog = ({ open, onOpenChange, defaultDate }: AddIncidentDialogProps) => {
   const [submitting, setSubmitting] = useState(false);
-  const [missions, setMissions] = useState<Array<{ id: string; tittel: string; status: string; tidspunkt: string }>>([]);
+  const [missions, setMissions] = useState<Array<{ id: string; tittel: string; status: string; tidspunkt: string; lokasjon: string }>>([]);
   const [formData, setFormData] = useState({
     tittel: "",
     beskrivelse: "",
@@ -62,16 +62,39 @@ export const AddIncidentDialog = ({ open, onOpenChange, defaultDate }: AddIncide
 
   const fetchMissions = async () => {
     try {
-      const { data, error } = await supabase
-        .from('missions')
-        .select('id, tittel, status, tidspunkt')
-        .in('status', ['Planlagt', 'Tildelt', 'Pågår'])
-        .order('tidspunkt', { ascending: true });
+    const { data, error } = await supabase
+      .from('missions')
+      .select('id, tittel, status, tidspunkt, lokasjon')
+      .in('status', ['Planlagt', 'Tildelt', 'Pågår'])
+      .order('tidspunkt', { ascending: true });
 
       if (error) throw error;
       setMissions(data || []);
     } catch (error) {
       console.error('Error fetching missions:', error);
+    }
+  };
+
+  const handleMissionSelect = (missionId: string) => {
+    const selectedMission = missions.find(m => m.id === missionId);
+    
+    if (selectedMission) {
+      const missionDate = new Date(selectedMission.tidspunkt);
+      const year = missionDate.getFullYear();
+      const month = String(missionDate.getMonth() + 1).padStart(2, '0');
+      const day = String(missionDate.getDate()).padStart(2, '0');
+      const hours = String(missionDate.getHours()).padStart(2, '0');
+      const minutes = String(missionDate.getMinutes()).padStart(2, '0');
+      const dateTimeStr = `${year}-${month}-${day}T${hours}:${minutes}`;
+      
+      setFormData(prev => ({
+        ...prev,
+        mission_id: missionId,
+        hendelsestidspunkt: dateTimeStr,
+        lokasjon: selectedMission.lokasjon,
+      }));
+    } else {
+      setFormData(prev => ({ ...prev, mission_id: missionId }));
     }
   };
 
@@ -135,7 +158,7 @@ export const AddIncidentDialog = ({ open, onOpenChange, defaultDate }: AddIncide
             <Label htmlFor="mission">Knytt til oppdrag (valgfritt)</Label>
             <Select
               value={formData.mission_id}
-              onValueChange={(value) => setFormData({ ...formData, mission_id: value })}
+              onValueChange={handleMissionSelect}
             >
               <SelectTrigger id="mission">
                 <SelectValue placeholder="Velg oppdrag..." />

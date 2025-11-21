@@ -246,7 +246,7 @@ const Index = () => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="bg-card/95 backdrop-blur-md border-glass z-50">
                   <DropdownMenuItem onClick={() => navigate("/kart")}>Kart</DropdownMenuItem>
-                  <DropdownMenuItem>Dokumenter</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/dokumenter")}>Dokumenter</DropdownMenuItem>
                   <DropdownMenuItem>Kalender</DropdownMenuItem>
                   <DropdownMenuItem>Hendelser</DropdownMenuItem>
                   <DropdownMenuItem>Status</DropdownMenuItem>
@@ -257,7 +257,7 @@ const Index = () => {
               {/* Desktop Navigation */}
               <nav className="hidden md:flex items-center gap-1 flex-shrink">
                 <Button variant="ghost" size="sm" onClick={() => navigate("/kart")}>Kart</Button>
-                <Button variant="ghost" size="sm">Dokumenter</Button>
+                <Button variant="ghost" size="sm" onClick={() => navigate("/dokumenter")}>Dokumenter</Button>
                 <Button variant="ghost" size="sm">Kalender</Button>
                 <Button variant="ghost" size="sm">Hendelser</Button>
                 <Button variant="ghost" size="sm">Status</Button>

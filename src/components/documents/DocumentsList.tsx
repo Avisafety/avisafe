@@ -36,26 +36,26 @@ const DocumentsList = ({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="bg-slate-200 text-slate-950 opacity-100">Tittel</TableHead>
-            <TableHead className="bg-slate-200 text-slate-950 shadow-sm">Kategori</TableHead>
-            <TableHead className="bg-slate-200 text-slate-950">Utløpsdato</TableHead>
-            <TableHead className="bg-slate-200 text-slate-950">Opprettet</TableHead>
+            <TableHead>Tittel</TableHead>
+            <TableHead>Kategori</TableHead>
+            <TableHead>Utløpsdato</TableHead>
+            <TableHead>Opprettet</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {documents.map(doc => <TableRow key={doc.id} className="cursor-pointer hover:bg-accent" onClick={() => onDocumentClick(doc)}>
-              <TableCell className="font-medium bg-slate-200 shadow-sm opacity-50 rounded-none">{doc.tittel}</TableCell>
-              <TableCell className="bg-slate-200 opacity-50">
+              <TableCell className="font-medium">{doc.tittel}</TableCell>
+              <TableCell>
                 <Badge variant="secondary">
                   {CATEGORY_LABELS[doc.kategori] || doc.kategori}
                 </Badge>
               </TableCell>
-              <TableCell className="bg-slate-200 opacity-50">
+              <TableCell>
                 {doc.gyldig_til ? format(new Date(doc.gyldig_til), "dd.MM.yyyy", {
               locale: nb
             }) : "Ingen utløpsdato"}
               </TableCell>
-              <TableCell className="text-muted-foreground bg-slate-200 opacity-50">
+              <TableCell className="text-muted-foreground">
                 {format(new Date(doc.opprettet_dato), "dd.MM.yyyy", {
               locale: nb
             })}

@@ -4,6 +4,8 @@ import { Document } from "@/pages/Documents";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { ExternalLink, FileText } from "lucide-react";
 interface DocumentsListProps {
   documents: Document[];
   isLoading: boolean;
@@ -40,6 +42,7 @@ const DocumentsList = ({
             <TableHead className="bg-slate-200 text-slate-950 shadow-sm">Kategori</TableHead>
             <TableHead className="bg-slate-200 text-slate-950">Utløpsdato</TableHead>
             <TableHead className="bg-slate-200 text-slate-950">Opprettet</TableHead>
+            <TableHead className="bg-slate-200 text-slate-950 text-right">Handlinger</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -59,6 +62,30 @@ const DocumentsList = ({
                 {format(new Date(doc.opprettet_dato), "dd.MM.yyyy", {
               locale: nb
             })}
+              </TableCell>
+              <TableCell className="bg-slate-200 opacity-50 text-right">
+                <div className="flex gap-2 justify-end" onClick={(e) => e.stopPropagation()}>
+                  {doc.fil_url && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => window.open(doc.fil_url!, "_blank")}
+                      title="Åpne dokument"
+                    >
+                      <FileText className="h-4 w-4" />
+                    </Button>
+                  )}
+                  {doc.nettside_url && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => window.open(doc.nettside_url!, "_blank")}
+                      title="Åpne nettside"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
               </TableCell>
             </TableRow>)}
         </TableBody>

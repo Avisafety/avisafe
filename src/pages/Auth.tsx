@@ -153,7 +153,7 @@ const Auth = () => {
               </div>
             </div>
 
-            <Button type="button" variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={loading}>
+            <Button type="button" variant="outline" onClick={handleGoogleSignIn} disabled={loading} className="w-full text-center py-0 my-[19px]">
               <Chrome className="mr-2 h-4 w-4" />
               Google
             </Button>

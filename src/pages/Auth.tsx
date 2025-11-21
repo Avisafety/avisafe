@@ -19,8 +19,11 @@ const Auth = () => {
   const [fullName, setFullName] = useState("");
 
   useEffect(() => {
+    console.log('Auth page - user:', user?.email, 'authLoading:', authLoading);
+    
     if (!authLoading && user) {
-      navigate("/");
+      console.log('Redirecting to home page');
+      navigate("/", { replace: true });
     }
   }, [user, authLoading, navigate]);
   const handleAuth = async (e: React.FormEvent) => {
@@ -89,14 +92,10 @@ const Auth = () => {
   const handleGoogleSignIn = async () => {
     setLoading(true);
     try {
-      const {
-        error
-      } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/`
-        }
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google'
       });
+      
       if (error) throw error;
     } catch (error: any) {
       console.error('Google sign-in error:', error);

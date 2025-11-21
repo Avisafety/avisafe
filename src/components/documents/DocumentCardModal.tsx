@@ -72,7 +72,7 @@ const formSchema = z.object({
   kategori: z.enum(["regelverk", "prosedyrer", "sjekklister", "rapporter", "nettsider", "annet"]),
   gyldig_til: z.date().optional(),
   varsel_dager_for_utløp: z.coerce.number().int().min(0).max(365).optional(),
-  nettside_url: z.string().url("Må være en gyldig URL").or(z.literal("")).optional(),
+  nettside_url: z.string().max(500, "URL må være under 500 tegn").optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;

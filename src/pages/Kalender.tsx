@@ -31,6 +31,7 @@ interface CalendarEvent {
   description?: string;
   id?: string;
   isCustom?: boolean;
+  sourceTable?: string;
 }
 
 type CalendarEventDB = Tables<"calendar_events">;
@@ -53,6 +54,9 @@ export default function Kalender() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [customEvents, setCustomEvents] = useState<CalendarEventDB[]>([]);
+  const [missions, setMissions] = useState<any[]>([]);
+  const [incidents, setIncidents] = useState<any[]>([]);
+  const [documents, setDocuments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
 
@@ -104,9 +108,9 @@ export default function Kalender() {
     fetchCustomEvents();
   }, []);
 
-  // Real-time subscription
+  // Real-time subscriptions
   useEffect(() => {
-    const channel = supabase
+    const calendarChannel = supabase
       .channel('calendar-events-changes')
       .on(
         'postgres_changes',
@@ -115,39 +119,106 @@ export default function Kalender() {
           schema: 'public',
           table: 'calendar_events'
         },
-        (payload) => {
-          if (payload.eventType === 'INSERT') {
-            setCustomEvents((current) => [...current, payload.new as CalendarEventDB]);
-          } else if (payload.eventType === 'UPDATE') {
-            setCustomEvents((current) =>
-              current.map((event) =>
-                event.id === (payload.new as CalendarEventDB).id ? (payload.new as CalendarEventDB) : event
-              )
-            );
-          } else if (payload.eventType === 'DELETE') {
-            setCustomEvents((current) =>
-              current.filter((event) => event.id !== (payload.old as CalendarEventDB).id)
-            );
-          }
+        () => {
+          fetchCustomEvents();
+        }
+      )
+      .subscribe();
+
+    const missionsChannel = supabase
+      .channel('missions-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'missions'
+        },
+        () => {
+          fetchCustomEvents();
+        }
+      )
+      .subscribe();
+
+    const incidentsChannel = supabase
+      .channel('incidents-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'incidents'
+        },
+        () => {
+          fetchCustomEvents();
+        }
+      )
+      .subscribe();
+
+    const documentsChannel = supabase
+      .channel('documents-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'documents'
+        },
+        () => {
+          fetchCustomEvents();
         }
       )
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(calendarChannel);
+      supabase.removeChannel(missionsChannel);
+      supabase.removeChannel(incidentsChannel);
+      supabase.removeChannel(documentsChannel);
     };
   }, []);
 
   const fetchCustomEvents = async () => {
     try {
-      const { data, error } = await supabase
+      // Fetch calendar events
+      const { data: calendarData, error: calendarError } = await supabase
         .from('calendar_events')
         .select('*')
         .order('event_date', { ascending: true });
 
-      if (error) throw error;
+      if (calendarError) throw calendarError;
+      setCustomEvents(calendarData || []);
 
-      setCustomEvents(data || []);
+      // Fetch missions
+      const { data: missionsData, error: missionsError } = await supabase
+        .from('missions')
+        .select('id, tittel, beskrivelse, tidspunkt, slutt_tidspunkt, status')
+        .order('tidspunkt', { ascending: true });
+
+      if (!missionsError) {
+        setMissions(missionsData || []);
+      }
+
+      // Fetch incidents
+      const { data: incidentsData, error: incidentsError } = await supabase
+        .from('incidents')
+        .select('id, tittel, beskrivelse, hendelsestidspunkt, alvorlighetsgrad, status')
+        .order('hendelsestidspunkt', { ascending: true });
+
+      if (!incidentsError) {
+        setIncidents(incidentsData || []);
+      }
+
+      // Fetch documents with expiry dates
+      const { data: documentsData, error: documentsError } = await supabase
+        .from('documents')
+        .select('id, tittel, kategori, gyldig_til')
+        .not('gyldig_til', 'is', null)
+        .order('gyldig_til', { ascending: true });
+
+      if (!documentsError) {
+        setDocuments(documentsData || []);
+      }
     } catch (error: any) {
       console.error('Error fetching calendar events:', error);
       toast.error('Kunne ikke laste kalenderoppføringer');
@@ -156,24 +227,61 @@ export default function Kalender() {
     }
   };
 
-  // Map custom events from database
-  const allEvents: CalendarEvent[] = customEvents.map((event) => {
+  // Combine all events from different sources
+  const allEvents: CalendarEvent[] = [
+    // Calendar events
+    ...customEvents.map((event) => {
       const eventDate = new Date(event.event_date);
       if (event.event_time) {
         const [hours, minutes] = event.event_time.split(':');
         eventDate.setHours(parseInt(hours), parseInt(minutes));
       }
       
-    return {
-      id: event.id,
-      type: event.type,
-      title: event.title,
-      date: eventDate,
-      description: event.description || undefined,
-      color: getColorForType(event.type),
-      isCustom: true,
-    };
-  });
+      return {
+        id: event.id,
+        type: event.type,
+        title: event.title,
+        date: eventDate,
+        description: event.description || undefined,
+        color: getColorForType(event.type),
+        isCustom: true,
+        sourceTable: 'calendar_events',
+      };
+    }),
+    
+    // Missions
+    ...missions.map((mission) => ({
+      id: mission.id,
+      type: "Oppdrag",
+      title: mission.tittel,
+      date: new Date(mission.tidspunkt),
+      description: mission.beskrivelse,
+      color: getColorForType("Oppdrag"),
+      sourceTable: 'missions',
+    })),
+    
+    // Incidents
+    ...incidents.map((incident) => ({
+      id: incident.id,
+      type: "Hendelse",
+      title: incident.tittel,
+      date: new Date(incident.hendelsestidspunkt),
+      description: incident.beskrivelse,
+      color: getColorForType("Hendelse"),
+      sourceTable: 'incidents',
+    })),
+    
+    // Documents (expiring)
+    ...documents.map((doc) => ({
+      id: doc.id,
+      type: "Dokument",
+      title: `${doc.tittel} utgår`,
+      date: new Date(doc.gyldig_til),
+      description: doc.kategori,
+      color: getColorForType("Dokument"),
+      sourceTable: 'documents',
+    })),
+  ];
 
   const getEventsForDate = (checkDate: Date) => {
     return allEvents.filter((event) => isSameDay(event.date, checkDate));
@@ -196,65 +304,57 @@ export default function Kalender() {
     // Close day dialog if open
     setDialogOpen(false);
 
-    // Based on event type, open appropriate detail dialog
-    if (event.type === "Oppdrag") {
-      // Fetch mission details from database
-      try {
+    if (!event.id) {
+      toast.info(event.title, {
+        description: event.description,
+      });
+      return;
+    }
+
+    try {
+      if (event.sourceTable === 'missions') {
         const { data, error } = await supabase
           .from('missions')
           .select('*')
-          .eq('tittel', event.title)
+          .eq('id', event.id)
           .single();
-        
+
         if (error) throw error;
-        if (data) {
-          setSelectedMission(data);
-          setMissionDetailDialogOpen(true);
-        }
-      } catch (error) {
-        console.error('Error fetching mission:', error);
-        toast.error('Kunne ikke laste oppdragsdetaljer');
-      }
-    } else if (event.type === "Dokument") {
-      // Fetch document details
-      try {
-        const documentTitle = event.title.replace(' utgår', '');
+        setSelectedMission(data);
+        setMissionDetailDialogOpen(true);
+      } else if (event.sourceTable === 'documents') {
         const { data, error } = await supabase
           .from('documents')
           .select('*')
-          .eq('tittel', documentTitle)
+          .eq('id', event.id)
           .single();
-        
+
         if (error) throw error;
-        if (data) {
-          setSelectedDocument(data);
-          setDocumentModalState({
-            document: data,
-            isCreating: false,
-          });
-          setDocumentDetailDialogOpen(true);
-        }
-      } catch (error) {
-        console.error('Error fetching document:', error);
-        toast.error('Kunne ikke laste dokumentdetaljer');
-      }
-    } else if (event.isCustom) {
-      // For custom calendar events, fetch incident if it exists
-      try {
+        setSelectedDocument(data);
+        setDocumentModalState({
+          document: data,
+          isCreating: false,
+        });
+        setDocumentDetailDialogOpen(true);
+      } else if (event.sourceTable === 'incidents') {
         const { data, error } = await supabase
           .from('incidents')
           .select('*')
-          .eq('tittel', event.title)
+          .eq('id', event.id)
           .single();
-        
-        if (data) {
-          setSelectedIncident(data);
-          setIncidentDetailDialogOpen(true);
-        }
-      } catch (error) {
-        // Not an incident, just show info
-        toast.info(event.title);
+
+        if (error) throw error;
+        setSelectedIncident(data);
+        setIncidentDetailDialogOpen(true);
+      } else {
+        // For calendar_events or unknown types
+        toast.info(event.title, {
+          description: event.description,
+        });
       }
+    } catch (error) {
+      console.error('Error fetching event details:', error);
+      toast.error('Kunne ikke laste detaljer');
     }
   };
 

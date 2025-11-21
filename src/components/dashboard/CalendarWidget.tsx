@@ -2,7 +2,6 @@ import { GlassCard } from "@/components/GlassCard";
 import { Calendar as CalendarIcon, Plus } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { useState, useEffect } from "react";
-import { mockDocuments, mockMissions, mockDrones, mockEquipment } from "@/data/mockData";
 import { format, isSameDay } from "date-fns";
 import { nb } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,6 +21,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { MissionDetailDialog } from "./MissionDetailDialog";
+import DocumentCardModal from "@/components/documents/DocumentCardModal";
+import { IncidentDetailDialog } from "./IncidentDetailDialog";
 
 interface CalendarEvent {
   type: string;
@@ -31,43 +33,11 @@ interface CalendarEvent {
   description?: string;
   id?: string;
   isCustom?: boolean;
+  sourceId?: string;
+  sourceType?: 'mission' | 'document' | 'drone' | 'equipment' | 'incident' | 'custom';
 }
 
 type CalendarEventDB = Tables<"calendar_events">;
-
-// Generate calendar events from mock data
-const getMockCalendarEvents = (): CalendarEvent[] => [
-  ...mockDocuments
-    .filter((doc) => doc.gyldig_til)
-    .map((doc) => ({
-      type: "Dokument",
-      title: `${doc.tittel} utgår`,
-      date: doc.gyldig_til!,
-      color: "text-blue-500",
-    })),
-  ...mockMissions.map((mission) => ({
-    type: "Oppdrag",
-    title: mission.tittel,
-    date: mission.start,
-    color: "text-primary",
-  })),
-  ...mockDrones
-    .filter((drone) => drone.neste_inspeksjon)
-    .map((drone) => ({
-      type: "Vedlikehold",
-      title: `${drone.modell} - inspeksjon`,
-      date: drone.neste_inspeksjon!,
-      color: "text-orange-500",
-    })),
-  ...mockEquipment
-    .filter((eq) => eq.neste_vedlikehold)
-    .map((eq) => ({
-      type: "Vedlikehold",
-      title: `${eq.navn} - vedlikehold`,
-      date: eq.neste_vedlikehold!,
-      color: "text-orange-500",
-    })),
-];
 
 export const CalendarWidget = () => {
   const [date, setDate] = useState<Date | undefined>(new Date());
@@ -75,6 +45,7 @@ export const CalendarWidget = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [customEvents, setCustomEvents] = useState<CalendarEventDB[]>([]);
+  const [realEvents, setRealEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [newEvent, setNewEvent] = useState({
     title: "",
@@ -82,6 +53,15 @@ export const CalendarWidget = () => {
     description: "",
     time: "09:00",
   });
+
+  // State for detail dialogs
+  const [selectedMission, setSelectedMission] = useState<any>(null);
+  const [missionDialogOpen, setMissionDialogOpen] = useState(false);
+  const [selectedDocument, setSelectedDocument] = useState<any>(null);
+  const [documentDialogOpen, setDocumentDialogOpen] = useState(false);
+  const [selectedIncident, setSelectedIncident] = useState<any>(null);
+  const [incidentDialogOpen, setIncidentDialogOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   // Helper function - must be defined before use
   const getColorForType = (type: string): string => {
@@ -94,12 +74,37 @@ export const CalendarWidget = () => {
     }
   };
 
-  // Fetch custom events from database
+  // Fetch all events from database
   useEffect(() => {
-    fetchCustomEvents();
+    fetchAllEvents();
+    checkAdminStatus();
   }, []);
 
-  // Real-time subscription
+  const checkAdminStatus = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .single();
+      
+      setIsAdmin(data?.role === 'admin');
+    }
+  };
+
+  const fetchAllEvents = async () => {
+    try {
+      await Promise.all([
+        fetchCustomEvents(),
+        fetchRealCalendarEvents()
+      ]);
+    } catch (error) {
+      console.error('Error fetching events:', error);
+    }
+  };
+
+  // Real-time subscriptions
   useEffect(() => {
     const channel = supabase
       .channel('calendar-events-changes')
@@ -126,6 +131,51 @@ export const CalendarWidget = () => {
           }
         }
       )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'missions'
+        },
+        () => fetchRealCalendarEvents()
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'documents'
+        },
+        () => fetchRealCalendarEvents()
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'drones'
+        },
+        () => fetchRealCalendarEvents()
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'equipment'
+        },
+        () => fetchRealCalendarEvents()
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'incidents'
+        },
+        () => fetchRealCalendarEvents()
+      )
       .subscribe();
 
     return () => {
@@ -151,9 +201,107 @@ export const CalendarWidget = () => {
     }
   };
 
-  // Combine mock and custom events
+  const fetchRealCalendarEvents = async () => {
+    try {
+      const events: CalendarEvent[] = [];
+
+      // Fetch missions
+      const { data: missions } = await supabase
+        .from('missions')
+        .select('id, tittel, tidspunkt')
+        .order('tidspunkt', { ascending: true });
+      
+      if (missions) {
+        events.push(...missions.map(m => ({
+          type: "Oppdrag",
+          title: m.tittel,
+          date: new Date(m.tidspunkt),
+          color: "text-primary",
+          sourceId: m.id,
+          sourceType: 'mission' as const,
+        })));
+      }
+
+      // Fetch documents with expiry dates
+      const { data: documents } = await supabase
+        .from('documents')
+        .select('id, tittel, gyldig_til')
+        .not('gyldig_til', 'is', null)
+        .order('gyldig_til', { ascending: true });
+      
+      if (documents) {
+        events.push(...documents.map(d => ({
+          type: "Dokument",
+          title: `${d.tittel} utgår`,
+          date: new Date(d.gyldig_til!),
+          color: "text-blue-500",
+          sourceId: d.id,
+          sourceType: 'document' as const,
+        })));
+      }
+
+      // Fetch drones with inspection dates
+      const { data: drones } = await supabase
+        .from('drones')
+        .select('id, modell, neste_inspeksjon')
+        .not('neste_inspeksjon', 'is', null)
+        .order('neste_inspeksjon', { ascending: true });
+      
+      if (drones) {
+        events.push(...drones.map(d => ({
+          type: "Vedlikehold",
+          title: `${d.modell} - inspeksjon`,
+          date: new Date(d.neste_inspeksjon!),
+          color: "text-orange-500",
+          sourceId: d.id,
+          sourceType: 'drone' as const,
+        })));
+      }
+
+      // Fetch equipment with maintenance dates
+      const { data: equipment } = await supabase
+        .from('equipment')
+        .select('id, navn, neste_vedlikehold')
+        .not('neste_vedlikehold', 'is', null)
+        .order('neste_vedlikehold', { ascending: true });
+      
+      if (equipment) {
+        events.push(...equipment.map(e => ({
+          type: "Vedlikehold",
+          title: `${e.navn} - vedlikehold`,
+          date: new Date(e.neste_vedlikehold!),
+          color: "text-orange-500",
+          sourceId: e.id,
+          sourceType: 'equipment' as const,
+        })));
+      }
+
+      // Fetch incidents
+      const { data: incidents } = await supabase
+        .from('incidents')
+        .select('id, tittel, hendelsestidspunkt')
+        .order('hendelsestidspunkt', { ascending: true });
+      
+      if (incidents) {
+        events.push(...incidents.map(i => ({
+          type: "Hendelse",
+          title: i.tittel,
+          date: new Date(i.hendelsestidspunkt),
+          color: "text-red-500",
+          sourceId: i.id,
+          sourceType: 'incident' as const,
+        })));
+      }
+
+      setRealEvents(events);
+    } catch (error) {
+      console.error('Error fetching real calendar events:', error);
+    }
+  };
+
+  // Combine real and custom events
   const allEvents: CalendarEvent[] = [
-    ...getMockCalendarEvents(),
+    ...realEvents,
     ...customEvents.map((event) => {
       const eventDate = new Date(event.event_date);
       if (event.event_time) {
@@ -169,6 +317,7 @@ export const CalendarWidget = () => {
         description: event.description || undefined,
         color: getColorForType(event.type),
         isCustom: true,
+        sourceType: 'custom' as const,
       };
     }),
   ];
@@ -188,6 +337,66 @@ export const CalendarWidget = () => {
       setShowAddForm(false);
       setNewEvent({ title: "", type: "Oppdrag", description: "", time: "09:00" });
       setDate(undefined); // Clear selection so it doesn't stay blue
+    }
+  };
+
+  const handleEventClick = async (event: CalendarEvent) => {
+    if (!event.sourceId || !event.sourceType) {
+      if (event.sourceType === 'custom') {
+        toast.info('Custom kalenderoppføring');
+      }
+      return;
+    }
+
+    try {
+      switch (event.sourceType) {
+        case 'mission':
+          const { data: mission } = await supabase
+            .from('missions')
+            .select('*')
+            .eq('id', event.sourceId)
+            .single();
+          
+          if (mission) {
+            setSelectedMission(mission);
+            setMissionDialogOpen(true);
+          }
+          break;
+
+        case 'document':
+          const { data: document } = await supabase
+            .from('documents')
+            .select('*')
+            .eq('id', event.sourceId)
+            .single();
+          
+          if (document) {
+            setSelectedDocument(document);
+            setDocumentDialogOpen(true);
+          }
+          break;
+
+        case 'incident':
+          const { data: incident } = await supabase
+            .from('incidents')
+            .select('*')
+            .eq('id', event.sourceId)
+            .single();
+          
+          if (incident) {
+            setSelectedIncident(incident);
+            setIncidentDialogOpen(true);
+          }
+          break;
+
+        case 'drone':
+        case 'equipment':
+          toast.info(`${event.title} - vedlikeholdsinformasjon`);
+          break;
+      }
+    } catch (error) {
+      console.error('Error fetching event details:', error);
+      toast.error('Kunne ikke laste detaljer');
     }
   };
 
@@ -311,7 +520,12 @@ export const CalendarWidget = () => {
                   selectedEvents.map((event, index) => (
                     <div
                       key={event.id || index}
-                      className="p-3 bg-card/30 rounded-lg border border-border"
+                      className={cn(
+                        "p-3 bg-card/30 rounded-lg border border-border",
+                        event.sourceType && event.sourceType !== 'custom' && 
+                        "cursor-pointer hover:bg-card/50 transition-colors"
+                      )}
+                      onClick={() => handleEventClick(event)}
                     >
                       <div className="flex items-start gap-2">
                         <div className="flex-1">
@@ -405,6 +619,29 @@ export const CalendarWidget = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Detail Dialogs */}
+      <MissionDetailDialog
+        open={missionDialogOpen}
+        onOpenChange={setMissionDialogOpen}
+        mission={selectedMission}
+      />
+
+      <DocumentCardModal
+        isOpen={documentDialogOpen}
+        onClose={() => setDocumentDialogOpen(false)}
+        document={selectedDocument}
+        onSaveSuccess={() => fetchRealCalendarEvents()}
+        onDeleteSuccess={() => fetchRealCalendarEvents()}
+        isAdmin={isAdmin}
+        isCreating={false}
+      />
+
+      <IncidentDetailDialog
+        open={incidentDialogOpen}
+        onOpenChange={setIncidentDialogOpen}
+        incident={selectedIncident}
+      />
     </>
   );
 };

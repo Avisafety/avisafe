@@ -66,18 +66,27 @@ export const IncidentsSection = () => {
             if (newIncident.status !== 'Ferdigbehandlet') {
               setIncidents((current) => [newIncident, ...current]);
             }
-          } else if (payload.eventType === 'UPDATE') {
-            const updatedIncident = payload.new as Incident;
-            setIncidents((current) => {
-              // Remove if now Ferdigbehandlet, otherwise update
-              if (updatedIncident.status === 'Ferdigbehandlet') {
-                return current.filter((incident) => incident.id !== updatedIncident.id);
-              }
-              return current.map((incident) =>
-                incident.id === updatedIncident.id ? updatedIncident : incident
-              );
-            });
-          } else if (payload.eventType === 'DELETE') {
+        } else if (payload.eventType === 'UPDATE') {
+          const updatedIncident = payload.new as Incident;
+          
+          // Oppdater selectedIncident hvis det er samme hendelse
+          setSelectedIncident((current) => {
+            if (current?.id === updatedIncident.id) {
+              return updatedIncident;
+            }
+            return current;
+          });
+          
+          setIncidents((current) => {
+            // Remove if now Ferdigbehandlet, otherwise update
+            if (updatedIncident.status === 'Ferdigbehandlet') {
+              return current.filter((incident) => incident.id !== updatedIncident.id);
+            }
+            return current.map((incident) =>
+              incident.id === updatedIncident.id ? updatedIncident : incident
+            );
+          });
+        } else if (payload.eventType === 'DELETE') {
             setIncidents((current) =>
               current.filter((incident) => incident.id !== (payload.old as Incident).id)
             );

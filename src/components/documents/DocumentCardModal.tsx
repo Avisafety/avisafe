@@ -172,9 +172,7 @@ const DocumentCardModal = ({
 
     if (uploadError) throw uploadError;
 
-    const { data: urlData } = supabase.storage.from("documents").getPublicUrl(filePath);
-
-    return urlData.publicUrl;
+    return filePath;
   };
 
   const onSubmit = async (data: FormData) => {

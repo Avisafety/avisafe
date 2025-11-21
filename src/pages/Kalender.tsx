@@ -17,7 +17,9 @@ import { toast } from "sonner";
 import { mockDocuments, mockMissions, mockDrones, mockEquipment } from "@/data/mockData";
 import type { Tables } from "@/integrations/supabase/types";
 import { AddMissionDialog } from "@/components/dashboard/AddMissionDialog";
+import { MissionDetailDialog } from "@/components/dashboard/MissionDetailDialog";
 import { AddIncidentDialog } from "@/components/dashboard/AddIncidentDialog";
+import { IncidentDetailDialog } from "@/components/dashboard/IncidentDetailDialog";
 import DocumentCardModal from "@/components/documents/DocumentCardModal";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -98,6 +100,14 @@ export default function Kalender() {
     document: null,
     isCreating: false,
   });
+
+  // Detail dialog states
+  const [missionDetailDialogOpen, setMissionDetailDialogOpen] = useState(false);
+  const [selectedMission, setSelectedMission] = useState<any | null>(null);
+  const [incidentDetailDialogOpen, setIncidentDetailDialogOpen] = useState(false);
+  const [selectedIncident, setSelectedIncident] = useState<any | null>(null);
+  const [documentDetailDialogOpen, setDocumentDetailDialogOpen] = useState(false);
+  const [selectedDocument, setSelectedDocument] = useState<any | null>(null);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -213,6 +223,74 @@ export default function Kalender() {
     if (clickedDate) {
       setSelectedDate(clickedDate);
       setDialogOpen(true);
+    }
+  };
+
+  const handleEventClick = async (event: CalendarEvent, e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    // Close day dialog if open
+    setDialogOpen(false);
+
+    // Based on event type, open appropriate detail dialog
+    if (event.type === "Oppdrag") {
+      // Fetch mission details from database
+      try {
+        const { data, error } = await supabase
+          .from('missions')
+          .select('*')
+          .eq('tittel', event.title)
+          .single();
+        
+        if (error) throw error;
+        if (data) {
+          setSelectedMission(data);
+          setMissionDetailDialogOpen(true);
+        }
+      } catch (error) {
+        console.error('Error fetching mission:', error);
+        toast.error('Kunne ikke laste oppdragsdetaljer');
+      }
+    } else if (event.type === "Dokument") {
+      // Fetch document details
+      try {
+        const documentTitle = event.title.replace(' utgår', '');
+        const { data, error } = await supabase
+          .from('documents')
+          .select('*')
+          .eq('tittel', documentTitle)
+          .single();
+        
+        if (error) throw error;
+        if (data) {
+          setSelectedDocument(data);
+          setDocumentModalState({
+            document: data,
+            isCreating: false,
+          });
+          setDocumentDetailDialogOpen(true);
+        }
+      } catch (error) {
+        console.error('Error fetching document:', error);
+        toast.error('Kunne ikke laste dokumentdetaljer');
+      }
+    } else if (event.isCustom) {
+      // For custom calendar events, fetch incident if it exists
+      try {
+        const { data, error } = await supabase
+          .from('incidents')
+          .select('*')
+          .eq('tittel', event.title)
+          .single();
+        
+        if (data) {
+          setSelectedIncident(data);
+          setIncidentDetailDialogOpen(true);
+        }
+      } catch (error) {
+        // Not an incident, just show info
+        toast.info(event.title);
+      }
     }
   };
 
@@ -431,8 +509,9 @@ export default function Kalender() {
                         {displayEvents.map((event, idx) => (
                           <div
                             key={event.id || idx}
-                            className="text-[10px] truncate w-full px-1 py-0.5 bg-primary/10 rounded text-primary"
+                            className="text-[10px] truncate w-full px-1 py-0.5 bg-primary/10 rounded text-primary hover:bg-primary/20 cursor-pointer transition-colors"
                             title={event.title}
+                            onClick={(e) => handleEventClick(event, e)}
                           >
                             {event.title}
                           </div>
@@ -460,7 +539,8 @@ export default function Kalender() {
                     selectedEvents.map((event, index) => (
                       <div
                         key={event.id || index}
-                        className="p-3 bg-card/30 rounded-lg border border-border"
+                        className="p-3 bg-card/30 rounded-lg border border-border hover:bg-card/50 cursor-pointer transition-colors"
+                        onClick={(e) => handleEventClick(event, e)}
                       >
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex-1">
@@ -504,7 +584,8 @@ export default function Kalender() {
               selectedEvents.map((event, index) => (
                 <div
                   key={event.id || index}
-                  className="p-3 bg-card/30 rounded-lg border border-border"
+                  className="p-3 bg-card/30 rounded-lg border border-border hover:bg-card/50 cursor-pointer transition-colors"
+                  onClick={(e) => handleEventClick(event, e)}
                 >
                   <div className="flex items-start gap-2">
                     <div className="flex-1">
@@ -555,6 +636,42 @@ export default function Kalender() {
         onDeleteSuccess={handleDocumentDeleteSuccess}
         isAdmin={isAdmin}
         isCreating={documentModalState.isCreating}
+      />
+
+      {/* Detail Dialogs */}
+      <MissionDetailDialog
+        open={missionDetailDialogOpen}
+        onOpenChange={setMissionDetailDialogOpen}
+        mission={selectedMission}
+      />
+
+      <IncidentDetailDialog
+        open={incidentDetailDialogOpen}
+        onOpenChange={setIncidentDetailDialogOpen}
+        incident={selectedIncident}
+      />
+
+      <DocumentCardModal
+        document={selectedDocument}
+        isOpen={documentDetailDialogOpen}
+        onClose={() => {
+          setDocumentDetailDialogOpen(false);
+          setSelectedDocument(null);
+        }}
+        onSaveSuccess={() => {
+          toast.success("Dokument oppdatert!");
+          setDocumentDetailDialogOpen(false);
+          setSelectedDocument(null);
+          fetchCustomEvents();
+        }}
+        onDeleteSuccess={() => {
+          toast.success("Dokument slettet!");
+          setDocumentDetailDialogOpen(false);
+          setSelectedDocument(null);
+          fetchCustomEvents();
+        }}
+        isAdmin={isAdmin}
+        isCreating={false}
       />
     </div>
   );

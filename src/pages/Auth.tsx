@@ -153,9 +153,9 @@ const Auth = () => {
               </div>
             </div>
 
-            <Button type="button" variant="outline" onClick={handleGoogleSignIn} disabled={loading} className="w-full text-center py-0 my-[19px]">
+            <Button type="button" variant="outline" onClick={handleGoogleSignIn} disabled={loading} className="w-full text-center py-0 my-[19px] bg-blue-200 hover:bg-blue-100">
               <Chrome className="mr-2 h-4 w-4" />
-              Google
+              Logg inn med Google
             </Button>
 
             <div className="text-center text-sm">

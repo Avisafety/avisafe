@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, Clock } from "lucide-react";
-import { mockFollowUps } from "@/data/mockData";
+
 import { format } from "date-fns";
 import { nb } from "date-fns/locale";
 import { useState, useEffect } from "react";
@@ -41,6 +41,8 @@ export const IncidentsSection = () => {
   const [loading, setLoading] = useState(true);
   const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [myFollowUpIncidents, setMyFollowUpIncidents] = useState<Incident[]>([]);
+  const [followUpLoading, setFollowUpLoading] = useState(true);
 
   // Fetch incidents from database
   useEffect(() => {
@@ -86,6 +88,57 @@ export const IncidentsSection = () => {
 
     return () => {
       supabase.removeChannel(channel);
+    };
+  }, []);
+
+  // Fetch follow-up incidents for logged-in user
+  useEffect(() => {
+    const fetchMyFollowUps = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          setMyFollowUpIncidents([]);
+          setFollowUpLoading(false);
+          return;
+        }
+
+        const { data, error } = await supabase
+          .from('incidents')
+          .select('*')
+          .eq('oppfolgingsansvarlig_id', user.id)
+          .order('hendelsestidspunkt', { ascending: false });
+
+        if (error) throw error;
+
+        setMyFollowUpIncidents(data || []);
+      } catch (error: any) {
+        console.error('Error fetching follow-up incidents:', error);
+        toast.error('Kunne ikke laste oppfølgingshendelser');
+      } finally {
+        setFollowUpLoading(false);
+      }
+    };
+
+    fetchMyFollowUps();
+
+    // Realtime subscription for follow-up incidents
+    const followUpChannel = supabase
+      .channel('my-followup-incidents')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'incidents'
+        },
+        async () => {
+          fetchMyFollowUps();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(followUpChannel);
     };
   }, []);
 
@@ -138,7 +191,7 @@ export const IncidentsSection = () => {
             Hendelser ({incidents.length})
           </TabsTrigger>
           <TabsTrigger value="followups" className="flex-1 text-xs sm:text-sm">
-            Oppfølging ({mockFollowUps.length})
+            Oppfølging ({myFollowUpIncidents.length})
           </TabsTrigger>
         </TabsList>
 
@@ -181,34 +234,53 @@ export const IncidentsSection = () => {
         </TabsContent>
 
         <TabsContent value="followups" className="space-y-1.5 sm:space-y-2 mt-2 sm:mt-3 flex-1 overflow-y-auto">
-          {mockFollowUps.map((followUp) => {
-            const incident = incidents.find((i) => i.id === followUp.hendelse_id);
-            return (
+          {followUpLoading ? (
+            <div className="text-center py-4 text-xs sm:text-sm text-muted-foreground">
+              Laster oppfølginger...
+            </div>
+          ) : myFollowUpIncidents.length === 0 ? (
+            <div className="text-center py-4 text-xs sm:text-sm text-muted-foreground">
+              Du har ingen hendelser som oppfølgingsansvarlig
+            </div>
+          ) : (
+            myFollowUpIncidents.slice(0, 4).map((incident) => (
               <div
-                key={followUp.id}
+                key={incident.id}
+                onClick={() => handleIncidentClick(incident)}
                 className="p-2 sm:p-3 bg-card/30 rounded hover:bg-card/50 transition-colors cursor-pointer"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-xs sm:text-sm mb-1">{incident?.tittel}</h3>
-                    <p className="text-[10px] sm:text-xs text-muted-foreground line-clamp-1 mb-1 sm:mb-1.5">
-                      {followUp.tiltak}
-                    </p>
-                    <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs">
-                      <div className="flex items-center gap-1">
-                        <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
-                        <span>{format(followUp.frist, "dd. MMM", { locale: nb })}</span>
-                      </div>
-                      {followUp.ansvarlig && (
-                        <span className="text-muted-foreground truncate">• {followUp.ansvarlig}</span>
+                    <h3 className="font-medium text-xs sm:text-sm mb-1">{incident.tittel}</h3>
+                    {incident.beskrivelse && (
+                      <p className="text-[10px] sm:text-xs text-muted-foreground line-clamp-1 mb-1 sm:mb-1.5">
+                        {incident.beskrivelse}
+                      </p>
+                    )}
+                    <div className="flex flex-wrap items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs">
+                      <Badge className={`${severityColors[incident.alvorlighetsgrad as keyof typeof severityColors] || 'bg-gray-500/20'} text-[10px] sm:text-xs px-1 sm:px-1.5 py-0.5`}>
+                        {incident.alvorlighetsgrad}
+                      </Badge>
+                      {incident.kategori && (
+                        <Badge variant="outline" className="text-[10px] sm:text-xs px-1 sm:px-1.5 py-0.5">
+                          {incident.kategori}
+                        </Badge>
+                      )}
+                      <span className="text-muted-foreground">
+                        {format(new Date(incident.hendelsestidspunkt), "dd. MMM", { locale: nb })}
+                      </span>
+                      {incident.lokasjon && (
+                        <span className="text-muted-foreground truncate">• {incident.lokasjon}</span>
                       )}
                     </div>
                   </div>
-                  <Badge className={`${statusColors[followUp.status]} text-[10px] sm:text-xs px-1 sm:px-1.5 py-0.5 whitespace-nowrap`}>{followUp.status}</Badge>
+                  <Badge className={`${statusColors[incident.status as keyof typeof statusColors] || 'bg-gray-500/20'} text-[10px] sm:text-xs px-1 sm:px-1.5 py-0.5 whitespace-nowrap`}>
+                    {incident.status}
+                  </Badge>
                 </div>
               </div>
-            );
-          })}
+            ))
+          )}
         </TabsContent>
       </Tabs>
 

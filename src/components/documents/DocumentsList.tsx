@@ -36,7 +36,7 @@ const DocumentsList = ({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="bg-slate-200 text-slate-950 opacity-80">Tittel</TableHead>
+            <TableHead className="bg-slate-200 text-slate-950 opacity-100">Tittel</TableHead>
             <TableHead className="bg-slate-200 text-slate-950 shadow-sm">Kategori</TableHead>
             <TableHead className="bg-slate-200 text-slate-950">Utløpsdato</TableHead>
             <TableHead className="bg-slate-200 text-slate-950">Opprettet</TableHead>
@@ -44,7 +44,7 @@ const DocumentsList = ({
         </TableHeader>
         <TableBody>
           {documents.map(doc => <TableRow key={doc.id} className="cursor-pointer hover:bg-accent" onClick={() => onDocumentClick(doc)}>
-              <TableCell className="font-medium bg-slate-200 rounded-sm shadow-sm opacity-50">{doc.tittel}</TableCell>
+              <TableCell className="font-medium bg-slate-200 shadow-sm opacity-50 rounded-none">{doc.tittel}</TableCell>
               <TableCell className="bg-slate-200 opacity-50">
                 <Badge variant="secondary">
                   {CATEGORY_LABELS[doc.kategori] || doc.kategori}
@@ -55,7 +55,7 @@ const DocumentsList = ({
               locale: nb
             }) : "Ingen utløpsdato"}
               </TableCell>
-              <TableCell className="text-muted-foreground bg-slate-200">
+              <TableCell className="text-muted-foreground bg-slate-200 opacity-50">
                 {format(new Date(doc.opprettet_dato), "dd.MM.yyyy", {
               locale: nb
             })}

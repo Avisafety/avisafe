@@ -19,6 +19,7 @@ export interface Document {
   sist_endret: Date;
   fil_url?: string;
   fil_navn?: string;
+  nettside_url?: string;
 }
 
 export type PersonRole = "Pilot" | "Tekniker" | "Operativ leder" | "Observatør" | "Annet";

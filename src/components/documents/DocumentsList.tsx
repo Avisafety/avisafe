@@ -6,6 +6,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ExternalLink, FileText } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const openUrl = (url: string) => {
   let finalUrl = url;
@@ -32,6 +34,29 @@ const DocumentsList = ({
   isLoading,
   onDocumentClick
 }: DocumentsListProps) => {
+  const handleOpenFile = async (filUrl: string) => {
+    try {
+      // Check if it's an external URL
+      if (filUrl.startsWith('http://') || filUrl.startsWith('https://')) {
+        window.open(filUrl, '_blank');
+        return;
+      }
+      
+      // It's a storage path - generate signed URL
+      const { data, error } = await supabase.storage
+        .from('documents')
+        .createSignedUrl(filUrl, 3600); // Valid for 1 hour
+
+      if (error) throw error;
+      if (data?.signedUrl) {
+        window.open(data.signedUrl, '_blank');
+      }
+    } catch (error) {
+      console.error('Error opening file:', error);
+      toast.error('Kunne ikke åpne dokumentet');
+    }
+  };
+
   if (isLoading) {
     return <div className="space-y-2">
         {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-16 w-full" />)}
@@ -77,7 +102,7 @@ const DocumentsList = ({
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => window.open(doc.fil_url!, "_blank")}
+                      onClick={() => handleOpenFile(doc.fil_url!)}
                       title="Åpne dokument"
                     >
                       <FileText className="h-4 w-4" />

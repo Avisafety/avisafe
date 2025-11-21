@@ -184,8 +184,16 @@ export const ProfileDialog = () => {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="sm" title="Min profil">
+        <Button variant="ghost" size="sm" title="Min profil" className="relative">
           <User className="w-4 h-4" />
+          {followUpIncidents.length > 0 && (
+            <Badge 
+              variant="destructive" 
+              className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs rounded-full"
+            >
+              {followUpIncidents.length}
+            </Badge>
+          )}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[80vh]">

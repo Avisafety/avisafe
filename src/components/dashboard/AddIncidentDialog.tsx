@@ -22,6 +22,7 @@ interface AddIncidentDialogProps {
 
 export const AddIncidentDialog = ({ open, onOpenChange, defaultDate }: AddIncidentDialogProps) => {
   const [submitting, setSubmitting] = useState(false);
+  const [missions, setMissions] = useState<Array<{ id: string; tittel: string; status: string; tidspunkt: string }>>([]);
   const [formData, setFormData] = useState({
     tittel: "",
     beskrivelse: "",
@@ -30,17 +31,21 @@ export const AddIncidentDialog = ({ open, onOpenChange, defaultDate }: AddIncide
     status: "Åpen",
     kategori: "",
     lokasjon: "",
+    mission_id: "",
   });
 
   useEffect(() => {
-    if (open && defaultDate) {
-      // Format date to datetime-local format
-      const year = defaultDate.getFullYear();
-      const month = String(defaultDate.getMonth() + 1).padStart(2, '0');
-      const day = String(defaultDate.getDate()).padStart(2, '0');
-      const dateStr = `${year}-${month}-${day}T09:00`;
-      setFormData(prev => ({ ...prev, hendelsestidspunkt: dateStr }));
-    } else if (!open) {
+    if (open) {
+      fetchMissions();
+      if (defaultDate) {
+        // Format date to datetime-local format
+        const year = defaultDate.getFullYear();
+        const month = String(defaultDate.getMonth() + 1).padStart(2, '0');
+        const day = String(defaultDate.getDate()).padStart(2, '0');
+        const dateStr = `${year}-${month}-${day}T09:00`;
+        setFormData(prev => ({ ...prev, hendelsestidspunkt: dateStr }));
+      }
+    } else {
       // Reset form when dialog closes
       setFormData({
         tittel: "",
@@ -50,9 +55,25 @@ export const AddIncidentDialog = ({ open, onOpenChange, defaultDate }: AddIncide
         status: "Åpen",
         kategori: "",
         lokasjon: "",
+        mission_id: "",
       });
     }
   }, [open, defaultDate]);
+
+  const fetchMissions = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('missions')
+        .select('id, tittel, status, tidspunkt')
+        .in('status', ['Planlagt', 'Tildelt', 'Pågår'])
+        .order('tidspunkt', { ascending: true });
+
+      if (error) throw error;
+      setMissions(data || []);
+    } catch (error) {
+      console.error('Error fetching missions:', error);
+    }
+  };
 
   const handleSubmit = async () => {
     if (!formData.tittel || !formData.hendelsestidspunkt) {
@@ -83,6 +104,7 @@ export const AddIncidentDialog = ({ open, onOpenChange, defaultDate }: AddIncide
           kategori: formData.kategori || null,
           lokasjon: formData.lokasjon || null,
           rapportert_av: user.email || 'Ukjent',
+          mission_id: formData.mission_id || null,
         });
 
       if (error) throw error;
@@ -109,6 +131,26 @@ export const AddIncidentDialog = ({ open, onOpenChange, defaultDate }: AddIncide
         </DialogHeader>
 
         <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="mission">Knytt til oppdrag (valgfritt)</Label>
+            <Select
+              value={formData.mission_id}
+              onValueChange={(value) => setFormData({ ...formData, mission_id: value })}
+            >
+              <SelectTrigger id="mission">
+                <SelectValue placeholder="Velg oppdrag..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Ingen oppdrag</SelectItem>
+                {missions.map((mission) => (
+                  <SelectItem key={mission.id} value={mission.id}>
+                    {mission.tittel} ({mission.status})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="tittel">Tittel *</Label>
             <Input

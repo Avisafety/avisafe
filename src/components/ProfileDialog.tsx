@@ -1,12 +1,6 @@
 import { useState, useEffect } from "react";
 import { User } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,7 +10,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { IncidentDetailDialog } from "./dashboard/IncidentDetailDialog";
-
 
 interface Profile {
   full_name: string | null;
@@ -93,14 +86,11 @@ export const ProfileDialog = () => {
       }
 
       // Fetch roles
-      const { data: rolesData } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", user.id);
+      const { data: rolesData } = await supabase.from("user_roles").select("role").eq("user_id", user.id);
 
       if (rolesData) {
         setRoles(rolesData);
-        setIsAdmin(rolesData.some(role => role.role === "admin"));
+        setIsAdmin(rolesData.some((role) => role.role === "admin"));
       }
 
       // Fetch calendar events
@@ -187,8 +177,8 @@ export const ProfileDialog = () => {
         <Button variant="ghost" size="sm" title="Min profil" className="relative">
           <User className="w-4 h-4" />
           {followUpIncidents.length > 0 && (
-            <Badge 
-              variant="destructive" 
+            <Badge
+              variant="destructive"
               className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs rounded-full"
             >
               {followUpIncidents.length}
@@ -221,9 +211,7 @@ export const ProfileDialog = () => {
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className="text-lg font-semibold">
-                        {profile?.full_name || "Ikke satt"}
-                      </p>
+                      <p className="text-lg font-semibold">{profile?.full_name || "Ikke satt"}</p>
                       <p className="text-sm text-muted-foreground">{user?.email}</p>
                     </div>
                   </div>
@@ -259,8 +247,8 @@ export const ProfileDialog = () => {
                   {followUpIncidents.length > 0 ? (
                     <div className="space-y-2">
                       {followUpIncidents.slice(0, 5).map((incident) => (
-                        <div 
-                          key={incident.id} 
+                        <div
+                          key={incident.id}
                           className="flex justify-between items-center py-2 cursor-pointer hover:bg-accent/50 rounded-md px-2 transition-colors"
                           onClick={() => handleIncidentClick(incident)}
                         >
@@ -270,7 +258,7 @@ export const ProfileDialog = () => {
                               {incident.status} • {formatDate(incident.hendelsestidspunkt)}
                             </p>
                           </div>
-                          <Badge 
+                          <Badge
                             variant="outline"
                             className={severityColors[incident.alvorlighetsgrad as keyof typeof severityColors]}
                           >
@@ -293,7 +281,7 @@ export const ProfileDialog = () => {
               {/* Calendar Events */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Mine kalenderhendelser ({calendarEvents.length})</CardTitle>
+                  <CardTitle>Mine kalenderoppføringer ({calendarEvents.length})</CardTitle>
                 </CardHeader>
                 <CardContent>
                   {calendarEvents.length > 0 ? (
@@ -323,7 +311,7 @@ export const ProfileDialog = () => {
           )}
         </ScrollArea>
       </DialogContent>
-      <IncidentDetailDialog 
+      <IncidentDetailDialog
         open={incidentDialogOpen}
         onOpenChange={setIncidentDialogOpen}
         incident={selectedIncident}

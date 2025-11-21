@@ -26,6 +26,7 @@ type Incident = {
   oppdatert_dato: string | null;
   user_id: string | null;
   mission_id: string | null;
+  oppfolgingsansvarlig_id: string | null;
 };
 
 const statusOptions = ["Alle", "Åpen", "Under behandling", "Ferdigbehandlet", "Lukket"];

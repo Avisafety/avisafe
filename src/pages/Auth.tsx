@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Shield } from "lucide-react";
+import { Shield, Chrome } from "lucide-react";
 import droneBackground from "@/assets/drone-background.png";
 
 const Auth = () => {
@@ -83,6 +83,24 @@ const Auth = () => {
       console.error("Auth error:", error);
       toast.error(error.message || "En feil oppstod");
     } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/`,
+        }
+      });
+
+      if (error) throw error;
+    } catch (error: any) {
+      console.error('Google sign-in error:', error);
+      toast.error(error.message || 'Kunne ikke logge inn med Google');
       setLoading(false);
     }
   };
@@ -167,18 +185,41 @@ const Auth = () => {
               >
                 {loading ? "Behandler..." : (isLogin ? "Logg inn" : "Opprett konto")}
               </Button>
-              <div className="text-center text-sm">
-                <button
-                  type="button"
-                  onClick={() => setIsLogin(!isLogin)}
-                  className="text-primary hover:underline"
-                >
-                  {isLogin 
-                    ? "Har du ikke konto? Opprett en her" 
-                    : "Har du allerede konto? Logg inn her"}
-                </button>
-              </div>
             </form>
+            
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-card px-2 text-muted-foreground">
+                  Eller fortsett med
+                </span>
+              </div>
+            </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={handleGoogleSignIn}
+              disabled={loading}
+            >
+              <Chrome className="mr-2 h-4 w-4" />
+              Google
+            </Button>
+
+            <div className="text-center text-sm">
+              <button
+                type="button"
+                onClick={() => setIsLogin(!isLogin)}
+                className="text-primary hover:underline"
+              >
+                {isLogin 
+                  ? "Har du ikke konto? Opprett en her" 
+                  : "Har du allerede konto? Logg inn her"}
+              </button>
+            </div>
           </CardContent>
         </Card>
       </div>

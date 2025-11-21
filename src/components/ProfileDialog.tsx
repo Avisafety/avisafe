@@ -250,66 +250,6 @@ export const ProfileDialog = () => {
                 </CardContent>
               </Card>
 
-              {/* Calendar Events */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Mine kalenderhendelser ({calendarEvents.length})</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {calendarEvents.length > 0 ? (
-                    <div className="space-y-2">
-                      {calendarEvents.slice(0, 5).map((event) => (
-                        <div key={event.id} className="flex justify-between items-center py-2">
-                          <div>
-                            <p className="font-medium">{event.title}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {event.type} • {formatDate(event.event_date)}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                      {calendarEvents.length > 5 && (
-                        <p className="text-xs text-muted-foreground pt-2">
-                          + {calendarEvents.length - 5} flere hendelser
-                        </p>
-                      )}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">Ingen kalenderhendelser</p>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Incidents */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Mine hendelser ({incidents.length})</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {incidents.length > 0 ? (
-                    <div className="space-y-2">
-                      {incidents.slice(0, 5).map((incident) => (
-                        <div key={incident.id} className="flex justify-between items-center py-2">
-                          <div>
-                            <p className="font-medium">{incident.tittel}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {incident.status} • {formatDate(incident.hendelsestidspunkt)}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                      {incidents.length > 5 && (
-                        <p className="text-xs text-muted-foreground pt-2">
-                          + {incidents.length - 5} flere hendelser
-                        </p>
-                      )}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">Ingen hendelser</p>
-                  )}
-                </CardContent>
-              </Card>
-
               {/* Follow-up Incidents */}
               <Card>
                 <CardHeader>
@@ -346,6 +286,36 @@ export const ProfileDialog = () => {
                     </div>
                   ) : (
                     <p className="text-sm text-muted-foreground">Ingen hendelser til oppfølging</p>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Calendar Events */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Mine kalenderhendelser ({calendarEvents.length})</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {calendarEvents.length > 0 ? (
+                    <div className="space-y-2">
+                      {calendarEvents.slice(0, 5).map((event) => (
+                        <div key={event.id} className="flex justify-between items-center py-2">
+                          <div>
+                            <p className="font-medium">{event.title}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {event.type} • {formatDate(event.event_date)}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                      {calendarEvents.length > 5 && (
+                        <p className="text-xs text-muted-foreground pt-2">
+                          + {calendarEvents.length - 5} flere hendelser
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">Ingen kalenderhendelser</p>
                   )}
                 </CardContent>
               </Card>

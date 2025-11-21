@@ -250,6 +250,7 @@ export type Database = {
           id: string
           kategori: string | null
           lokasjon: string | null
+          mission_id: string | null
           oppdatert_dato: string | null
           opprettet_dato: string | null
           rapportert_av: string | null
@@ -264,6 +265,7 @@ export type Database = {
           id?: string
           kategori?: string | null
           lokasjon?: string | null
+          mission_id?: string | null
           oppdatert_dato?: string | null
           opprettet_dato?: string | null
           rapportert_av?: string | null
@@ -278,6 +280,7 @@ export type Database = {
           id?: string
           kategori?: string | null
           lokasjon?: string | null
+          mission_id?: string | null
           oppdatert_dato?: string | null
           opprettet_dato?: string | null
           rapportert_av?: string | null
@@ -285,7 +288,15 @@ export type Database = {
           tittel?: string
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "incidents_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "missions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       mission_equipment: {
         Row: {

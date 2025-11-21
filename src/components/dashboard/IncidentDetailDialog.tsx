@@ -38,6 +38,7 @@ const statusColors = {
 export const IncidentDetailDialog = ({ open, onOpenChange, incident }: IncidentDetailDialogProps) => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [relatedMission, setRelatedMission] = useState<{ id: string; tittel: string; lokasjon: string; status: string } | null>(null);
 
   useEffect(() => {
     const checkAdmin = async () => {
@@ -52,6 +53,31 @@ export const IncidentDetailDialog = ({ open, onOpenChange, incident }: IncidentD
     };
     checkAdmin();
   }, []);
+
+  useEffect(() => {
+    const fetchRelatedMission = async () => {
+      if (!incident?.mission_id) {
+        setRelatedMission(null);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('missions')
+          .select('id, tittel, lokasjon, status')
+          .eq('id', incident.mission_id)
+          .single();
+
+        if (error) throw error;
+        setRelatedMission(data);
+      } catch (error) {
+        console.error('Error fetching related mission:', error);
+        setRelatedMission(null);
+      }
+    };
+
+    fetchRelatedMission();
+  }, [incident?.mission_id]);
 
   const handleStatusChange = async (newStatus: string) => {
     if (!incident) return;
@@ -119,6 +145,16 @@ export const IncidentDetailDialog = ({ open, onOpenChange, incident }: IncidentD
           </div>
 
           <div className="space-y-3">
+            {relatedMission && (
+              <div className="p-3 bg-muted rounded-md border">
+                <p className="text-sm font-medium text-muted-foreground mb-1">Knyttet til oppdrag</p>
+                <p className="font-medium">{relatedMission.tittel}</p>
+                <p className="text-sm text-muted-foreground">
+                  {relatedMission.lokasjon} • {relatedMission.status}
+                </p>
+              </div>
+            )}
+
             <div className="flex items-start gap-3">
               <Calendar className="w-5 h-5 text-muted-foreground mt-0.5" />
               <div>

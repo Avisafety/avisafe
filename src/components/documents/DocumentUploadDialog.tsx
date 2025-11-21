@@ -86,11 +86,7 @@ export const DocumentUploadDialog = ({
 
         if (uploadError) throw uploadError;
 
-        const {
-          data: { publicUrl },
-        } = supabase.storage.from("documents").getPublicUrl(filePath);
-
-        fileUrl = publicUrl;
+        fileUrl = filePath;
         fileName = selectedFile.name;
         fileSize = selectedFile.size;
       }

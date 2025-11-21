@@ -9,17 +9,7 @@ import { nb } from "date-fns/locale";
 import { useState, useEffect } from "react";
 import type { Tables } from "@/integrations/supabase/types";
 import { IncidentDetailDialog } from "./IncidentDetailDialog";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AddIncidentDialog } from "./AddIncidentDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -46,20 +36,9 @@ const statusColors = {
 type Incident = Tables<"incidents">;
 
 export const IncidentsSection = () => {
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [loading, setLoading] = useState(true);
-  const [formData, setFormData] = useState({
-    tittel: "",
-    beskrivelse: "",
-    hendelsestidspunkt: "",
-    alvorlighetsgrad: "Middels",
-    status: "Åpen",
-    kategori: "",
-    lokasjon: "",
-  });
-  
   const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
 
@@ -129,59 +108,6 @@ export const IncidentsSection = () => {
     }
   };
 
-  const handleSubmit = async () => {
-    if (!formData.tittel || !formData.hendelsestidspunkt) {
-      toast.error("Vennligst fyll ut alle påkrevde felt");
-      return;
-    }
-
-    setSubmitting(true);
-
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        toast.error("Du må være logget inn for å rapportere hendelser");
-        setSubmitting(false);
-        return;
-      }
-
-      const { error } = await supabase
-        .from('incidents')
-        .insert({
-          user_id: user.id,
-          tittel: formData.tittel,
-          beskrivelse: formData.beskrivelse,
-          hendelsestidspunkt: new Date(formData.hendelsestidspunkt).toISOString(),
-          alvorlighetsgrad: formData.alvorlighetsgrad,
-          status: formData.status,
-          kategori: formData.kategori || null,
-          lokasjon: formData.lokasjon || null,
-          rapportert_av: user.email || 'Ukjent',
-        });
-
-      if (error) throw error;
-
-      toast.success("Hendelse rapportert!");
-      setDialogOpen(false);
-      setFormData({
-        tittel: "",
-        beskrivelse: "",
-        hendelsestidspunkt: "",
-        alvorlighetsgrad: "Middels",
-        status: "Åpen",
-        kategori: "",
-        lokasjon: "",
-      });
-      
-    } catch (error: any) {
-      console.error('Submit error:', error);
-      toast.error(`Feil ved rapportering: ${error.message}`);
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
   const handleIncidentClick = (incident: Incident) => {
     setSelectedIncident(incident);
     setDetailDialogOpen(true);
@@ -199,7 +125,7 @@ export const IncidentsSection = () => {
           size="sm" 
           variant="destructive" 
           className="gap-1 h-7 sm:h-8 text-xs sm:text-sm px-2 sm:px-3 flex-shrink-0"
-          onClick={() => setDialogOpen(true)}
+          onClick={() => setAddDialogOpen(true)}
         >
           <AlertTriangle className="w-3 h-3 sm:w-4 sm:h-4" />
           <span>Rapporter hendelse</span>
@@ -286,134 +212,10 @@ export const IncidentsSection = () => {
         </TabsContent>
       </Tabs>
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="w-[95vw] max-w-md max-h-[90vh] overflow-y-auto p-4 sm:p-6">
-          <DialogHeader>
-            <DialogTitle>Rapporter hendelse</DialogTitle>
-            <DialogDescription>
-              Fyll ut informasjon om hendelsen
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="tittel">Tittel *</Label>
-              <Input
-                id="tittel"
-                value={formData.tittel}
-                onChange={(e) => setFormData({ ...formData, tittel: e.target.value })}
-                placeholder="Kort beskrivelse av hendelsen"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="beskrivelse">Beskrivelse</Label>
-              <Textarea
-                id="beskrivelse"
-                value={formData.beskrivelse}
-                onChange={(e) => setFormData({ ...formData, beskrivelse: e.target.value })}
-                placeholder="Detaljert beskrivelse av hendelsen..."
-                rows={4}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="hendelsestidspunkt">Hendelsestidspunkt *</Label>
-              <Input
-                id="hendelsestidspunkt"
-                type="datetime-local"
-                value={formData.hendelsestidspunkt}
-                onChange={(e) => setFormData({ ...formData, hendelsestidspunkt: e.target.value })}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="alvorlighetsgrad">Alvorlighetsgrad</Label>
-              <Select
-                value={formData.alvorlighetsgrad}
-                onValueChange={(value) => setFormData({ ...formData, alvorlighetsgrad: value })}
-              >
-                <SelectTrigger id="alvorlighetsgrad">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Lav">Lav</SelectItem>
-                  <SelectItem value="Middels">Middels</SelectItem>
-                  <SelectItem value="Høy">Høy</SelectItem>
-                  <SelectItem value="Kritisk">Kritisk</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
-              <Select
-                value={formData.status}
-                onValueChange={(value) => setFormData({ ...formData, status: value })}
-              >
-                <SelectTrigger id="status">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Åpen">Åpen</SelectItem>
-                  <SelectItem value="Under behandling">Under behandling</SelectItem>
-                  <SelectItem value="Ferdigbehandlet">Ferdigbehandlet</SelectItem>
-                  <SelectItem value="Lukket">Lukket</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="kategori">Kategori (valgfritt)</Label>
-              <Input
-                id="kategori"
-                value={formData.kategori}
-                onChange={(e) => setFormData({ ...formData, kategori: e.target.value })}
-                placeholder="F.eks. Teknisk, Operasjonell, etc."
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="lokasjon">Lokasjon (valgfritt)</Label>
-              <Input
-                id="lokasjon"
-                value={formData.lokasjon}
-                onChange={(e) => setFormData({ ...formData, lokasjon: e.target.value })}
-                placeholder="F.eks. Oslo, Hangar A, etc."
-              />
-            </div>
-
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  setDialogOpen(false);
-                  setFormData({
-                    tittel: "",
-                    beskrivelse: "",
-                    hendelsestidspunkt: "",
-                    alvorlighetsgrad: "Middels",
-                    status: "Åpen",
-                    kategori: "",
-                    lokasjon: "",
-                  });
-                }}
-                className="flex-1"
-              >
-                Avbryt
-              </Button>
-              <Button
-                onClick={handleSubmit}
-                disabled={submitting || !formData.tittel || !formData.hendelsestidspunkt}
-                className="flex-1"
-              >
-                {submitting ? "Rapporterer..." : "Rapporter"}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <AddIncidentDialog
+        open={addDialogOpen}
+        onOpenChange={setAddDialogOpen}
+      />
       
       <IncidentDetailDialog 
         open={detailDialogOpen}

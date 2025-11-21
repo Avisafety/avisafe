@@ -6,6 +6,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ExternalLink, FileText } from "lucide-react";
+
+const openUrl = (url: string) => {
+  let finalUrl = url;
+  if (!url.match(/^https?:\/\//i)) {
+    finalUrl = `https://${url}`;
+  }
+  window.open(finalUrl, "_blank");
+};
 interface DocumentsListProps {
   documents: Document[];
   isLoading: boolean;
@@ -79,7 +87,7 @@ const DocumentsList = ({
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => window.open(doc.nettside_url!, "_blank")}
+                      onClick={() => openUrl(doc.nettside_url!)}
                       title="Åpne nettside"
                     >
                       <ExternalLink className="h-4 w-4" />

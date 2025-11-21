@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface AuthContextType {
   user: User | null;
@@ -36,6 +37,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+
+        // Check approval for Google sign-in users
+        if (event === 'SIGNED_IN' && session?.user) {
+          setTimeout(async () => {
+            const { data: profileData } = await supabase
+              .from("profiles")
+              .select("approved")
+              .eq("id", session.user.id)
+              .maybeSingle();
+
+            if (profileData && !profileData.approved) {
+              await supabase.auth.signOut();
+              toast.error("Din konto venter på godkjenning fra administrator");
+            }
+          }, 0);
+        }
       }
     );
 

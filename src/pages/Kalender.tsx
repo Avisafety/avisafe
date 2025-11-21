@@ -592,44 +592,6 @@ export default function Kalender() {
               />
             </div>
 
-            {/* Event List for Selected Date */}
-            {selectedDate && (
-              <div className="lg:w-80 bg-card/50 backdrop-blur-sm rounded-lg border border-border p-6">
-                <h3 className="text-lg font-semibold mb-4">
-                  {format(selectedDate, "dd. MMMM yyyy", { locale: nb })}
-                </h3>
-                <div className="space-y-3">
-                  {selectedEvents.length > 0 ? (
-                    selectedEvents.map((event, index) => (
-                      <div
-                        key={event.id || index}
-                        className="p-3 bg-card/30 rounded-lg border border-border hover:bg-card/50 cursor-pointer transition-colors"
-                        onClick={(e) => handleEventClick(event, e)}
-                      >
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1">
-                            <h4 className="font-semibold text-sm mb-1">{event.title}</h4>
-                            {event.description && (
-                              <p className="text-xs text-muted-foreground mb-2">{event.description}</p>
-                            )}
-                            <Badge variant="outline" className="text-xs">
-                              {event.type}
-                            </Badge>
-                          </div>
-                          <div className={cn("text-xs font-medium", event.color)}>
-                            {format(event.date, "HH:mm")}
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-sm text-muted-foreground text-center py-4">
-                      Ingen hendelser denne dagen
-                    </p>
-                  )}
-                </div>
-              </div>
-            )}
           </div>
         </main>
       </div>

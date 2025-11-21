@@ -94,12 +94,14 @@ export type Database = {
       }
       documents: {
         Row: {
+          beskrivelse: string | null
           fil_navn: string | null
           fil_storrelse: number | null
           fil_url: string | null
           gyldig_til: string | null
           id: string
           kategori: string
+          nettside_url: string | null
           oppdatert_dato: string | null
           opprettet_av: string | null
           opprettet_dato: string | null
@@ -109,12 +111,14 @@ export type Database = {
           versjon: string | null
         }
         Insert: {
+          beskrivelse?: string | null
           fil_navn?: string | null
           fil_storrelse?: number | null
           fil_url?: string | null
           gyldig_til?: string | null
           id?: string
           kategori: string
+          nettside_url?: string | null
           oppdatert_dato?: string | null
           opprettet_av?: string | null
           opprettet_dato?: string | null
@@ -124,12 +128,14 @@ export type Database = {
           versjon?: string | null
         }
         Update: {
+          beskrivelse?: string | null
           fil_navn?: string | null
           fil_storrelse?: number | null
           fil_url?: string | null
           gyldig_til?: string | null
           id?: string
           kategori?: string
+          nettside_url?: string | null
           oppdatert_dato?: string | null
           opprettet_av?: string | null
           opprettet_dato?: string | null

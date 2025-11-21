@@ -107,16 +107,6 @@ const DocumentsList = ({
               </TableCell>
               <TableCell className="bg-slate-200/50 text-slate-950 text-right">
                 <div className="flex gap-2 justify-end" onClick={(e) => e.stopPropagation()}>
-                  {doc.fil_url && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDownloadFile(doc.fil_url!, doc.fil_navn || undefined)}
-                      title="Last ned dokument"
-                    >
-                      <Download className="h-4 w-4" />
-                    </Button>
-                  )}
                   {doc.nettside_url && (
                     <Button
                       variant="outline"
@@ -125,6 +115,16 @@ const DocumentsList = ({
                       title="Åpne nettside"
                     >
                       <ExternalLink className="h-4 w-4" />
+                    </Button>
+                  )}
+                  {doc.fil_url && !doc.nettside_url && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDownloadFile(doc.fil_url!, doc.fil_navn || undefined)}
+                      title="Last ned dokument"
+                    >
+                      <Download className="h-4 w-4" />
                     </Button>
                   )}
                 </div>

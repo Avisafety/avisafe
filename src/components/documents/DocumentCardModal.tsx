@@ -91,6 +91,14 @@ const DocumentCardModal = ({
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
+  const openUrl = (url: string) => {
+    let finalUrl = url;
+    if (!url.match(/^https?:\/\//i)) {
+      finalUrl = `https://${url}`;
+    }
+    window.open(finalUrl, "_blank");
+  };
+
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -355,7 +363,7 @@ const DocumentCardModal = ({
                           variant="link"
                           size="sm"
                           className="h-auto p-0"
-                          onClick={() => window.open(document.nettside_url!, "_blank")}
+                          onClick={() => openUrl(document.nettside_url!)}
                         >
                           Åpne eksisterende URL
                         </Button>
@@ -425,7 +433,7 @@ const DocumentCardModal = ({
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => window.open(document.nettside_url!, "_blank")}
+                    onClick={() => openUrl(document.nettside_url!)}
                     className="w-full"
                   >
                     <Upload className="mr-2 h-4 w-4" />

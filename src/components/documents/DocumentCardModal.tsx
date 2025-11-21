@@ -99,6 +99,29 @@ const DocumentCardModal = ({
     window.open(finalUrl, "_blank");
   };
 
+  const handleOpenFile = async (filUrl: string) => {
+    try {
+      // Check if it's an external URL
+      if (filUrl.startsWith('http://') || filUrl.startsWith('https://')) {
+        window.open(filUrl, '_blank');
+        return;
+      }
+      
+      // It's a storage path - generate signed URL
+      const { data, error } = await supabase.storage
+        .from('documents')
+        .createSignedUrl(filUrl, 3600); // Valid for 1 hour
+
+      if (error) throw error;
+      if (data?.signedUrl) {
+        window.open(data.signedUrl, '_blank');
+      }
+    } catch (error) {
+      console.error('Error opening file:', error);
+      toast.error('Kunne ikke åpne dokumentet');
+    }
+  };
+
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -403,7 +426,7 @@ const DocumentCardModal = ({
                         variant="link"
                         size="sm"
                         className="h-auto p-0"
-                        onClick={() => window.open(document.fil_url!, "_blank")}
+                        onClick={() => handleOpenFile(document.fil_url!)}
                       >
                         Åpne eksisterende fil
                       </Button>
@@ -418,7 +441,7 @@ const DocumentCardModal = ({
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => window.open(document.fil_url!, "_blank")}
+                    onClick={() => handleOpenFile(document.fil_url!)}
                     className="w-full"
                   >
                     <Upload className="mr-2 h-4 w-4" />

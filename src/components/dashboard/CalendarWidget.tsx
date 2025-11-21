@@ -1,5 +1,5 @@
 import { GlassCard } from "@/components/GlassCard";
-import { Calendar as CalendarIcon, Plus } from "lucide-react";
+import { Calendar as CalendarIcon, Plus, ChevronDown } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { useState, useEffect } from "react";
 import { format, isSameDay } from "date-fns";
@@ -24,6 +24,15 @@ import { toast } from "sonner";
 import { MissionDetailDialog } from "./MissionDetailDialog";
 import DocumentCardModal from "@/components/documents/DocumentCardModal";
 import { IncidentDetailDialog } from "./IncidentDetailDialog";
+import { AddIncidentDialog } from "./AddIncidentDialog";
+import { AddMissionDialog } from "./AddMissionDialog";
+import { AddNewsDialog } from "./AddNewsDialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface CalendarEvent {
   type: string;
@@ -61,6 +70,12 @@ export const CalendarWidget = () => {
   const [documentDialogOpen, setDocumentDialogOpen] = useState(false);
   const [selectedIncident, setSelectedIncident] = useState<any>(null);
   const [incidentDialogOpen, setIncidentDialogOpen] = useState(false);
+  
+  // State for creation dialogs
+  const [createIncidentOpen, setCreateIncidentOpen] = useState(false);
+  const [createMissionOpen, setCreateMissionOpen] = useState(false);
+  const [createDocumentOpen, setCreateDocumentOpen] = useState(false);
+  const [createNewsOpen, setCreateNewsOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
 
   // Helper function - must be defined before use
@@ -400,6 +415,16 @@ export const CalendarWidget = () => {
     }
   };
 
+  const handleMissionAdded = () => {
+    fetchRealCalendarEvents();
+    toast.success("Oppdrag opprettet og lagt til i kalenderen");
+  };
+
+  const handleDocumentAdded = () => {
+    fetchRealCalendarEvents();
+    toast.success("Dokument opprettet og lagt til i kalenderen");
+  };
+
   const handleAddEvent = async () => {
     if (!newEvent.title.trim()) {
       toast.error("Tittel er påkrevd");
@@ -550,10 +575,56 @@ export const CalendarWidget = () => {
                 )}
               </div>
 
-              <Button onClick={() => setShowAddForm(true)} className="w-full gap-2">
-                <Plus className="w-4 h-4" />
-                Legg til hendelse
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button className="w-full gap-2">
+                    <Plus className="w-4 h-4" />
+                    Legg til
+                    <ChevronDown className="w-4 h-4 ml-auto" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56 bg-background z-50">
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setCreateIncidentOpen(true);
+                      setDialogOpen(false);
+                    }}
+                  >
+                    Hendelse
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setCreateDocumentOpen(true);
+                      setDialogOpen(false);
+                    }}
+                  >
+                    Dokument
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setCreateMissionOpen(true);
+                      setDialogOpen(false);
+                    }}
+                  >
+                    Oppdrag
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setCreateNewsOpen(true);
+                      setDialogOpen(false);
+                    }}
+                  >
+                    Nyhet
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setShowAddForm(true);
+                    }}
+                  >
+                    Annet
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </>
           ) : (
             <div className="space-y-4">
@@ -641,6 +712,42 @@ export const CalendarWidget = () => {
         open={incidentDialogOpen}
         onOpenChange={setIncidentDialogOpen}
         incident={selectedIncident}
+      />
+
+      {/* Creation Dialogs */}
+      <AddIncidentDialog
+        open={createIncidentOpen}
+        onOpenChange={(open) => {
+          setCreateIncidentOpen(open);
+          if (!open) {
+            fetchRealCalendarEvents();
+          }
+        }}
+        defaultDate={selectedDate || undefined}
+      />
+
+      <AddMissionDialog
+        open={createMissionOpen}
+        onOpenChange={setCreateMissionOpen}
+        onMissionAdded={handleMissionAdded}
+      />
+
+      <DocumentCardModal
+        isOpen={createDocumentOpen}
+        onClose={() => setCreateDocumentOpen(false)}
+        document={null}
+        onSaveSuccess={handleDocumentAdded}
+        onDeleteSuccess={() => {}}
+        isAdmin={isAdmin}
+        isCreating={true}
+      />
+
+      <AddNewsDialog
+        open={createNewsOpen}
+        onOpenChange={(open) => {
+          setCreateNewsOpen(open);
+        }}
+        news={null}
       />
     </>
   );

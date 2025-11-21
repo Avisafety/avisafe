@@ -30,17 +30,17 @@ type Incident = {
 const statusOptions = ["Alle", "Åpen", "Under behandling", "Ferdigbehandlet", "Lukket"];
 
 const severityColors: Record<string, string> = {
-  Kritisk: "bg-red-500/20 text-red-300 border-red-500/30",
-  Høy: "bg-orange-500/20 text-orange-300 border-orange-500/30",
-  Middels: "bg-yellow-500/20 text-yellow-300 border-yellow-500/30",
-  Lav: "bg-blue-500/20 text-blue-300 border-blue-500/30",
+  Kritisk: "bg-red-100 text-red-900 border-red-300 dark:bg-red-900/30 dark:text-red-100 dark:border-red-700",
+  Høy: "bg-orange-100 text-orange-900 border-orange-300 dark:bg-orange-900/30 dark:text-orange-100 dark:border-orange-700",
+  Middels: "bg-yellow-100 text-yellow-900 border-yellow-300 dark:bg-yellow-900/30 dark:text-yellow-100 dark:border-yellow-700",
+  Lav: "bg-blue-100 text-blue-900 border-blue-300 dark:bg-blue-900/30 dark:text-blue-100 dark:border-blue-700",
 };
 
 const statusColors: Record<string, string> = {
-  Åpen: "bg-red-500/20 text-red-300 border-red-500/30",
-  "Under behandling": "bg-yellow-500/20 text-yellow-300 border-yellow-500/30",
-  Ferdigbehandlet: "bg-green-500/20 text-green-300 border-green-500/30",
-  Lukket: "bg-gray-500/20 text-gray-300 border-gray-500/30",
+  Åpen: "bg-red-100 text-red-900 border-red-300 dark:bg-red-900/30 dark:text-red-100 dark:border-red-700",
+  "Under behandling": "bg-yellow-100 text-yellow-900 border-yellow-300 dark:bg-yellow-900/30 dark:text-yellow-100 dark:border-yellow-700",
+  Ferdigbehandlet: "bg-green-100 text-green-900 border-green-300 dark:bg-green-900/30 dark:text-green-100 dark:border-green-700",
+  Lukket: "bg-gray-100 text-gray-900 border-gray-300 dark:bg-gray-700/30 dark:text-gray-100 dark:border-gray-600",
 };
 
 const Hendelser = () => {
@@ -216,12 +216,12 @@ const Hendelser = () => {
                       </div>
                       
                       {incident.beskrivelse && (
-                        <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
+                        <p className="text-sm text-foreground opacity-90 line-clamp-2 mb-2">
                           {incident.beskrivelse}
                         </p>
                       )}
                       
-                      <div className="flex gap-4 text-xs text-muted-foreground flex-wrap">
+                      <div className="flex gap-4 text-xs text-foreground opacity-80 flex-wrap">
                         {incident.lokasjon && (
                           <span>📍 {incident.lokasjon}</span>
                         )}

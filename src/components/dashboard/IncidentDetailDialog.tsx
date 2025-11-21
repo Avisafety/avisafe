@@ -55,6 +55,7 @@ export const IncidentDetailDialog = ({ open, onOpenChange, incident }: IncidentD
   const [newComment, setNewComment] = useState("");
   const [submittingComment, setSubmittingComment] = useState(false);
   const [currentUserName, setCurrentUserName] = useState("");
+  const [selectedResponsibleId, setSelectedResponsibleId] = useState<string | null>(null);
 
   useEffect(() => {
     const checkAdmin = async () => {
@@ -120,6 +121,11 @@ export const IncidentDetailDialog = ({ open, onOpenChange, incident }: IncidentD
 
     fetchRelatedMission();
   }, [incident?.mission_id]);
+
+  // Synkroniser selectedResponsibleId med incident prop
+  useEffect(() => {
+    setSelectedResponsibleId(incident?.oppfolgingsansvarlig_id || null);
+  }, [incident?.oppfolgingsansvarlig_id]);
 
   useEffect(() => {
     const fetchOppfolgingsansvarlig = async () => {
@@ -258,16 +264,6 @@ export const IncidentDetailDialog = ({ open, onOpenChange, incident }: IncidentD
       if (error) throw error;
 
       toast.success("Oppfølgingsansvarlig oppdatert");
-      
-      // Oppdater lokal state
-      if (newUserId) {
-        const user = users.find(u => u.id === newUserId);
-        if (user) {
-          setOppfolgingsansvarlig(user);
-        }
-      } else {
-        setOppfolgingsansvarlig(null);
-      }
     } catch (error) {
       console.error("Error updating responsible:", error);
       toast.error("Kunne ikke oppdatere ansvarlig");
@@ -309,7 +305,7 @@ export const IncidentDetailDialog = ({ open, onOpenChange, incident }: IncidentD
               <div className="space-y-2">
                 <Label htmlFor="responsible-select">Oppfølgingsansvarlig (Admin)</Label>
                 <Select 
-                  value={incident.oppfolgingsansvarlig_id || "ingen"} 
+                  value={selectedResponsibleId || "ingen"} 
                   onValueChange={handleResponsibleChange}
                   disabled={updatingResponsible}
                 >

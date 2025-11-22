@@ -206,7 +206,10 @@ export const IncidentDetailDialog = ({ open, onOpenChange, incident }: IncidentD
     try {
       const { error } = await supabase
         .from('incidents')
-        .update({ status: newStatus })
+        .update({ 
+          status: newStatus,
+          oppdatert_dato: new Date().toISOString()
+        })
         .eq('id', incident.id);
 
       if (error) throw error;
@@ -258,7 +261,10 @@ export const IncidentDetailDialog = ({ open, onOpenChange, incident }: IncidentD
       
       const { error } = await supabase
         .from('incidents')
-        .update({ oppfolgingsansvarlig_id: newUserId })
+        .update({ 
+          oppfolgingsansvarlig_id: newUserId,
+          oppdatert_dato: new Date().toISOString()
+        })
         .eq('id', incident.id);
 
       if (error) throw error;

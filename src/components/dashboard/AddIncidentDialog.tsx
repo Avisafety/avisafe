@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { sendNotificationEmail, generateIncidentNotificationHTML } from "@/lib/notifications";
 
 interface AddIncidentDialogProps {
   open: boolean;
@@ -151,6 +152,21 @@ export const AddIncidentDialog = ({ open, onOpenChange, defaultDate }: AddIncide
         });
 
       if (error) throw error;
+
+      // Send email notification to follow-up responsible
+      if (formData.oppfolgingsansvarlig_id) {
+        await sendNotificationEmail({
+          recipientId: formData.oppfolgingsansvarlig_id,
+          notificationType: 'email_followup_assigned',
+          subject: `Du er satt som oppfølgingsansvarlig: ${formData.tittel}`,
+          htmlContent: generateIncidentNotificationHTML({
+            tittel: formData.tittel,
+            beskrivelse: formData.beskrivelse,
+            alvorlighetsgrad: formData.alvorlighetsgrad,
+            lokasjon: formData.lokasjon,
+          }),
+        });
+      }
 
       toast.success("Hendelse rapportert!");
       onOpenChange(false);

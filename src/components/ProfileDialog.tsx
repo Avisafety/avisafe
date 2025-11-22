@@ -9,7 +9,9 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
 import { IncidentDetailDialog } from "./dashboard/IncidentDetailDialog";
+import { toast } from "sonner";
 
 interface Profile {
   full_name: string | null;
@@ -44,6 +46,18 @@ interface Incident {
   user_id: string | null;
 }
 
+interface NotificationPreferences {
+  id: string;
+  user_id: string;
+  email_new_incident: boolean;
+  email_new_mission: boolean;
+  email_document_expiry: boolean;
+  email_new_user_pending: boolean;
+  email_followup_assigned: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 const severityColors = {
   Lav: "bg-blue-500/20 text-blue-700 dark:text-blue-300 border-blue-500/30",
   Middels: "bg-status-yellow/20 text-yellow-700 dark:text-yellow-300 border-status-yellow/30",
@@ -62,6 +76,7 @@ export const ProfileDialog = () => {
   const [incidentDialogOpen, setIncidentDialogOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [notificationPrefs, setNotificationPrefs] = useState<NotificationPreferences | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -126,10 +141,60 @@ export const ProfileDialog = () => {
       if (followUpIncidentsData) {
         setFollowUpIncidents(followUpIncidentsData);
       }
+
+      // Fetch notification preferences
+      const { data: prefsData } = await supabase
+        .from("notification_preferences")
+        .select("*")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (!prefsData) {
+        // Auto-create with defaults
+        const { data: newPrefs } = await supabase
+          .from("notification_preferences")
+          .insert({
+            user_id: user.id,
+            email_new_incident: false,
+            email_new_mission: false,
+            email_document_expiry: false,
+            email_new_user_pending: false,
+            email_followup_assigned: true,
+          })
+          .select()
+          .single();
+        
+        setNotificationPrefs(newPrefs);
+      } else {
+        setNotificationPrefs(prefsData);
+      }
     } catch (error) {
       console.error("Error fetching user data:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const updateNotificationPref = async (field: keyof NotificationPreferences, value: boolean) => {
+    if (!user || !notificationPrefs) return;
+    
+    // Optimistic update
+    setNotificationPrefs({ ...notificationPrefs, [field]: value });
+    
+    try {
+      const { error } = await supabase
+        .from("notification_preferences")
+        .update({ [field]: value })
+        .eq("user_id", user.id);
+      
+      if (error) throw error;
+      
+      toast.success("Varslingsinnstillinger oppdatert");
+    } catch (error: any) {
+      console.error("Error updating notification preferences:", error);
+      toast.error("Kunne ikke oppdatere innstillinger");
+      // Revert optimistic update
+      setNotificationPrefs({ ...notificationPrefs, [field]: !value });
     }
   };
 
@@ -305,6 +370,110 @@ export const ProfileDialog = () => {
                   ) : (
                     <p className="text-sm text-muted-foreground">Ingen kalenderhendelser</p>
                   )}
+                </CardContent>
+              </Card>
+
+              {/* Notification Preferences */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Varslinger</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <label className="text-sm font-medium">
+                          E-post ved nye hendelser
+                        </label>
+                        <p className="text-xs text-muted-foreground">
+                          Få beskjed når nye hendelser rapporteres
+                        </p>
+                      </div>
+                      <Switch
+                        checked={notificationPrefs?.email_new_incident ?? false}
+                        onCheckedChange={(checked) => 
+                          updateNotificationPref('email_new_incident', checked)
+                        }
+                      />
+                    </div>
+                    
+                    <Separator />
+                    
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <label className="text-sm font-medium">
+                          E-post ved nye oppdrag
+                        </label>
+                        <p className="text-xs text-muted-foreground">
+                          Få beskjed når nye missions opprettes
+                        </p>
+                      </div>
+                      <Switch
+                        checked={notificationPrefs?.email_new_mission ?? false}
+                        onCheckedChange={(checked) => 
+                          updateNotificationPref('email_new_mission', checked)
+                        }
+                      />
+                    </div>
+                    
+                    <Separator />
+                    
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <label className="text-sm font-medium">
+                          E-post når dokumenter nærmer seg utløpsdato
+                        </label>
+                        <p className="text-xs text-muted-foreground">
+                          Varsling 30 dager før dokumenter utløper
+                        </p>
+                      </div>
+                      <Switch
+                        checked={notificationPrefs?.email_document_expiry ?? false}
+                        onCheckedChange={(checked) => 
+                          updateNotificationPref('email_document_expiry', checked)
+                        }
+                      />
+                    </div>
+                    
+                    <Separator />
+                    
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <label className="text-sm font-medium">
+                          E-post når nye brukere venter på godkjenning
+                        </label>
+                        <p className="text-xs text-muted-foreground">
+                          Kun for administratorer
+                        </p>
+                      </div>
+                      <Switch
+                        checked={notificationPrefs?.email_new_user_pending ?? false}
+                        onCheckedChange={(checked) => 
+                          updateNotificationPref('email_new_user_pending', checked)
+                        }
+                        disabled={!isAdmin}
+                      />
+                    </div>
+                    
+                    <Separator />
+                    
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <label className="text-sm font-medium">
+                          E-post når jeg settes som oppfølgingsansvarlig
+                        </label>
+                        <p className="text-xs text-muted-foreground">
+                          Standard aktivert - anbefales sterkt
+                        </p>
+                      </div>
+                      <Switch
+                        checked={notificationPrefs?.email_followup_assigned ?? true}
+                        onCheckedChange={(checked) => 
+                          updateNotificationPref('email_followup_assigned', checked)
+                        }
+                      />
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             </div>

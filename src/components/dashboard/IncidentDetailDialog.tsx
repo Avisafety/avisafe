@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
+import { sendNotificationEmail, generateIncidentNotificationHTML } from "@/lib/notifications";
 
 type Incident = Tables<"incidents">;
 
@@ -268,6 +269,21 @@ export const IncidentDetailDialog = ({ open, onOpenChange, incident }: IncidentD
         .eq('id', incident.id);
 
       if (error) throw error;
+
+      // Send e-post til ny ansvarlig hvis en bruker er valgt
+      if (newUserId) {
+        await sendNotificationEmail({
+          recipientId: newUserId,
+          notificationType: 'email_followup_assigned',
+          subject: `Du er satt som oppfølgingsansvarlig: ${incident.tittel}`,
+          htmlContent: generateIncidentNotificationHTML({
+            tittel: incident.tittel,
+            beskrivelse: incident.beskrivelse,
+            alvorlighetsgrad: incident.alvorlighetsgrad,
+            lokasjon: incident.lokasjon,
+          }),
+        });
+      }
 
       // Optimistisk UI-oppdatering
       setSelectedResponsibleId(newUserId);

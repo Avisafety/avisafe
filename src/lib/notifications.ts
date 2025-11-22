@@ -45,38 +45,35 @@ export const generateIncidentNotificationHTML = (incident: {
   alvorlighetsgrad: string;
   lokasjon?: string;
 }) => {
-  return `
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <style>
-          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-          .header { background: #1e40af; color: white; padding: 20px; border-radius: 8px 8px 0 0; }
-          .content { background: #f9fafb; padding: 20px; border-radius: 0 0 8px 8px; }
-          .severity { display: inline-block; padding: 4px 12px; border-radius: 4px; font-weight: bold; }
-          .severity-Lav { background: #dbeafe; color: #1e40af; }
-          .severity-Middels { background: #fef3c7; color: #92400e; }
-          .severity-Høy { background: #fed7aa; color: #9a3412; }
-          .severity-Kritisk { background: #fee2e2; color: #991b1b; }
-          .button { display: inline-block; background: #1e40af; color: white; padding: 12px 24px; 
-                    text-decoration: none; border-radius: 6px; margin-top: 20px; }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="header">
-            <h1>Du er satt som oppfølgingsansvarlig</h1>
-          </div>
-          <div class="content">
-            <h2>${incident.tittel}</h2>
-            <p><strong>Alvorlighetsgrad:</strong> <span class="severity severity-${incident.alvorlighetsgrad}">${incident.alvorlighetsgrad}</span></p>
-            ${incident.lokasjon ? `<p><strong>Lokasjon:</strong> ${incident.lokasjon}</p>` : ''}
-            ${incident.beskrivelse ? `<p><strong>Beskrivelse:</strong><br>${incident.beskrivelse}</p>` : ''}
-            <p style="margin-top: 20px;">Logg inn i Avisafe for å følge opp denne hendelsen.</p>
-          </div>
-        </div>
-      </body>
-    </html>
-  `;
+  return `<!DOCTYPE html>
+<html>
+<head>
+<style>
+body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+.container { max-width: 600px; margin: 0 auto; padding: 20px; }
+.header { background: #1e40af; color: white; padding: 20px; border-radius: 8px 8px 0 0; }
+.content { background: #f9fafb; padding: 20px; border-radius: 0 0 8px 8px; }
+.severity { display: inline-block; padding: 4px 12px; border-radius: 4px; font-weight: bold; }
+.severity-Lav { background: #dbeafe; color: #1e40af; }
+.severity-Middels { background: #fef3c7; color: #92400e; }
+.severity-Høy { background: #fed7aa; color: #9a3412; }
+.severity-Kritisk { background: #fee2e2; color: #991b1b; }
+.button { display: inline-block; background: #1e40af; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 20px; }
+</style>
+</head>
+<body>
+<div class="container">
+<div class="header">
+<h1>Du er satt som oppfølgingsansvarlig</h1>
+</div>
+<div class="content">
+<h2>${incident.tittel}</h2>
+<p><strong>Alvorlighetsgrad:</strong> <span class="severity severity-${incident.alvorlighetsgrad}">${incident.alvorlighetsgrad}</span></p>
+${incident.lokasjon ? `<p><strong>Lokasjon:</strong> ${incident.lokasjon}</p>` : ''}
+${incident.beskrivelse ? `<p><strong>Beskrivelse:</strong><br>${incident.beskrivelse}</p>` : ''}
+<p style="margin-top: 20px;">Logg inn i Avisafe for å følge opp denne hendelsen.</p>
+</div>
+</div>
+</body>
+</html>`;
 };

@@ -590,6 +590,42 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_preferences: {
+        Row: {
+          created_at: string
+          email_document_expiry: boolean
+          email_followup_assigned: boolean
+          email_new_incident: boolean
+          email_new_mission: boolean
+          email_new_user_pending: boolean
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email_document_expiry?: boolean
+          email_followup_assigned?: boolean
+          email_new_incident?: boolean
+          email_new_mission?: boolean
+          email_new_user_pending?: boolean
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email_document_expiry?: boolean
+          email_followup_assigned?: boolean
+          email_new_incident?: boolean
+          email_new_mission?: boolean
+          email_new_user_pending?: boolean
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       personnel_competencies: {
         Row: {
           beskrivelse: string | null

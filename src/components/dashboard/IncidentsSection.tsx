@@ -2,7 +2,7 @@ import { GlassCard } from "@/components/GlassCard";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
+
 import { AlertTriangle, Clock } from "lucide-react";
 
 import { format } from "date-fns";
@@ -206,99 +206,95 @@ export const IncidentsSection = () => {
         </TabsList>
 
         <TabsContent value="incidents" className="mt-2 sm:mt-3 flex-1">
-          <ScrollArea className="h-[400px] pr-2 sm:pr-4">
-            <div className="space-y-1.5 sm:space-y-2">
-              {loading ? (
-                <div className="text-center py-4 text-xs sm:text-sm text-muted-foreground">
-                  Laster hendelser...
-                </div>
-              ) : incidents.length === 0 ? (
-                <div className="text-center py-4 text-xs sm:text-sm text-muted-foreground">
-                  Ingen hendelser registrert
-                </div>
-              ) : (
-                incidents.map((incident) => (
-                  <div
-                    key={incident.id}
-                    onClick={() => handleIncidentClick(incident)}
-                    className="p-2 sm:p-3 bg-card/30 rounded hover:bg-card/50 transition-colors cursor-pointer"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-medium text-xs sm:text-sm mb-1">{incident.tittel}</h3>
-                        <div className="flex flex-wrap items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs">
-                          <Badge className={`${severityColors[incident.alvorlighetsgrad as keyof typeof severityColors] || 'bg-gray-500/20'} text-[10px] sm:text-xs px-1 sm:px-1.5 py-0.5`}>
-                            {incident.alvorlighetsgrad}
-                          </Badge>
-                          {incident.kategori && (
-                            <Badge variant="outline" className="text-[10px] sm:text-xs px-1 sm:px-1.5 py-0.5">{incident.kategori}</Badge>
-                          )}
-                          <span className="text-muted-foreground">
-                            {format(new Date(incident.hendelsestidspunkt), "dd. MMM", { locale: nb })}
-                          </span>
-                        </div>
+          <div className="space-y-1.5 sm:space-y-2 overflow-y-auto h-[400px] pr-2 sm:pr-4">
+            {loading ? (
+              <div className="text-center py-4 text-xs sm:text-sm text-muted-foreground">
+                Laster hendelser...
+              </div>
+            ) : incidents.length === 0 ? (
+              <div className="text-center py-4 text-xs sm:text-sm text-muted-foreground">
+                Ingen hendelser registrert
+              </div>
+            ) : (
+              incidents.map((incident) => (
+                <div
+                  key={incident.id}
+                  onClick={() => handleIncidentClick(incident)}
+                  className="p-2 sm:p-3 bg-card/30 rounded hover:bg-card/50 transition-colors cursor-pointer"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-medium text-xs sm:text-sm mb-1">{incident.tittel}</h3>
+                      <div className="flex flex-wrap items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs">
+                        <Badge className={`${severityColors[incident.alvorlighetsgrad as keyof typeof severityColors] || 'bg-gray-500/20'} text-[10px] sm:text-xs px-1 sm:px-1.5 py-0.5`}>
+                          {incident.alvorlighetsgrad}
+                        </Badge>
+                        {incident.kategori && (
+                          <Badge variant="outline" className="text-[10px] sm:text-xs px-1 sm:px-1.5 py-0.5">{incident.kategori}</Badge>
+                        )}
+                        <span className="text-muted-foreground">
+                          {format(new Date(incident.hendelsestidspunkt), "dd. MMM", { locale: nb })}
+                        </span>
                       </div>
-                      <Badge className={`${statusColors[incident.status as keyof typeof statusColors] || 'bg-gray-500/20'} text-[10px] sm:text-xs px-1 sm:px-1.5 py-0.5 whitespace-nowrap`}>{incident.status}</Badge>
                     </div>
+                    <Badge className={`${statusColors[incident.status as keyof typeof statusColors] || 'bg-gray-500/20'} text-[10px] sm:text-xs px-1 sm:px-1.5 py-0.5 whitespace-nowrap`}>{incident.status}</Badge>
                   </div>
-                ))
-              )}
-            </div>
-          </ScrollArea>
+                </div>
+              ))
+            )}
+          </div>
         </TabsContent>
 
         <TabsContent value="followups" className="mt-2 sm:mt-3 flex-1">
-          <ScrollArea className="h-[400px] pr-2 sm:pr-4">
-            <div className="space-y-1.5 sm:space-y-2">
-              {followUpLoading ? (
-                <div className="text-center py-4 text-xs sm:text-sm text-muted-foreground">
-                  Laster oppfølginger...
-                </div>
-              ) : myFollowUpIncidents.length === 0 ? (
-                <div className="text-center py-4 text-xs sm:text-sm text-muted-foreground">
-                  Du har ingen hendelser som oppfølgingsansvarlig
-                </div>
-              ) : (
-                myFollowUpIncidents.map((incident) => (
-                  <div
-                    key={incident.id}
-                    onClick={() => handleIncidentClick(incident)}
-                    className="p-2 sm:p-3 bg-card/30 rounded hover:bg-card/50 transition-colors cursor-pointer"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-medium text-xs sm:text-sm mb-1">{incident.tittel}</h3>
-                        {incident.beskrivelse && (
-                          <p className="text-[10px] sm:text-xs text-muted-foreground line-clamp-1 mb-1 sm:mb-1.5">
-                            {incident.beskrivelse}
-                          </p>
-                        )}
-                        <div className="flex flex-wrap items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs">
-                          <Badge className={`${severityColors[incident.alvorlighetsgrad as keyof typeof severityColors] || 'bg-gray-500/20'} text-[10px] sm:text-xs px-1 sm:px-1.5 py-0.5`}>
-                            {incident.alvorlighetsgrad}
+          <div className="space-y-1.5 sm:space-y-2 overflow-y-auto h-[400px] pr-2 sm:pr-4">
+            {followUpLoading ? (
+              <div className="text-center py-4 text-xs sm:text-sm text-muted-foreground">
+                Laster oppfølginger...
+              </div>
+            ) : myFollowUpIncidents.length === 0 ? (
+              <div className="text-center py-4 text-xs sm:text-sm text-muted-foreground">
+                Du har ingen hendelser som oppfølgingsansvarlig
+              </div>
+            ) : (
+              myFollowUpIncidents.map((incident) => (
+                <div
+                  key={incident.id}
+                  onClick={() => handleIncidentClick(incident)}
+                  className="p-2 sm:p-3 bg-card/30 rounded hover:bg-card/50 transition-colors cursor-pointer"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-medium text-xs sm:text-sm mb-1">{incident.tittel}</h3>
+                      {incident.beskrivelse && (
+                        <p className="text-[10px] sm:text-xs text-muted-foreground line-clamp-1 mb-1 sm:mb-1.5">
+                          {incident.beskrivelse}
+                        </p>
+                      )}
+                      <div className="flex flex-wrap items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs">
+                        <Badge className={`${severityColors[incident.alvorlighetsgrad as keyof typeof severityColors] || 'bg-gray-500/20'} text-[10px] sm:text-xs px-1 sm:px-1.5 py-0.5`}>
+                          {incident.alvorlighetsgrad}
+                        </Badge>
+                        {incident.kategori && (
+                          <Badge variant="outline" className="text-[10px] sm:text-xs px-1 sm:px-1.5 py-0.5">
+                            {incident.kategori}
                           </Badge>
-                          {incident.kategori && (
-                            <Badge variant="outline" className="text-[10px] sm:text-xs px-1 sm:px-1.5 py-0.5">
-                              {incident.kategori}
-                            </Badge>
-                          )}
-                          <span className="text-muted-foreground">
-                            {format(new Date(incident.hendelsestidspunkt), "dd. MMM", { locale: nb })}
-                          </span>
-                          {incident.lokasjon && (
-                            <span className="text-muted-foreground truncate">• {incident.lokasjon}</span>
-                          )}
-                        </div>
+                        )}
+                        <span className="text-muted-foreground">
+                          {format(new Date(incident.hendelsestidspunkt), "dd. MMM", { locale: nb })}
+                        </span>
+                        {incident.lokasjon && (
+                          <span className="text-muted-foreground truncate">• {incident.lokasjon}</span>
+                        )}
                       </div>
-                      <Badge className={`${statusColors[incident.status as keyof typeof statusColors] || 'bg-gray-500/20'} text-[10px] sm:text-xs px-1 sm:px-1.5 py-0.5 whitespace-nowrap`}>
-                        {incident.status}
-                      </Badge>
                     </div>
+                    <Badge className={`${statusColors[incident.status as keyof typeof statusColors] || 'bg-gray-500/20'} text-[10px] sm:text-xs px-1 sm:px-1.5 py-0.5 whitespace-nowrap`}>
+                      {incident.status}
+                    </Badge>
                   </div>
-                ))
-              )}
-            </div>
-          </ScrollArea>
+                </div>
+              ))
+            )}
+          </div>
         </TabsContent>
       </Tabs>
 

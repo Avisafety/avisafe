@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Shield, LogOut, Trash2, Check, X, Menu, Settings, UserCog } from "lucide-react";
+import { Shield, LogOut, Trash2, Check, X, Menu, Settings, UserCog, Users, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -29,6 +29,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CompanyManagementSection } from "@/components/admin/CompanyManagementSection";
 
 interface Profile {
   id: string;
@@ -305,20 +307,35 @@ const Admin = () => {
       </header>
 
       <main className="w-full px-4 py-8">
-        <div className="space-y-6">
-          {/* Pending Users */}
-          {pendingUsers.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <UserCog className="w-5 h-5" />
-                  Ventende godkjenninger ({pendingUsers.length})
-                </CardTitle>
-                <CardDescription>
-                  Brukere som venter på godkjenning
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
+        <Tabs defaultValue="users" className="w-full">
+          <TabsList className="grid w-full max-w-md mx-auto" style={{ gridTemplateColumns: isSuperAdmin ? '1fr 1fr' : '1fr' }}>
+            <TabsTrigger value="users" className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Brukeradministrasjon
+            </TabsTrigger>
+            {isSuperAdmin && (
+              <TabsTrigger value="companies" className="flex items-center gap-2">
+                <Building2 className="h-4 w-4" />
+                Selskaper
+              </TabsTrigger>
+            )}
+          </TabsList>
+
+          <TabsContent value="users" className="mt-6">
+            <div className="space-y-6">
+              {/* Pending Users */}
+              {pendingUsers.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <UserCog className="w-5 h-5" />
+                      Ventende godkjenninger ({pendingUsers.length})
+                    </CardTitle>
+                    <CardDescription>
+                      Brukere som venter på godkjenning
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
                   <Table>
                   <TableHeader>
                     <TableRow>
@@ -446,10 +463,19 @@ const Admin = () => {
               </Table>
             </CardContent>
           </Card>
-        </div>
+            </div>
+          </TabsContent>
+
+          {isSuperAdmin && (
+            <TabsContent value="companies" className="mt-6">
+              <CompanyManagementSection />
+            </TabsContent>
+          )}
+        </Tabs>
       </main>
     </div>
   );
 };
 
 export default Admin;
+

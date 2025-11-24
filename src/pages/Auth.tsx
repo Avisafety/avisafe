@@ -13,39 +13,40 @@ import { Shield, Chrome } from "lucide-react";
 import droneBackground from "@/assets/drone-background.png";
 const Auth = () => {
   const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
+  const {
+    user,
+    loading: authLoading
+  } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
-  const [companies, setCompanies] = useState<Array<{id: string, navn: string}>>([]);
+  const [companies, setCompanies] = useState<Array<{
+    id: string;
+    navn: string;
+  }>>([]);
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>("");
   const [showResetPassword, setShowResetPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
-
   useEffect(() => {
     console.log('Auth page - user:', user?.email, 'authLoading:', authLoading);
-    
     if (!authLoading && user) {
       console.log('Redirecting to home page');
-      navigate("/", { replace: true });
+      navigate("/", {
+        replace: true
+      });
     }
   }, [user, authLoading, navigate]);
-
   useEffect(() => {
     if (!isLogin) {
       fetchCompanies();
     }
   }, [isLogin]);
-
   const fetchCompanies = async () => {
-    const { data } = await supabase
-      .from('companies')
-      .select('id, navn')
-      .eq('aktiv', true)
-      .order('navn');
-    
+    const {
+      data
+    } = await supabase.from('companies').select('id, navn').eq('aktiv', true).order('navn');
     if (data) {
       setCompanies(data);
     }
@@ -106,11 +107,9 @@ const Auth = () => {
         if (error) throw error;
         if (data.user) {
           // Update profile with company_id
-          await supabase
-            .from('profiles')
-            .update({ company_id: selectedCompanyId })
-            .eq('id', data.user.id);
-            
+          await supabase.from('profiles').update({
+            company_id: selectedCompanyId
+          }).eq('id', data.user.id);
           toast.success("Konto opprettet! Venter på godkjenning fra administrator.");
           setEmail("");
           setPassword("");
@@ -128,10 +127,11 @@ const Auth = () => {
   const handleGoogleSignIn = async () => {
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      const {
+        error
+      } = await supabase.auth.signInWithOAuth({
         provider: 'google'
       });
-      
       if (error) throw error;
     } catch (error: any) {
       console.error('Google sign-in error:', error);
@@ -139,22 +139,20 @@ const Auth = () => {
       setLoading(false);
     }
   };
-
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!resetEmail) {
       toast.error("Vennligst skriv inn e-postadressen din");
       return;
     }
-
     setLoading(true);
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-        redirectTo: `${window.location.origin}/reset-password`,
+      const {
+        error
+      } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+        redirectTo: `${window.location.origin}/reset-password`
       });
-
       if (error) throw error;
-
       toast.success("En e-post med instruksjoner er sendt til deg!");
       setShowResetPassword(false);
       setResetEmail("");
@@ -200,27 +198,19 @@ const Auth = () => {
                   <Label htmlFor="fullName">Fullt navn</Label>
                   <Input id="fullName" type="text" placeholder="Ola Nordmann" value={fullName} onChange={e => setFullName(e.target.value)} required={!isLogin} />
                 </div>}
-              {!isLogin && (
-                <div className="space-y-2">
+              {!isLogin && <div className="space-y-2">
                   <Label htmlFor="company">Velg selskap</Label>
-                  <Select 
-                    value={selectedCompanyId} 
-                    onValueChange={setSelectedCompanyId}
-                    required={!isLogin}
-                  >
+                  <Select value={selectedCompanyId} onValueChange={setSelectedCompanyId} required={!isLogin}>
                     <SelectTrigger>
                       <SelectValue placeholder="Velg et selskap" />
                     </SelectTrigger>
                     <SelectContent>
-                      {companies.map((company) => (
-                        <SelectItem key={company.id} value={company.id}>
+                      {companies.map(company => <SelectItem key={company.id} value={company.id}>
                           {company.navn}
-                        </SelectItem>
-                      ))}
+                        </SelectItem>)}
                     </SelectContent>
                   </Select>
-                </div>
-              )}
+                </div>}
               <div className="space-y-2">
                 <Label htmlFor="email">E-post</Label>
                 <Input id="email" type="email" placeholder="din@epost.no" value={email} onChange={e => setEmail(e.target.value)} required />
@@ -228,15 +218,9 @@ const Auth = () => {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password">Passord</Label>
-                  {isLogin && (
-                    <button
-                      type="button"
-                      onClick={() => setShowResetPassword(true)}
-                      className="text-xs text-primary hover:underline"
-                    >
-                      Glemt passord?
-                    </button>
-                  )}
+                  {isLogin && <button type="button" onClick={() => setShowResetPassword(true)} className="text-xs text-primary hover:underline">
+                      Glemt passord? Send mail til kontakt@avisafe.no      
+                    </button>}
                 </div>
                 <Input id="password" type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required minLength={6} />
               </div>
@@ -280,25 +264,13 @@ const Auth = () => {
           <form onSubmit={handleResetPassword} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="resetEmail">E-post</Label>
-              <Input
-                id="resetEmail"
-                type="email"
-                placeholder="din@epost.no"
-                value={resetEmail}
-                onChange={(e) => setResetEmail(e.target.value)}
-                required
-              />
+              <Input id="resetEmail" type="email" placeholder="din@epost.no" value={resetEmail} onChange={e => setResetEmail(e.target.value)} required />
             </div>
             <div className="flex gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  setShowResetPassword(false);
-                  setResetEmail("");
-                }}
-                className="flex-1"
-              >
+              <Button type="button" variant="outline" onClick={() => {
+              setShowResetPassword(false);
+              setResetEmail("");
+            }} className="flex-1">
                 Avbryt
               </Button>
               <Button type="submit" disabled={loading} className="flex-1">

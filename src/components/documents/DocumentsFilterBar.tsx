@@ -50,7 +50,7 @@ const DocumentsFilterBar = ({
       </div>
 
       <div className="flex flex-wrap gap-2">
-        {CATEGORIES.map(category => <Badge key={category.value} variant={selectedCategories.includes(category.value) ? "default" : "outline"} onClick={() => toggleCategory(category.value)} className="cursor-pointer bg-slate-50">
+        {CATEGORIES.map(category => <Badge key={category.value} variant={selectedCategories.includes(category.value) ? "default" : "outline"} onClick={() => toggleCategory(category.value)} className={selectedCategories.includes(category.value) ? "cursor-pointer" : "cursor-pointer bg-secondary"}>
             {category.label}
           </Badge>)}
       </div>

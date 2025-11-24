@@ -44,6 +44,7 @@ interface Incident {
   opprettet_dato: string | null;
   rapportert_av: string | null;
   user_id: string | null;
+  company_id: string;
 }
 
 interface NotificationPreferences {

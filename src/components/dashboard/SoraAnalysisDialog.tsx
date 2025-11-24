@@ -21,7 +21,7 @@ interface SoraAnalysisDialogProps {
 }
 
 export const SoraAnalysisDialog = ({ open, onOpenChange, missionId, onSaved }: SoraAnalysisDialogProps) => {
-  const { user } = useAuth();
+  const { user, companyId } = useAuth();
   const [missions, setMissions] = useState<any[]>([]);
   const [selectedMissionId, setSelectedMissionId] = useState<string>(missionId || "");
   const [selectedMission, setSelectedMission] = useState<any>(null);
@@ -190,12 +190,16 @@ export const SoraAnalysisDialog = ({ open, onOpenChange, missionId, onSaved }: S
         if (error) throw error;
         toast.success("SORA-analyse oppdatert");
       } else {
+        if (!companyId) {
+          toast.error("Kunne ikke finne selskaps-ID");
+          return;
+        }
+        
         const { error } = await supabase
           .from("mission_sora")
           .insert({
             ...soraData,
-            prepared_by: user?.id,
-            prepared_at: new Date().toISOString(),
+            company_id: companyId,
           });
 
         if (error) throw error;

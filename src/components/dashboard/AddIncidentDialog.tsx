@@ -14,6 +14,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { sendNotificationEmail, generateIncidentNotificationHTML } from "@/lib/notifications";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface AddIncidentDialogProps {
   open: boolean;
@@ -22,6 +23,7 @@ interface AddIncidentDialogProps {
 }
 
 export const AddIncidentDialog = ({ open, onOpenChange, defaultDate }: AddIncidentDialogProps) => {
+  const { companyId } = useAuth();
   const [submitting, setSubmitting] = useState(false);
   const [missions, setMissions] = useState<Array<{ id: string; tittel: string; status: string; tidspunkt: string; lokasjon: string }>>([]);
   const [users, setUsers] = useState<Array<{ id: string; full_name: string }>>([]);
@@ -129,7 +131,7 @@ export const AddIncidentDialog = ({ open, onOpenChange, defaultDate }: AddIncide
     try {
       const { data: { user } } = await supabase.auth.getUser();
       
-      if (!user) {
+      if (!user || !companyId) {
         toast.error("Du må være logget inn for å rapportere hendelser");
         setSubmitting(false);
         return;
@@ -138,7 +140,7 @@ export const AddIncidentDialog = ({ open, onOpenChange, defaultDate }: AddIncide
       const { error } = await supabase
         .from('incidents')
         .insert({
-          user_id: user.id,
+          company_id: companyId,
           tittel: formData.tittel,
           beskrivelse: formData.beskrivelse,
           hendelsestidspunkt: new Date(formData.hendelsestidspunkt).toISOString(),

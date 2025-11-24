@@ -7,6 +7,9 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  companyId: string | null;
+  companyName: string | null;
+  isSuperAdmin: boolean;
   signOut: () => Promise<void>;
 }
 
@@ -14,6 +17,9 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   session: null,
   loading: true,
+  companyId: null,
+  companyName: null,
+  isSuperAdmin: false,
   signOut: async () => {},
 });
 
@@ -29,6 +35,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [companyId, setCompanyId] = useState<string | null>(null);
+  const [companyName, setCompanyName] = useState<string | null>(null);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
   useEffect(() => {
     // Set up auth state listener FIRST
@@ -50,8 +59,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             if (profileData && !profileData.approved) {
               await supabase.auth.signOut();
               toast.error("Din konto venter på godkjenning fra administrator");
+            } else {
+              // Fetch company info after approval check
+              fetchUserInfo(session.user.id);
             }
           }, 0);
+        } else if (event === 'SIGNED_OUT') {
+          setCompanyId(null);
+          setCompanyName(null);
+          setIsSuperAdmin(false);
         }
       }
     );
@@ -61,17 +77,55 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+      
+      if (session?.user) {
+        fetchUserInfo(session.user.id);
+      }
     });
 
     return () => subscription.unsubscribe();
   }, []);
+
+  const fetchUserInfo = async (userId: string) => {
+    try {
+      // Fetch company info
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select(`
+          company_id,
+          companies (
+            id,
+            navn
+          )
+        `)
+        .eq('id', userId)
+        .single();
+      
+      if (profile) {
+        setCompanyId(profile.company_id);
+        setCompanyName((profile.companies as any)?.navn || null);
+      }
+
+      // Check if superadmin
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId)
+        .eq('role', 'superadmin')
+        .maybeSingle();
+      
+      setIsSuperAdmin(!!roleData);
+    } catch (error) {
+      console.error('Error fetching user info:', error);
+    }
+  };
 
   const signOut = async () => {
     await supabase.auth.signOut();
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, companyId, companyName, isSuperAdmin, signOut }}>
       {children}
     </AuthContext.Provider>
   );

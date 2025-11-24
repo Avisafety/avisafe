@@ -48,6 +48,7 @@ interface UserRole {
 }
 
 const availableRoles = [
+  { value: "superadmin", label: "Super Administrator" },
   { value: "admin", label: "Administrator" },
   { value: "operativ_leder", label: "Operativ Leder" },
   { value: "pilot", label: "Pilot" },
@@ -56,7 +57,7 @@ const availableRoles = [
 ];
 
 const Admin = () => {
-  const { user, loading } = useAuth();
+  const { user, loading, companyId, isSuperAdmin } = useAuth();
   const navigate = useNavigate();
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [userRoles, setUserRoles] = useState<UserRole[]>([]);
@@ -103,11 +104,18 @@ const Admin = () => {
   const fetchData = async () => {
     setLoadingData(true);
     try {
-      // Fetch all profiles
-      const { data: profilesData, error: profilesError } = await supabase
+      // Fetch profiles - filter by company if not superadmin
+      let profilesQuery = supabase
         .from("profiles")
-        .select("*")
+        .select("*, companies(navn)")
         .order("created_at", { ascending: false });
+      
+      // Regular admin sees only their company
+      if (!isSuperAdmin && companyId) {
+        profilesQuery = profilesQuery.eq('company_id', companyId);
+      }
+
+      const { data: profilesData, error: profilesError } = await profilesQuery;
 
       if (profilesError) throw profilesError;
 
@@ -311,10 +319,11 @@ const Admin = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Table>
+                  <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>Navn</TableHead>
+                      <TableHead>Selskap</TableHead>
                       <TableHead>Bruker ID</TableHead>
                       <TableHead>Opprettet</TableHead>
                       <TableHead className="text-right">Handlinger</TableHead>
@@ -324,6 +333,7 @@ const Admin = () => {
                     {pendingUsers.map((profile) => (
                       <TableRow key={profile.id}>
                         <TableCell>{profile.full_name || "Ikke oppgitt"}</TableCell>
+                        <TableCell>{(profile as any).companies?.navn || "Ukjent"}</TableCell>
                         <TableCell className="font-mono text-xs">{profile.id.slice(0, 8)}...</TableCell>
                         <TableCell>
                           {new Date(profile.created_at).toLocaleDateString("nb-NO")}
@@ -370,6 +380,7 @@ const Admin = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Navn</TableHead>
+                    <TableHead>Selskap</TableHead>
                     <TableHead>Bruker ID</TableHead>
                     <TableHead>Roller</TableHead>
                     <TableHead className="text-right">Tildel rolle</TableHead>
@@ -382,6 +393,7 @@ const Admin = () => {
                     return (
                       <TableRow key={profile.id}>
                         <TableCell>{profile.full_name || "Ikke oppgitt"}</TableCell>
+                        <TableCell>{(profile as any).companies?.navn || "Ukjent"}</TableCell>
                         <TableCell className="font-mono text-xs">{profile.id.slice(0, 8)}...</TableCell>
                         <TableCell>
                           <div className="flex flex-wrap gap-2">

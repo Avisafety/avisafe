@@ -6,6 +6,7 @@ import { format, isSameDay } from "date-fns";
 import { nb } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Dialog,
   DialogContent,
@@ -50,6 +51,7 @@ interface CalendarEvent {
 type CalendarEventDB = Tables<"calendar_events">;
 
 export const CalendarWidget = () => {
+  const { companyId } = useAuth();
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -440,7 +442,7 @@ export const CalendarWidget = () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       
-      if (!user) {
+      if (!user || !companyId) {
         toast.error("Du må være logget inn for å opprette kalenderoppføringer");
         return;
       }
@@ -449,6 +451,7 @@ export const CalendarWidget = () => {
         .from('calendar_events')
         .insert({
           user_id: user.id,
+          company_id: companyId,
           title: newEvent.title,
           type: newEvent.type,
           description: newEvent.description || null,

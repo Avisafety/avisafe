@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { Document, DocumentCategory } from "@/pages/Documents";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Dialog,
   DialogContent,
@@ -86,6 +87,7 @@ const DocumentCardModal = ({
   isAdmin,
   isCreating,
 }: DocumentCardModalProps) => {
+  const { companyId } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -176,7 +178,7 @@ const DocumentCardModal = ({
   };
 
   const onSubmit = async (data: FormData) => {
-    if (!isAdmin) return;
+    if (!isAdmin || !companyId) return;
 
     setIsSubmitting(true);
     try {
@@ -195,7 +197,7 @@ const DocumentCardModal = ({
         varsel_dager_for_utløp: data.varsel_dager_for_utløp || null,
         nettside_url: data.nettside_url || null,
         fil_url: fileUrl,
-        user_id: userData.user?.id,
+        company_id: companyId,
         opprettet_av: userData.user?.email || null,
       };
 

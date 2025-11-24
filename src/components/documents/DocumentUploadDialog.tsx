@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Upload } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface DocumentUploadDialogProps {
   open: boolean;
@@ -22,6 +23,7 @@ export const DocumentUploadDialog = ({
   onSuccess,
   defaultExpiryDate,
 }: DocumentUploadDialogProps) => {
+  const { companyId } = useAuth();
   const [uploading, setUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadType, setUploadType] = useState<"file" | "url">("file");
@@ -100,7 +102,7 @@ export const DocumentUploadDialog = ({
         fil_navn: fileName,
         fil_storrelse: fileSize,
         nettside_url: uploadType === "url" ? formData.websiteUrl : null,
-        user_id: user.id,
+        company_id: companyId,
       });
 
       if (insertError) throw insertError;

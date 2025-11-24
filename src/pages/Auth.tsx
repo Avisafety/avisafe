@@ -218,11 +218,11 @@ const Auth = () => {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password">Passord</Label>
-                  {isLogin && <span className="text-xs text-muted-foreground">
-                      Glemt passord? Send mail til kontakt@avisafe.no      
-                    </span>}
                 </div>
                 <Input id="password" type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required minLength={6} />
+                {isLogin && <span className="text-xs text-muted-foreground block mt-1">
+                    Glemt passord? Send mail til kontakt@avisafe.no      
+                  </span>}
               </div>
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? "Behandler..." : isLogin ? "Logg inn" : "Opprett konto"}

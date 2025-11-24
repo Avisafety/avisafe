@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import DocumentsFilterBar from "@/components/documents/DocumentsFilterBar";
@@ -27,6 +29,8 @@ export interface Document {
   opprettet_av: string | null;
 }
 const Documents = () => {
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
   const { isAdmin } = useAdminCheck();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<DocumentCategory[]>([]);
@@ -34,6 +38,12 @@ const Documents = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate("/auth", { replace: true });
+    }
+  }, [user, loading, navigate]);
   const {
     data: documents,
     isLoading,
@@ -81,6 +91,14 @@ const Documents = () => {
     handleCloseModal();
     toast.success("Dokument slettet");
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <p className="text-foreground">Laster...</p>
+      </div>
+    );
+  }
 
   return <div className="min-h-screen relative w-full overflow-x-hidden">
       {/* Background with gradient overlay */}

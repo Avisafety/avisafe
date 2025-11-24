@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Shield, Chrome } from "lucide-react";
 import droneBackground from "@/assets/drone-background.png";
@@ -20,6 +21,8 @@ const Auth = () => {
   const [fullName, setFullName] = useState("");
   const [companies, setCompanies] = useState<Array<{id: string, navn: string}>>([]);
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>("");
+  const [showResetPassword, setShowResetPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
 
   useEffect(() => {
     console.log('Auth page - user:', user?.email, 'authLoading:', authLoading);
@@ -136,6 +139,32 @@ const Auth = () => {
       setLoading(false);
     }
   };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resetEmail) {
+      toast.error("Vennligst skriv inn e-postadressen din");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      if (error) throw error;
+
+      toast.success("En e-post med instruksjoner er sendt til deg!");
+      setShowResetPassword(false);
+      setResetEmail("");
+    } catch (error: any) {
+      console.error("Reset password error:", error);
+      toast.error(error.message || "En feil oppstod");
+    } finally {
+      setLoading(false);
+    }
+  };
   return <div className="min-h-screen relative flex items-center justify-center">
       {/* Background */}
       <div className="fixed inset-0 z-0" style={{
@@ -197,7 +226,18 @@ const Auth = () => {
                 <Input id="email" type="email" placeholder="din@epost.no" value={email} onChange={e => setEmail(e.target.value)} required />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password">Passord</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password">Passord</Label>
+                  {isLogin && (
+                    <button
+                      type="button"
+                      onClick={() => setShowResetPassword(true)}
+                      className="text-xs text-primary hover:underline"
+                    >
+                      Glemt passord?
+                    </button>
+                  )}
+                </div>
                 <Input id="password" type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required minLength={6} />
               </div>
               <Button type="submit" className="w-full" disabled={loading}>
@@ -227,6 +267,47 @@ const Auth = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Reset Password Dialog */}
+      <Dialog open={showResetPassword} onOpenChange={setShowResetPassword}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Tilbakestill passord</DialogTitle>
+            <DialogDescription>
+              Skriv inn e-postadressen din, så sender vi deg en lenke for å tilbakestille passordet.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleResetPassword} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="resetEmail">E-post</Label>
+              <Input
+                id="resetEmail"
+                type="email"
+                placeholder="din@epost.no"
+                value={resetEmail}
+                onChange={(e) => setResetEmail(e.target.value)}
+                required
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setShowResetPassword(false);
+                  setResetEmail("");
+                }}
+                className="flex-1"
+              >
+                Avbryt
+              </Button>
+              <Button type="submit" disabled={loading} className="flex-1">
+                {loading ? "Sender..." : "Send e-post"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>;
 };
 export default Auth;

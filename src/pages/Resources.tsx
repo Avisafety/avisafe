@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils";
 import { StatusBadge } from "@/components/StatusBadge";
 import { format } from "date-fns";
 import { AddDroneDialog } from "@/components/resources/AddDroneDialog";
+import { AddEquipmentDialog } from "@/components/resources/AddEquipmentDialog";
 
 const Resources = () => {
   const navigate = useNavigate();
@@ -93,30 +94,6 @@ const Resources = () => {
   };
 
 
-  const handleAddEquipment = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    
-    const { error } = await (supabase as any).from("equipment").insert([{
-      user_id: user?.id!,
-      navn: formData.get("navn") as string,
-      type: formData.get("type") as string,
-      serienummer: formData.get("serienummer") as string,
-      status: (formData.get("status") as string) || "Grønn",
-      merknader: (formData.get("merknader") as string) || null,
-      sist_vedlikeholdt: (formData.get("sist_vedlikeholdt") as string) || null,
-      neste_vedlikehold: (formData.get("neste_vedlikehold") as string) || null,
-    }]);
-
-    if (error) {
-      console.error("Error adding equipment:", error);
-      toast.error("Kunne ikke legge til utstyr");
-    } else {
-      toast.success("Utstyr lagt til");
-      setEquipmentDialogOpen(false);
-      fetchEquipment();
-    }
-  };
 
   const handleAddCompetency = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -223,59 +200,12 @@ const Resources = () => {
                   <Gauge className="w-5 h-5 text-primary" />
                   <h2 className="text-lg font-semibold">Utstyr</h2>
                 </div>
-                <Dialog open={equipmentDialogOpen} onOpenChange={setEquipmentDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button size="sm" className="gap-2">
-                      <Plus className="w-4 h-4" />
-                      Legg til
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-md">
-                    <DialogHeader>
-                      <DialogTitle>Legg til nytt utstyr</DialogTitle>
-                    </DialogHeader>
-                    <form onSubmit={handleAddEquipment} className="space-y-4">
-                      <div>
-                        <Label htmlFor="navn">Navn</Label>
-                        <Input id="navn" name="navn" required />
-                      </div>
-                      <div>
-                        <Label htmlFor="type">Type</Label>
-                        <Input id="type" name="type" required />
-                      </div>
-                      <div>
-                        <Label htmlFor="serienummer">Serienummer</Label>
-                        <Input id="serienummer" name="serienummer" required />
-                      </div>
-                      <div>
-                        <Label htmlFor="status">Status</Label>
-                        <Select name="status" defaultValue="Grønn">
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Grønn">Grønn</SelectItem>
-                            <SelectItem value="Gul">Gul</SelectItem>
-                            <SelectItem value="Rød">Rød</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <Label htmlFor="sist_vedlikeholdt">Sist vedlikeholdt</Label>
-                        <Input id="sist_vedlikeholdt" name="sist_vedlikeholdt" type="date" />
-                      </div>
-                      <div>
-                        <Label htmlFor="neste_vedlikehold">Neste vedlikehold</Label>
-                        <Input id="neste_vedlikehold" name="neste_vedlikehold" type="date" />
-                      </div>
-                      <div>
-                        <Label htmlFor="merknader">Merknader</Label>
-                        <Textarea id="merknader" name="merknader" />
-                      </div>
-                      <Button type="submit" className="w-full">Legg til utstyr</Button>
-                    </form>
-                  </DialogContent>
-                </Dialog>
+                <AddEquipmentDialog
+                  open={equipmentDialogOpen}
+                  onOpenChange={setEquipmentDialogOpen}
+                  onEquipmentAdded={fetchEquipment}
+                  userId={user?.id!}
+                />
               </div>
               <div className="space-y-3">
                 {equipment.map((item) => (

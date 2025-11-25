@@ -110,11 +110,23 @@ export const AddMissionDialog = ({ open, onOpenChange, onMissionAdded }: AddMiss
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Ikke innlogget");
 
+      // Get user's company_id
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('company_id')
+        .eq('id', user.id)
+        .single();
+
+      if (!profile?.company_id) {
+        throw new Error("Kunne ikke hente brukerinformasjon");
+      }
+
       const { data, error } = await (supabase as any)
         .from("customers")
         .insert({
           navn: newCustomerName.trim(),
           user_id: user.id,
+          company_id: profile.company_id,
         })
         .select()
         .single();

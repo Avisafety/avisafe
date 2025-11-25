@@ -77,3 +77,81 @@ ${incident.beskrivelse ? `<p><strong>Beskrivelse:</strong><br>${incident.beskriv
 </body>
 </html>`;
 };
+
+// Helper for generating HTML content for new user notifications
+export const generateNewUserNotificationHTML = (newUser: {
+  fullName: string;
+  email: string;
+  companyName: string;
+}) => {
+  return `<!DOCTYPE html>
+<html>
+<head>
+<style>
+body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+.container { max-width: 600px; margin: 0 auto; padding: 20px; }
+.header { background: #1e40af; color: white; padding: 20px; border-radius: 8px 8px 0 0; }
+.content { background: #f9fafb; padding: 20px; border-radius: 0 0 8px 8px; }
+.user-info { background: white; padding: 15px; border-radius: 6px; margin: 15px 0; border-left: 4px solid #1e40af; }
+</style>
+</head>
+<body>
+<div class="container">
+<div class="header">
+<h1>Ny bruker venter på godkjenning</h1>
+</div>
+<div class="content">
+<p>En ny bruker har registrert seg og venter på godkjenning.</p>
+<div class="user-info">
+<p><strong>Navn:</strong> ${newUser.fullName}</p>
+<p><strong>E-post:</strong> ${newUser.email}</p>
+<p><strong>Selskap:</strong> ${newUser.companyName}</p>
+</div>
+<p style="margin-top: 20px;">Logg inn i Avisafe for å godkjenne eller avslå denne brukeren.</p>
+</div>
+</div>
+</body>
+</html>`;
+};
+
+// Helper to find admins with new user notifications enabled
+export const findAdminsWithNewUserNotifications = async (companyId: string) => {
+  try {
+    // Get all users with admin role in the company
+    const { data: adminRoles, error: rolesError } = await supabase
+      .from('user_roles')
+      .select('user_id')
+      .eq('role', 'admin');
+
+    if (rolesError) throw rolesError;
+    if (!adminRoles || adminRoles.length === 0) return [];
+
+    const adminUserIds = adminRoles.map(role => role.user_id);
+
+    // Get profiles for these admins in the same company
+    const { data: adminProfiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('company_id', companyId)
+      .in('id', adminUserIds);
+
+    if (profilesError) throw profilesError;
+    if (!adminProfiles || adminProfiles.length === 0) return [];
+
+    const companyAdminIds = adminProfiles.map(profile => profile.id);
+
+    // Get notification preferences for these admins
+    const { data: preferences, error: prefsError } = await supabase
+      .from('notification_preferences')
+      .select('user_id')
+      .in('user_id', companyAdminIds)
+      .eq('email_new_user_pending', true);
+
+    if (prefsError) throw prefsError;
+
+    return preferences?.map(pref => pref.user_id) || [];
+  } catch (error) {
+    console.error('Error finding admins with notifications:', error);
+    return [];
+  }
+};

@@ -190,6 +190,32 @@ export const AddMissionDialog = ({ open, onOpenChange, onMissionAdded }: AddMiss
         if (equipmentError) throw equipmentError;
       }
 
+      // Send email notification for new mission
+      try {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('company_id')
+          .eq('id', user.id)
+          .single();
+
+        if (profile?.company_id) {
+          await supabase.functions.invoke('send-notification-email', {
+            body: {
+              type: 'notify_new_mission',
+              companyId: profile.company_id,
+              mission: {
+                tittel: formData.tittel,
+                lokasjon: formData.lokasjon,
+                tidspunkt: formData.tidspunkt,
+                beskrivelse: formData.beskrivelse
+              }
+            }
+          });
+        }
+      } catch (emailError) {
+        console.error('Error sending new mission notification:', emailError);
+      }
+
       toast.success("Oppdrag opprettet!");
       onMissionAdded();
       onOpenChange(false);

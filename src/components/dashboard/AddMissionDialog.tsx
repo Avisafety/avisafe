@@ -141,6 +141,17 @@ export const AddMissionDialog = ({ open, onOpenChange, onMissionAdded }: AddMiss
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Ikke innlogget");
 
+      // Get user's company_id
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('company_id')
+        .eq('id', user.id)
+        .single();
+
+      if (!profile?.company_id) {
+        throw new Error("Kunne ikke hente brukerinformasjon");
+      }
+
       // Insert mission
       const { data: mission, error: missionError } = await (supabase as any)
         .from("missions")
@@ -154,6 +165,7 @@ export const AddMissionDialog = ({ open, onOpenChange, onMissionAdded }: AddMiss
           risk_nivå: formData.risk_nivå,
           customer_id: selectedCustomer || null,
           user_id: user.id,
+          company_id: profile.company_id,
           latitude: formData.latitude,
           longitude: formData.longitude,
         })
@@ -192,26 +204,18 @@ export const AddMissionDialog = ({ open, onOpenChange, onMissionAdded }: AddMiss
 
       // Send email notification for new mission
       try {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('company_id')
-          .eq('id', user.id)
-          .single();
-
-        if (profile?.company_id) {
-          await supabase.functions.invoke('send-notification-email', {
-            body: {
-              type: 'notify_new_mission',
-              companyId: profile.company_id,
-              mission: {
-                tittel: formData.tittel,
-                lokasjon: formData.lokasjon,
-                tidspunkt: formData.tidspunkt,
-                beskrivelse: formData.beskrivelse
-              }
+        await supabase.functions.invoke('send-notification-email', {
+          body: {
+            type: 'notify_new_mission',
+            companyId: profile.company_id,
+            mission: {
+              tittel: formData.tittel,
+              lokasjon: formData.lokasjon,
+              tidspunkt: formData.tidspunkt,
+              beskrivelse: formData.beskrivelse
             }
-          });
-        }
+          }
+        });
       } catch (emailError) {
         console.error('Error sending new mission notification:', emailError);
       }

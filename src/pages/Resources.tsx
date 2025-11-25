@@ -216,14 +216,15 @@ const Resources = () => {
               </div>
               <div className="space-y-3">
                 {personnel.map((person) => (
-                  <div key={person.id} className="p-3 bg-background/50 rounded-lg border border-border">
-                    <h3 
-                      className="font-semibold mb-2 cursor-pointer hover:text-primary transition-colors"
-                      onClick={() => {
-                        setSelectedPerson(person);
-                        setPersonCompetencyDialogOpen(true);
-                      }}
-                    >
+                  <div 
+                    key={person.id} 
+                    className="p-3 bg-background/50 rounded-lg border border-border cursor-pointer hover:bg-background/70 hover:border-primary/50 transition-all"
+                    onClick={() => {
+                      setSelectedPerson(person);
+                      setPersonCompetencyDialogOpen(true);
+                    }}
+                  >
+                    <h3 className="font-semibold mb-2">
                       {person.full_name || "Ukjent navn"}
                     </h3>
                     <div className="text-sm space-y-1">

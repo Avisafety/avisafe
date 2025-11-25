@@ -17,6 +17,7 @@ interface AddEquipmentDialogProps {
 
 export const AddEquipmentDialog = ({ open, onOpenChange, onEquipmentAdded, userId }: AddEquipmentDialogProps) => {
   const [companyId, setCompanyId] = useState<string>("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     const fetchCompanyId = async () => {
@@ -38,44 +39,54 @@ export const AddEquipmentDialog = ({ open, onOpenChange, onEquipmentAdded, userI
 
   const handleAddEquipment = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget);
+    
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    
+    const form = e.currentTarget;
+    const formData = new FormData(form);
     
     if (!companyId) {
       toast.error("Kunne ikke hente brukerinformasjon");
+      setIsSubmitting(false);
       return;
     }
     
-    const { error } = await (supabase as any).from("equipment").insert([{
-      user_id: userId,
-      company_id: companyId,
-      navn: formData.get("navn") as string,
-      type: formData.get("type") as string,
-      serienummer: formData.get("serienummer") as string,
-      status: (formData.get("status") as string) || "Grønn",
-      merknader: (formData.get("merknader") as string) || null,
-      sist_vedlikeholdt: (formData.get("sist_vedlikeholdt") as string) || null,
-      neste_vedlikehold: (formData.get("neste_vedlikehold") as string) || null,
-    }]);
+    try {
+      const { error } = await (supabase as any).from("equipment").insert([{
+        user_id: userId,
+        company_id: companyId,
+        navn: formData.get("navn") as string,
+        type: formData.get("type") as string,
+        serienummer: formData.get("serienummer") as string,
+        status: (formData.get("status") as string) || "Grønn",
+        merknader: (formData.get("merknader") as string) || null,
+        sist_vedlikeholdt: (formData.get("sist_vedlikeholdt") as string) || null,
+        neste_vedlikehold: (formData.get("neste_vedlikehold") as string) || null,
+      }]);
 
-    if (error) {
-      console.error("Error adding equipment:", error);
-      console.error("Error details:", {
-        code: error.code,
-        message: error.message,
-        details: error.details,
-        hint: error.hint
-      });
-      
-      if (error.code === "42501" || error.message?.includes("policy")) {
-        toast.error("Du har ikke tillatelse til å legge til utstyr");
+      if (error) {
+        console.error("Error adding equipment:", error);
+        console.error("Error details:", {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint
+        });
+        
+        if (error.code === "42501" || error.message?.includes("policy")) {
+          toast.error("Du har ikke tillatelse til å legge til utstyr");
+        } else {
+          toast.error(`Kunne ikke legge til utstyr: ${error.message || "Ukjent feil"}`);
+        }
       } else {
-        toast.error(`Kunne ikke legge til utstyr: ${error.message || "Ukjent feil"}`);
+        toast.success("Utstyr lagt til");
+        form.reset();
+        onEquipmentAdded();
+        onOpenChange(false);
       }
-    } else {
-      toast.success("Utstyr lagt til");
-      onOpenChange(false);
-      onEquipmentAdded();
-      e.currentTarget.reset();
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -123,7 +134,9 @@ export const AddEquipmentDialog = ({ open, onOpenChange, onEquipmentAdded, userI
             <Label htmlFor="merknader">Merknader</Label>
             <Textarea id="merknader" name="merknader" />
           </div>
-          <Button type="submit" className="w-full">Legg til utstyr</Button>
+          <Button type="submit" disabled={isSubmitting} className="w-full">
+            {isSubmitting ? "Legger til..." : "Legg til utstyr"}
+          </Button>
         </form>
       </DialogContent>
     </Dialog>

@@ -28,6 +28,8 @@ const Resources = () => {
   const [personCompetencyDialogOpen, setPersonCompetencyDialogOpen] = useState(false);
   const [selectedPerson, setSelectedPerson] = useState<typeof personnel[0] | null>(null);
   const [personnelSearch, setPersonnelSearch] = useState("");
+  const [droneSearch, setDroneSearch] = useState("");
+  const [equipmentSearch, setEquipmentSearch] = useState("");
 
   useEffect(() => {
     if (!loading && !user) {
@@ -134,8 +136,30 @@ const Resources = () => {
                   userId={user?.id!}
                 />
               </div>
+              
+              {/* Search field */}
+              <div className="relative mb-4">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Søk etter modell eller registrering..."
+                  value={droneSearch}
+                  onChange={(e) => setDroneSearch(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+              
               <div className="space-y-3">
-                {drones.map((drone) => (
+                {drones
+                  .filter((drone) => {
+                    if (!droneSearch) return true;
+                    const searchLower = droneSearch.toLowerCase();
+                    return (
+                      drone.modell?.toLowerCase().includes(searchLower) ||
+                      drone.registrering?.toLowerCase().includes(searchLower) ||
+                      drone.merknader?.toLowerCase().includes(searchLower)
+                    );
+                  })
+                  .map((drone) => (
                   <div key={drone.id} className="p-3 bg-background/50 rounded-lg border border-border">
                     <div className="flex items-start justify-between mb-2">
                       <div>
@@ -152,6 +176,19 @@ const Resources = () => {
                     </div>
                   </div>
                 ))}
+                {drones.filter((drone) => {
+                  if (!droneSearch) return true;
+                  const searchLower = droneSearch.toLowerCase();
+                  return (
+                    drone.modell?.toLowerCase().includes(searchLower) ||
+                    drone.registrering?.toLowerCase().includes(searchLower) ||
+                    drone.merknader?.toLowerCase().includes(searchLower)
+                  );
+                }).length === 0 && droneSearch && (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    Ingen treff for "{droneSearch}"
+                  </p>
+                )}
                 {drones.length === 0 && (
                   <p className="text-sm text-muted-foreground text-center py-4">
                     Ingen droner registrert
@@ -174,8 +211,31 @@ const Resources = () => {
                   userId={user?.id!}
                 />
               </div>
+              
+              {/* Search field */}
+              <div className="relative mb-4">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Søk etter navn, type eller serienummer..."
+                  value={equipmentSearch}
+                  onChange={(e) => setEquipmentSearch(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+              
               <div className="space-y-3">
-                {equipment.map((item) => (
+                {equipment
+                  .filter((item) => {
+                    if (!equipmentSearch) return true;
+                    const searchLower = equipmentSearch.toLowerCase();
+                    return (
+                      item.navn?.toLowerCase().includes(searchLower) ||
+                      item.type?.toLowerCase().includes(searchLower) ||
+                      item.serienummer?.toLowerCase().includes(searchLower) ||
+                      item.merknader?.toLowerCase().includes(searchLower)
+                    );
+                  })
+                  .map((item) => (
                   <div key={item.id} className="p-3 bg-background/50 rounded-lg border border-border">
                     <div className="flex items-start justify-between mb-2">
                       <div>
@@ -192,6 +252,20 @@ const Resources = () => {
                     </div>
                   </div>
                 ))}
+                {equipment.filter((item) => {
+                  if (!equipmentSearch) return true;
+                  const searchLower = equipmentSearch.toLowerCase();
+                  return (
+                    item.navn?.toLowerCase().includes(searchLower) ||
+                    item.type?.toLowerCase().includes(searchLower) ||
+                    item.serienummer?.toLowerCase().includes(searchLower) ||
+                    item.merknader?.toLowerCase().includes(searchLower)
+                  );
+                }).length === 0 && equipmentSearch && (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    Ingen treff for "{equipmentSearch}"
+                  </p>
+                )}
                 {equipment.length === 0 && (
                   <p className="text-sm text-muted-foreground text-center py-4">
                     Ingen utstyr registrert

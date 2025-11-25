@@ -81,11 +81,27 @@ export function PersonCompetencyDialog({
     });
 
     if (error) {
-      toast({
-        title: "Feil",
-        description: "Kunne ikke legge til kompetanse",
-        variant: "destructive",
+      console.error("Error adding competency:", error);
+      console.error("Error details:", {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint
       });
+      
+      if (error.code === "42501" || error.message?.includes("policy")) {
+        toast({
+          title: "Ingen tillatelse",
+          description: "Du har ikke tillatelse til å legge til kompetanse for denne personen",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Feil",
+          description: error.message || "Kunne ikke legge til kompetanse",
+          variant: "destructive",
+        });
+      }
       return;
     }
 

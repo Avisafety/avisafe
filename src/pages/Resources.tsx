@@ -13,6 +13,7 @@ import { format } from "date-fns";
 import { AddDroneDialog } from "@/components/resources/AddDroneDialog";
 import { AddEquipmentDialog } from "@/components/resources/AddEquipmentDialog";
 import { AddCompetencyDialog } from "@/components/resources/AddCompetencyDialog";
+import { PersonCompetencyDialog } from "@/components/resources/PersonCompetencyDialog";
 
 const Resources = () => {
   const navigate = useNavigate();
@@ -23,6 +24,8 @@ const Resources = () => {
   const [droneDialogOpen, setDroneDialogOpen] = useState(false);
   const [equipmentDialogOpen, setEquipmentDialogOpen] = useState(false);
   const [personnelDialogOpen, setPersonnelDialogOpen] = useState(false);
+  const [personCompetencyDialogOpen, setPersonCompetencyDialogOpen] = useState(false);
+  const [selectedPerson, setSelectedPerson] = useState<typeof personnel[0] | null>(null);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -202,17 +205,27 @@ const Resources = () => {
                   <Users className="w-5 h-5 text-primary" />
                   <h2 className="text-lg font-semibold">Personell</h2>
                 </div>
-                <AddCompetencyDialog
-                  open={personnelDialogOpen}
-                  onOpenChange={setPersonnelDialogOpen}
-                  onCompetencyAdded={fetchPersonnel}
-                  personnel={personnel}
-                />
+                <Button
+                  onClick={() => setPersonnelDialogOpen(true)}
+                  size="sm"
+                  className="gap-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  Legg til kompetanse
+                </Button>
               </div>
               <div className="space-y-3">
                 {personnel.map((person) => (
                   <div key={person.id} className="p-3 bg-background/50 rounded-lg border border-border">
-                    <h3 className="font-semibold mb-2">{person.full_name || "Ukjent navn"}</h3>
+                    <h3 
+                      className="font-semibold mb-2 cursor-pointer hover:text-primary transition-colors"
+                      onClick={() => {
+                        setSelectedPerson(person);
+                        setPersonCompetencyDialogOpen(true);
+                      }}
+                    >
+                      {person.full_name || "Ukjent navn"}
+                    </h3>
                     <div className="text-sm space-y-1">
                       {person.personnel_competencies && person.personnel_competencies.length > 0 ? (
                         person.personnel_competencies.map((comp: any) => (
@@ -241,6 +254,20 @@ const Resources = () => {
           </div>
         </main>
       </div>
+
+      <AddCompetencyDialog
+        open={personnelDialogOpen}
+        onOpenChange={setPersonnelDialogOpen}
+        onCompetencyAdded={fetchPersonnel}
+        personnel={personnel}
+      />
+
+      <PersonCompetencyDialog
+        open={personCompetencyDialogOpen}
+        onOpenChange={setPersonCompetencyDialogOpen}
+        person={selectedPerson}
+        onCompetencyUpdated={fetchPersonnel}
+      />
     </div>
   );
 };

@@ -22,7 +22,7 @@ import { format } from "date-fns";
 
 const Resources = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const [drones, setDrones] = useState<any[]>([]);
   const [equipment, setEquipment] = useState<any[]>([]);
   const [personnel, setPersonnel] = useState<any[]>([]);
@@ -31,6 +31,12 @@ const Resources = () => {
   const [personnelDialogOpen, setPersonnelDialogOpen] = useState(false);
   const [selectedPersonId, setSelectedPersonId] = useState<string>("");
   const [personSearchOpen, setPersonSearchOpen] = useState(false);
+
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate("/auth", { replace: true });
+    }
+  }, [user, loading, navigate]);
 
   useEffect(() => {
     if (user) {
@@ -163,6 +169,14 @@ const Resources = () => {
       fetchPersonnel();
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <p className="text-foreground">Laster...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen relative w-full overflow-x-hidden">

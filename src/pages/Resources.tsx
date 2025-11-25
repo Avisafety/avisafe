@@ -1,6 +1,7 @@
 import droneBackground from "@/assets/drone-background.png";
-import { Plane, Plus, Gauge, Users } from "lucide-react";
+import { Plane, Plus, Gauge, Users, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Header } from "@/components/Header";
 import { GlassCard } from "@/components/GlassCard";
 import { useState, useEffect } from "react";
@@ -26,6 +27,7 @@ const Resources = () => {
   const [personnelDialogOpen, setPersonnelDialogOpen] = useState(false);
   const [personCompetencyDialogOpen, setPersonCompetencyDialogOpen] = useState(false);
   const [selectedPerson, setSelectedPerson] = useState<typeof personnel[0] | null>(null);
+  const [personnelSearch, setPersonnelSearch] = useState("");
 
   useEffect(() => {
     if (!loading && !user) {
@@ -214,8 +216,31 @@ const Resources = () => {
                   Legg til kompetanse
                 </Button>
               </div>
+              
+              {/* Search field */}
+              <div className="relative mb-4">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Søk etter navn eller kompetanse..."
+                  value={personnelSearch}
+                  onChange={(e) => setPersonnelSearch(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+              
               <div className="space-y-3">
-                {personnel.map((person) => (
+                {personnel
+                  .filter((person) => {
+                    if (!personnelSearch) return true;
+                    const searchLower = personnelSearch.toLowerCase();
+                    const nameMatch = person.full_name?.toLowerCase().includes(searchLower);
+                    const competencyMatch = person.personnel_competencies?.some((comp: any) =>
+                      comp.navn?.toLowerCase().includes(searchLower) ||
+                      comp.type?.toLowerCase().includes(searchLower)
+                    );
+                    return nameMatch || competencyMatch;
+                  })
+                  .map((person) => (
                   <div 
                     key={person.id} 
                     className="p-3 bg-background/50 rounded-lg border border-border cursor-pointer hover:bg-accent/20 hover:border-accent transition-all duration-200"
@@ -245,6 +270,20 @@ const Resources = () => {
                     </div>
                   </div>
                 ))}
+                {personnel.filter((person) => {
+                  if (!personnelSearch) return true;
+                  const searchLower = personnelSearch.toLowerCase();
+                  const nameMatch = person.full_name?.toLowerCase().includes(searchLower);
+                  const competencyMatch = person.personnel_competencies?.some((comp: any) =>
+                    comp.navn?.toLowerCase().includes(searchLower) ||
+                    comp.type?.toLowerCase().includes(searchLower)
+                  );
+                  return nameMatch || competencyMatch;
+                }).length === 0 && personnelSearch && (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    Ingen treff for "{personnelSearch}"
+                  </p>
+                )}
                 {personnel.length === 0 && (
                   <p className="text-sm text-muted-foreground text-center py-4">
                     Ingen personell registrert

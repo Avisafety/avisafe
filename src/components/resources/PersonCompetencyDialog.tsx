@@ -25,7 +25,7 @@ interface Competency {
 interface Person {
   id: string;
   full_name: string;
-  competencies: Competency[];
+  personnel_competencies?: Competency[];
 }
 
 interface PersonCompetencyDialogProps {
@@ -208,10 +208,10 @@ export function PersonCompetencyDialog({
             <div className="space-y-4 mb-6">
               <h3 className="text-sm font-semibold text-muted-foreground">📋 Eksisterende kompetanser</h3>
               
-              {person.competencies.length === 0 ? (
+              {(person.personnel_competencies || []).length === 0 ? (
                 <p className="text-sm text-muted-foreground">Ingen kompetanser registrert</p>
               ) : (
-                person.competencies.map((competency) => (
+                (person.personnel_competencies || []).map((competency) => (
                   <div key={competency.id} className="border rounded-lg p-4 space-y-3 bg-card">
                     {editingId === competency.id ? (
                       // Edit mode

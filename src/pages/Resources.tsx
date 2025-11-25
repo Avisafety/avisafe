@@ -15,6 +15,7 @@ import { AddDroneDialog } from "@/components/resources/AddDroneDialog";
 import { AddEquipmentDialog } from "@/components/resources/AddEquipmentDialog";
 import { AddCompetencyDialog } from "@/components/resources/AddCompetencyDialog";
 import { PersonCompetencyDialog } from "@/components/resources/PersonCompetencyDialog";
+import { DroneDetailDialog } from "@/components/resources/DroneDetailDialog";
 
 const Resources = () => {
   const navigate = useNavigate();
@@ -27,6 +28,8 @@ const Resources = () => {
   const [personnelDialogOpen, setPersonnelDialogOpen] = useState(false);
   const [personCompetencyDialogOpen, setPersonCompetencyDialogOpen] = useState(false);
   const [selectedPerson, setSelectedPerson] = useState<typeof personnel[0] | null>(null);
+  const [selectedDrone, setSelectedDrone] = useState<any>(null);
+  const [droneDetailOpen, setDroneDetailOpen] = useState(false);
   const [personnelSearch, setPersonnelSearch] = useState("");
   const [droneSearch, setDroneSearch] = useState("");
   const [equipmentSearch, setEquipmentSearch] = useState("");
@@ -158,7 +161,14 @@ const Resources = () => {
                     );
                   })
                   .map((drone) => (
-                  <div key={drone.id} className="p-3 bg-background/50 rounded-lg border border-border">
+                  <div 
+                    key={drone.id} 
+                    className="p-3 bg-background/50 rounded-lg border border-border cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-[1.02] hover:border-primary/50 hover:bg-background/70"
+                    onClick={() => {
+                      setSelectedDrone(drone);
+                      setDroneDetailOpen(true);
+                    }}
+                  >
                     <div className="flex items-start justify-between mb-2">
                       <div>
                         <h3 className="font-semibold">{drone.modell}</h3>
@@ -391,6 +401,13 @@ const Resources = () => {
         onOpenChange={setPersonCompetencyDialogOpen}
         person={selectedPerson}
         onCompetencyUpdated={fetchPersonnel}
+      />
+
+      <DroneDetailDialog
+        open={droneDetailOpen}
+        onOpenChange={setDroneDetailOpen}
+        drone={selectedDrone}
+        onDroneUpdated={fetchDrones}
       />
     </div>
   );

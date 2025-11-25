@@ -218,7 +218,7 @@ const Resources = () => {
                 {personnel.map((person) => (
                   <div 
                     key={person.id} 
-                    className="p-3 bg-background/50 rounded-lg border border-border cursor-pointer hover:bg-background/70 hover:border-primary/50 transition-all"
+                    className="p-3 bg-background/50 rounded-lg border border-border cursor-pointer hover:bg-primary/10 hover:border-primary hover:shadow-lg hover:shadow-primary/20 transition-all duration-200"
                     onClick={() => {
                       setSelectedPerson(person);
                       setPersonCompetencyDialogOpen(true);

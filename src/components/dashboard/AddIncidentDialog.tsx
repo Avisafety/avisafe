@@ -141,6 +141,7 @@ export const AddIncidentDialog = ({ open, onOpenChange, defaultDate }: AddIncide
         .from('incidents')
         .insert({
           company_id: companyId,
+          user_id: user.id,
           tittel: formData.tittel,
           beskrivelse: formData.beskrivelse,
           hendelsestidspunkt: new Date(formData.hendelsestidspunkt).toISOString(),

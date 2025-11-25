@@ -32,10 +32,18 @@ export const AddCompetencyDialog = ({ open, onOpenChange, onCompetencyAdded, per
       return;
     }
     
+    const typeValue = formData.get("type") as string;
+    const navnValue = formData.get("navn") as string;
+    
+    if (!typeValue || !navnValue) {
+      toast.error("Type og navn er påkrevd");
+      return;
+    }
+    
     const { error } = await (supabase as any).from("personnel_competencies").insert([{
       profile_id: selectedPersonId,
-      type: formData.get("type") as string,
-      navn: formData.get("navn") as string,
+      type: typeValue,
+      navn: navnValue,
       beskrivelse: (formData.get("beskrivelse") as string) || null,
       utstedt_dato: (formData.get("utstedt_dato") as string) || null,
       utloper_dato: (formData.get("utloper_dato") as string) || null,
@@ -43,12 +51,24 @@ export const AddCompetencyDialog = ({ open, onOpenChange, onCompetencyAdded, per
 
     if (error) {
       console.error("Error adding competency:", error);
-      toast.error("Kunne ikke legge til kompetanse");
+      console.error("Error details:", {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint
+      });
+      
+      if (error.code === "42501" || error.message?.includes("policy")) {
+        toast.error("Du har ikke tillatelse til å legge til kompetanse for denne personen");
+      } else {
+        toast.error(`Kunne ikke legge til kompetanse: ${error.message || "Ukjent feil"}`);
+      }
     } else {
       toast.success("Kompetanse lagt til");
       onOpenChange(false);
       setSelectedPersonId("");
       onCompetencyAdded();
+      e.currentTarget.reset();
     }
   };
 

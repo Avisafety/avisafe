@@ -120,7 +120,11 @@ export const AddCompetencyDialog = ({ open, onOpenChange, onCompetencyAdded, per
               <SelectContent>
                 <SelectItem value="Kurs">Kurs</SelectItem>
                 <SelectItem value="Sertifikat">Sertifikat</SelectItem>
+                <SelectItem value="Lisens">Lisens</SelectItem>
+                <SelectItem value="Utdanning">Utdanning</SelectItem>
+                <SelectItem value="Godkjenning">Godkjenning</SelectItem>
                 <SelectItem value="Kompetanse">Kompetanse</SelectItem>
+                <SelectItem value="Annet">Annet</SelectItem>
               </SelectContent>
             </Select>
           </div>

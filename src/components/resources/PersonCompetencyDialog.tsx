@@ -226,7 +226,9 @@ export function PersonCompetencyDialog({
                               <SelectItem value="Kurs">Kurs</SelectItem>
                               <SelectItem value="Sertifikat">Sertifikat</SelectItem>
                               <SelectItem value="Lisens">Lisens</SelectItem>
+                              <SelectItem value="Utdanning">Utdanning</SelectItem>
                               <SelectItem value="Godkjenning">Godkjenning</SelectItem>
+                              <SelectItem value="Kompetanse">Kompetanse</SelectItem>
                               <SelectItem value="Annet">Annet</SelectItem>
                             </SelectContent>
                           </Select>
@@ -346,7 +348,9 @@ export function PersonCompetencyDialog({
                       <SelectItem value="Kurs">Kurs</SelectItem>
                       <SelectItem value="Sertifikat">Sertifikat</SelectItem>
                       <SelectItem value="Lisens">Lisens</SelectItem>
+                      <SelectItem value="Utdanning">Utdanning</SelectItem>
                       <SelectItem value="Godkjenning">Godkjenning</SelectItem>
+                      <SelectItem value="Kompetanse">Kompetanse</SelectItem>
                       <SelectItem value="Annet">Annet</SelectItem>
                     </SelectContent>
                   </Select>

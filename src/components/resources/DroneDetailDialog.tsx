@@ -10,7 +10,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
-import { Plane, Calendar, AlertTriangle, Trash2 } from "lucide-react";
+import { Plane, Calendar, AlertTriangle, Trash2, Plus, X, Package } from "lucide-react";
+import { AddEquipmentToDroneDialog } from "./AddEquipmentToDroneDialog";
 
 interface Drone {
   id: string;
@@ -42,6 +43,8 @@ export const DroneDetailDialog = ({ open, onOpenChange, drone, onDroneUpdated }:
   const { isAdmin } = useAdminCheck();
   const [isEditing, setIsEditing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [linkedEquipment, setLinkedEquipment] = useState<any[]>([]);
+  const [addEquipmentDialogOpen, setAddEquipmentDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
     modell: "",
     registrering: "",
@@ -64,8 +67,50 @@ export const DroneDetailDialog = ({ open, onOpenChange, drone, onDroneUpdated }:
         neste_inspeksjon: drone.neste_inspeksjon ? new Date(drone.neste_inspeksjon).toISOString().split('T')[0] : "",
       });
       setIsEditing(false);
+      fetchLinkedEquipment();
     }
   }, [drone]);
+
+  const fetchLinkedEquipment = async () => {
+    if (!drone) return;
+
+    const { data, error } = await supabase
+      .from("drone_equipment")
+      .select(`
+        id,
+        equipment:equipment_id (
+          id,
+          navn,
+          type,
+          serienummer,
+          status
+        )
+      `)
+      .eq("drone_id", drone.id);
+
+    if (error) {
+      console.error("Error fetching linked equipment:", error);
+    } else {
+      setLinkedEquipment(data || []);
+    }
+  };
+
+  const handleRemoveEquipment = async (linkId: string, equipmentName: string) => {
+    try {
+      const { error } = await supabase
+        .from("drone_equipment")
+        .delete()
+        .eq("id", linkId);
+
+      if (error) throw error;
+
+      toast.success(`${equipmentName} fjernet`);
+      fetchLinkedEquipment();
+    } catch (error: any) {
+      console.error("Error removing equipment:", error);
+      toast.error(`Kunne ikke fjerne utstyr: ${error.message}`);
+    }
+  };
 
   const handleSave = async () => {
     if (!drone || isSubmitting) return;
@@ -200,6 +245,61 @@ export const DroneDetailDialog = ({ open, onOpenChange, drone, onDroneUpdated }:
                   </div>
                 </div>
               )}
+
+              <div className="border-t border-border pt-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <Package className="w-4 h-4 text-muted-foreground" />
+                    <p className="text-sm font-medium text-muted-foreground">Tilknyttet utstyr</p>
+                  </div>
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => setAddEquipmentDialogOpen(true)}
+                    className="gap-2"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Legg til
+                  </Button>
+                </div>
+                
+                {linkedEquipment.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    Ingen utstyr tilknyttet
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {linkedEquipment.map((link: any) => {
+                      const eq = link.equipment;
+                      if (!eq) return null;
+                      return (
+                        <div
+                          key={link.id}
+                          className="flex items-center justify-between p-2 bg-background/50 rounded border border-border"
+                        >
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <p className="text-sm font-medium">{eq.navn}</p>
+                              <Badge className={`${statusColors[eq.status] || ""} border text-xs`}>
+                                {eq.status}
+                              </Badge>
+                            </div>
+                            <p className="text-xs text-muted-foreground">{eq.type} • SN: {eq.serienummer}</p>
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleRemoveEquipment(link.id, eq.navn)}
+                            className="h-8 w-8 p-0"
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             </>
           ) : (
             <>
@@ -323,6 +423,14 @@ export const DroneDetailDialog = ({ open, onOpenChange, drone, onDroneUpdated }:
           </div>
         </DialogFooter>
       </DialogContent>
+
+      <AddEquipmentToDroneDialog
+        open={addEquipmentDialogOpen}
+        onOpenChange={setAddEquipmentDialogOpen}
+        droneId={drone?.id || ""}
+        existingEquipmentIds={linkedEquipment.map((link) => link.equipment?.id).filter(Boolean)}
+        onEquipmentAdded={fetchLinkedEquipment}
+      />
     </Dialog>
   );
 };

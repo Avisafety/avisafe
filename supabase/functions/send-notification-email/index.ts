@@ -139,7 +139,6 @@ serve(async (req: Request): Promise<Response> => {
           from: Deno.env.get("EMAIL_USER") ?? "",
           to: user.email,
           subject: `Ny hendelse: ${incident.tittel}`,
-          content: incidentHtml,
           html: incidentHtml,
         });
 
@@ -248,7 +247,6 @@ serve(async (req: Request): Promise<Response> => {
           from: Deno.env.get("EMAIL_USER") ?? "",
           to: user.email,
           subject: `Nytt oppdrag: ${mission.tittel}`,
-          content: missionHtml,
           html: missionHtml,
         });
 
@@ -377,7 +375,6 @@ body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
           from: Deno.env.get("EMAIL_USER") ?? "",
           to: user.email,
           subject: 'Ny bruker venter på godkjenning',
-          content: html,
           html: html,
         });
         sentCount++;
@@ -447,7 +444,6 @@ body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
       from: Deno.env.get("EMAIL_USER") ?? "",
       to: user.email,
       subject: subject,
-      content: htmlContent,
       html: htmlContent,
     });
 

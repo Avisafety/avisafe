@@ -64,7 +64,7 @@ export const AddCompetencyDialog = ({ open, onOpenChange, onCompetencyAdded, per
         <DialogHeader>
           <DialogTitle>Legg til kompetanse/kurs</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleAddCompetency} className="space-y-4">
+        <form onSubmit={handleAddCompetency} className="space-y-4 px-1">
           <div>
             <Label>Person</Label>
             <Popover open={personSearchOpen} onOpenChange={setPersonSearchOpen}>

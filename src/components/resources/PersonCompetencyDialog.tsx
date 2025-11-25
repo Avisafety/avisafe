@@ -203,7 +203,7 @@ export function PersonCompetencyDialog({
             <DialogTitle>Kompetanser - {person.full_name}</DialogTitle>
           </DialogHeader>
 
-          <ScrollArea className="h-[calc(90vh-8rem)] pr-4">
+          <ScrollArea className="h-[calc(90vh-8rem)] px-4">
             {/* Existing Competencies */}
             <div className="space-y-4 mb-6">
               <h3 className="text-sm font-semibold text-muted-foreground">📋 Eksisterende kompetanser</h3>

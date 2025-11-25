@@ -11,7 +11,6 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { toast } from "sonner";
 import { Shield, Chrome } from "lucide-react";
 import droneBackground from "@/assets/drone-background.png";
-
 const Auth = () => {
   const navigate = useNavigate();
   const {
@@ -111,14 +110,12 @@ const Auth = () => {
           await supabase.from('profiles').update({
             company_id: selectedCompanyId
           }).eq('id', data.user.id);
-          
+
           // Get company name for the notification
-          const { data: companyData } = await supabase
-            .from('companies')
-            .select('navn')
-            .eq('id', selectedCompanyId)
-            .single();
-          
+          const {
+            data: companyData
+          } = await supabase.from('companies').select('navn').eq('id', selectedCompanyId).single();
+
           // Send notifications to admins via edge function
           if (companyData) {
             await supabase.functions.invoke('send-notification-email', {
@@ -133,7 +130,6 @@ const Auth = () => {
               }
             });
           }
-          
           toast.success("Konto opprettet! Venter på godkjenning fra administrator.");
           setEmail("");
           setPassword("");
@@ -203,8 +199,8 @@ const Auth = () => {
             <div className="flex items-center justify-center gap-3">
               <Shield className="w-10 h-10 text-primary" />
               <div>
-                <CardTitle className="text-2xl">Sikkerhetsstyringssystem</CardTitle>
-                <CardDescription className="text-primary">Drone Operations</CardDescription>
+                <CardTitle className="text-2xl">Sikkerhetsstyring</CardTitle>
+                <CardDescription className="text-primary">Droneoperasjoner</CardDescription>
               </div>
             </div>
             <div className="text-center">

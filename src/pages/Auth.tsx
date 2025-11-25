@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { toast } from "sonner";
 import { Shield, Chrome } from "lucide-react";
 import droneBackground from "@/assets/drone-background.png";
+import { sendNotificationEmail, generateNewUserNotificationHTML, findAdminsWithNewUserNotifications } from "@/lib/notifications";
 const Auth = () => {
   const navigate = useNavigate();
   const {
@@ -110,6 +111,34 @@ const Auth = () => {
           await supabase.from('profiles').update({
             company_id: selectedCompanyId
           }).eq('id', data.user.id);
+          
+          // Get company name for the notification
+          const { data: companyData } = await supabase
+            .from('companies')
+            .select('navn')
+            .eq('id', selectedCompanyId)
+            .single();
+          
+          // Send notifications to admins
+          const adminIds = await findAdminsWithNewUserNotifications(selectedCompanyId);
+          if (adminIds.length > 0 && companyData) {
+            const htmlContent = generateNewUserNotificationHTML({
+              fullName: fullName,
+              email: email,
+              companyName: companyData.navn
+            });
+            
+            // Send email to each admin
+            for (const adminId of adminIds) {
+              await sendNotificationEmail({
+                recipientId: adminId,
+                notificationType: 'email_new_user_pending',
+                subject: 'Ny bruker venter på godkjenning',
+                htmlContent: htmlContent
+              });
+            }
+          }
+          
           toast.success("Konto opprettet! Venter på godkjenning fra administrator.");
           setEmail("");
           setPassword("");

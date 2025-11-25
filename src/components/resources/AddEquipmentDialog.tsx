@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useEffect, useState } from "react";
 
 interface AddEquipmentDialogProps {
   open: boolean;
@@ -16,12 +17,38 @@ interface AddEquipmentDialogProps {
 }
 
 export const AddEquipmentDialog = ({ open, onOpenChange, onEquipmentAdded, userId }: AddEquipmentDialogProps) => {
+  const [companyId, setCompanyId] = useState<string>("");
+
+  useEffect(() => {
+    const fetchCompanyId = async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("company_id")
+        .eq("id", userId)
+        .single();
+      
+      if (data) {
+        setCompanyId(data.company_id);
+      }
+    };
+    
+    if (userId) {
+      fetchCompanyId();
+    }
+  }, [userId]);
+
   const handleAddEquipment = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     
+    if (!companyId) {
+      toast.error("Kunne ikke hente brukerinformasjon");
+      return;
+    }
+    
     const { error } = await (supabase as any).from("equipment").insert([{
       user_id: userId,
+      company_id: companyId,
       navn: formData.get("navn") as string,
       type: formData.get("type") as string,
       serienummer: formData.get("serienummer") as string,
@@ -33,11 +60,23 @@ export const AddEquipmentDialog = ({ open, onOpenChange, onEquipmentAdded, userI
 
     if (error) {
       console.error("Error adding equipment:", error);
-      toast.error("Kunne ikke legge til utstyr");
+      console.error("Error details:", {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint
+      });
+      
+      if (error.code === "42501" || error.message?.includes("policy")) {
+        toast.error("Du har ikke tillatelse til å legge til utstyr");
+      } else {
+        toast.error(`Kunne ikke legge til utstyr: ${error.message || "Ukjent feil"}`);
+      }
     } else {
       toast.success("Utstyr lagt til");
       onOpenChange(false);
       onEquipmentAdded();
+      e.currentTarget.reset();
     }
   };
 

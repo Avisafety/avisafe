@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useEffect, useState } from "react";
 
 interface AddDroneDialogProps {
   open: boolean;
@@ -16,12 +17,38 @@ interface AddDroneDialogProps {
 }
 
 export const AddDroneDialog = ({ open, onOpenChange, onDroneAdded, userId }: AddDroneDialogProps) => {
+  const [companyId, setCompanyId] = useState<string>("");
+
+  useEffect(() => {
+    const fetchCompanyId = async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("company_id")
+        .eq("id", userId)
+        .single();
+      
+      if (data) {
+        setCompanyId(data.company_id);
+      }
+    };
+    
+    if (userId) {
+      fetchCompanyId();
+    }
+  }, [userId]);
+
   const handleAddDrone = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     
+    if (!companyId) {
+      toast.error("Kunne ikke hente brukerinformasjon");
+      return;
+    }
+    
     const { error } = await (supabase as any).from("drones").insert([{
       user_id: userId,
+      company_id: companyId,
       modell: formData.get("modell") as string,
       registrering: formData.get("registrering") as string,
       status: (formData.get("status") as string) || "Grønn",
@@ -33,11 +60,23 @@ export const AddDroneDialog = ({ open, onOpenChange, onDroneAdded, userId }: Add
 
     if (error) {
       console.error("Error adding drone:", error);
-      toast.error("Kunne ikke legge til drone");
+      console.error("Error details:", {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint
+      });
+      
+      if (error.code === "42501" || error.message?.includes("policy")) {
+        toast.error("Du har ikke tillatelse til å legge til drone");
+      } else {
+        toast.error(`Kunne ikke legge til drone: ${error.message || "Ukjent feil"}`);
+      }
     } else {
       toast.success("Drone lagt til");
       onOpenChange(false);
       onDroneAdded();
+      e.currentTarget.reset();
     }
   };
 

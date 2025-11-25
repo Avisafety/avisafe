@@ -203,9 +203,9 @@ export function PersonCompetencyDialog({
             <DialogTitle>Kompetanser - {person.full_name}</DialogTitle>
           </DialogHeader>
 
-          <ScrollArea className="h-[calc(90vh-8rem)] px-4">
+          <ScrollArea className="h-[calc(90vh-8rem)] px-1">
             {/* Existing Competencies */}
-            <div className="space-y-4 mb-6">
+            <div className="space-y-4 mb-6 px-3">
               <h3 className="text-sm font-semibold text-muted-foreground">📋 Eksisterende kompetanser</h3>
               
               {(person.personnel_competencies || []).length === 0 ? (
@@ -333,7 +333,7 @@ export function PersonCompetencyDialog({
             </div>
 
             {/* Add New Competency Form */}
-            <div className="border-t pt-6">
+            <div className="border-t pt-6 px-3">
               <h3 className="text-sm font-semibold mb-4">➕ Legg til ny kompetanse</h3>
               <form onSubmit={handleAddCompetency} className="space-y-4">
                 <div>

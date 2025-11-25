@@ -17,6 +17,7 @@ interface AddDroneDialogProps {
 
 export const AddDroneDialog = ({ open, onOpenChange, onDroneAdded, userId }: AddDroneDialogProps) => {
   const [companyId, setCompanyId] = useState<string>("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     const fetchCompanyId = async () => {
@@ -38,44 +39,54 @@ export const AddDroneDialog = ({ open, onOpenChange, onDroneAdded, userId }: Add
 
   const handleAddDrone = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget);
+    
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    
+    const form = e.currentTarget;
+    const formData = new FormData(form);
     
     if (!companyId) {
       toast.error("Kunne ikke hente brukerinformasjon");
+      setIsSubmitting(false);
       return;
     }
     
-    const { error } = await (supabase as any).from("drones").insert([{
-      user_id: userId,
-      company_id: companyId,
-      modell: formData.get("modell") as string,
-      registrering: formData.get("registrering") as string,
-      status: (formData.get("status") as string) || "Grønn",
-      flyvetimer: parseInt(formData.get("flyvetimer") as string) || 0,
-      merknader: (formData.get("merknader") as string) || null,
-      sist_inspeksjon: (formData.get("sist_inspeksjon") as string) || null,
-      neste_inspeksjon: (formData.get("neste_inspeksjon") as string) || null,
-    }]);
+    try {
+      const { error } = await (supabase as any).from("drones").insert([{
+        user_id: userId,
+        company_id: companyId,
+        modell: formData.get("modell") as string,
+        registrering: formData.get("registrering") as string,
+        status: (formData.get("status") as string) || "Grønn",
+        flyvetimer: parseInt(formData.get("flyvetimer") as string) || 0,
+        merknader: (formData.get("merknader") as string) || null,
+        sist_inspeksjon: (formData.get("sist_inspeksjon") as string) || null,
+        neste_inspeksjon: (formData.get("neste_inspeksjon") as string) || null,
+      }]);
 
-    if (error) {
-      console.error("Error adding drone:", error);
-      console.error("Error details:", {
-        code: error.code,
-        message: error.message,
-        details: error.details,
-        hint: error.hint
-      });
-      
-      if (error.code === "42501" || error.message?.includes("policy")) {
-        toast.error("Du har ikke tillatelse til å legge til drone");
+      if (error) {
+        console.error("Error adding drone:", error);
+        console.error("Error details:", {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint
+        });
+        
+        if (error.code === "42501" || error.message?.includes("policy")) {
+          toast.error("Du har ikke tillatelse til å legge til drone");
+        } else {
+          toast.error(`Kunne ikke legge til drone: ${error.message || "Ukjent feil"}`);
+        }
       } else {
-        toast.error(`Kunne ikke legge til drone: ${error.message || "Ukjent feil"}`);
+        toast.success("Drone lagt til");
+        form.reset();
+        onDroneAdded();
+        onOpenChange(false);
       }
-    } else {
-      toast.success("Drone lagt til");
-      onOpenChange(false);
-      onDroneAdded();
-      e.currentTarget.reset();
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -123,7 +134,9 @@ export const AddDroneDialog = ({ open, onOpenChange, onDroneAdded, userId }: Add
             <Label htmlFor="merknader">Merknader</Label>
             <Textarea id="merknader" name="merknader" />
           </div>
-          <Button type="submit" className="w-full">Legg til drone</Button>
+          <Button type="submit" disabled={isSubmitting} className="w-full">
+            {isSubmitting ? "Legger til..." : "Legg til drone"}
+          </Button>
         </form>
       </DialogContent>
     </Dialog>

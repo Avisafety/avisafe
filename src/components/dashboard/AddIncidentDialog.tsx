@@ -155,6 +155,32 @@ export const AddIncidentDialog = ({ open, onOpenChange, defaultDate }: AddIncide
 
       if (error) throw error;
 
+      // Send email notification for new incident
+      try {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('company_id')
+          .eq('id', user.id)
+          .single();
+
+        if (profile?.company_id) {
+          await supabase.functions.invoke('send-notification-email', {
+            body: {
+              type: 'notify_new_incident',
+              companyId: profile.company_id,
+              incident: {
+                tittel: formData.tittel,
+                beskrivelse: formData.beskrivelse,
+                alvorlighetsgrad: formData.alvorlighetsgrad,
+                lokasjon: formData.lokasjon
+              }
+            }
+          });
+        }
+      } catch (emailError) {
+        console.error('Error sending new incident notification:', emailError);
+      }
+
       // Send email notification to follow-up responsible
       if (formData.oppfolgingsansvarlig_id) {
         await sendNotificationEmail({

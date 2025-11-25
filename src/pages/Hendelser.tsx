@@ -11,6 +11,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Plus, Search } from "lucide-react";
 import { format } from "date-fns";
 import { nb } from "date-fns/locale";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 type Incident = {
   id: string;
@@ -47,6 +49,8 @@ const statusColors: Record<string, string> = {
 };
 
 const Hendelser = () => {
+  const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [filteredIncidents, setFilteredIncidents] = useState<Incident[]>([]);
   const [oppfolgingsansvarlige, setOppfolgingsansvarlige] = useState<Record<string, string>>({});
@@ -56,6 +60,12 @@ const Hendelser = () => {
   const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate("/auth", { replace: true });
+    }
+  }, [user, authLoading, navigate]);
 
   useEffect(() => {
     fetchIncidents();
@@ -145,6 +155,14 @@ const Hendelser = () => {
     setSelectedIncident(incident);
     setDetailDialogOpen(true);
   };
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <p className="text-foreground">Laster...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen relative w-full overflow-x-hidden">

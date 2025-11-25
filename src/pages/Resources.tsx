@@ -129,12 +129,10 @@ const Resources = () => {
                   <Plane className="w-5 h-5 text-primary" />
                   <h2 className="text-lg font-semibold">Droner</h2>
                 </div>
-                <AddDroneDialog 
-                  open={droneDialogOpen} 
-                  onOpenChange={setDroneDialogOpen}
-                  onDroneAdded={fetchDrones}
-                  userId={user?.id!}
-                />
+                <Button onClick={() => setDroneDialogOpen(true)} size="sm" className="gap-2">
+                  <Plus className="w-4 h-4" />
+                  Legg til
+                </Button>
               </div>
               
               {/* Search field */}
@@ -204,12 +202,10 @@ const Resources = () => {
                   <Gauge className="w-5 h-5 text-primary" />
                   <h2 className="text-lg font-semibold">Utstyr</h2>
                 </div>
-                <AddEquipmentDialog
-                  open={equipmentDialogOpen}
-                  onOpenChange={setEquipmentDialogOpen}
-                  onEquipmentAdded={fetchEquipment}
-                  userId={user?.id!}
-                />
+                <Button onClick={() => setEquipmentDialogOpen(true)} size="sm" className="gap-2">
+                  <Plus className="w-4 h-4" />
+                  Legg til
+                </Button>
               </div>
               
               {/* Search field */}
@@ -368,6 +364,20 @@ const Resources = () => {
           </div>
         </main>
       </div>
+
+      <AddDroneDialog 
+        open={droneDialogOpen} 
+        onOpenChange={setDroneDialogOpen}
+        onDroneAdded={fetchDrones}
+        userId={user?.id!}
+      />
+
+      <AddEquipmentDialog
+        open={equipmentDialogOpen}
+        onOpenChange={setEquipmentDialogOpen}
+        onEquipmentAdded={fetchEquipment}
+        userId={user?.id!}
+      />
 
       <AddCompetencyDialog
         open={personnelDialogOpen}

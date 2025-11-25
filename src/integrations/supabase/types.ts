@@ -215,6 +215,42 @@ export type Database = {
           },
         ]
       }
+      drone_equipment: {
+        Row: {
+          created_at: string | null
+          drone_id: string
+          equipment_id: string
+          id: string
+        }
+        Insert: {
+          created_at?: string | null
+          drone_id: string
+          equipment_id: string
+          id?: string
+        }
+        Update: {
+          created_at?: string | null
+          drone_id?: string
+          equipment_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "drone_equipment_drone_id_fkey"
+            columns: ["drone_id"]
+            isOneToOne: false
+            referencedRelation: "drones"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "drone_equipment_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "equipment"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       drones: {
         Row: {
           aktiv: boolean

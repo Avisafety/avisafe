@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Shield, LogOut, Trash2, Check, X, Menu, Settings, UserCog, Users, Building2 } from "lucide-react";
+import { Shield, LogOut, Trash2, Check, X, Menu, Settings, UserCog, Users, Building2, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -320,7 +320,7 @@ const Admin = () => {
               Kunder
             </TabsTrigger>
             <TabsTrigger value="email-templates" className="flex items-center gap-2">
-              <Settings className="h-4 w-4" />
+              <Mail className="h-4 w-4" />
               E-postmaler
             </TabsTrigger>
             {isSuperAdmin && (

@@ -14,6 +14,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
@@ -28,8 +35,32 @@ interface EmailTemplate {
   updated_at: string;
 }
 
+const templateTypes = [
+  {
+    value: "customer_welcome",
+    label: "Kunde velkomst",
+    variables: ["{{customer_name}}", "{{company_name}}"],
+  },
+  {
+    value: "user_approved",
+    label: "Bruker godkjent",
+    variables: ["{{user_name}}", "{{company_name}}"],
+  },
+  {
+    value: "mission_confirmation",
+    label: "Oppdragsbekreftelse",
+    variables: ["{{mission_title}}", "{{mission_location}}", "{{mission_date}}", "{{mission_status}}", "{{company_name}}"],
+  },
+  {
+    value: "document_reminder",
+    label: "Dokumentpåminnelse",
+    variables: ["{{document_title}}", "{{expiry_date}}", "{{company_name}}"],
+  },
+];
+
 export const EmailTemplateEditor = () => {
   const { companyId } = useAuth();
+  const [selectedTemplateType, setSelectedTemplateType] = useState("customer_welcome");
   const [template, setTemplate] = useState<EmailTemplate | null>(null);
   const [subject, setSubject] = useState("");
   const [content, setContent] = useState("");
@@ -62,7 +93,7 @@ export const EmailTemplateEditor = () => {
 
   useEffect(() => {
     fetchTemplate();
-  }, [companyId]);
+  }, [companyId, selectedTemplateType]);
 
   const fetchTemplate = async () => {
     if (!companyId) return;
@@ -73,7 +104,7 @@ export const EmailTemplateEditor = () => {
         .from("email_templates")
         .select("*")
         .eq("company_id", companyId)
-        .eq("template_type", "customer_welcome")
+        .eq("template_type", selectedTemplateType)
         .maybeSingle();
 
       if (error) throw error;
@@ -82,6 +113,11 @@ export const EmailTemplateEditor = () => {
         setTemplate(data);
         setSubject(data.subject);
         setContent(data.content);
+      } else {
+        // No template found, reset to defaults
+        setTemplate(null);
+        setSubject("");
+        setContent("");
       }
     } catch (error: any) {
       console.error("Error fetching template:", error);
@@ -116,7 +152,7 @@ export const EmailTemplateEditor = () => {
           .from("email_templates")
           .insert({
             company_id: companyId,
-            template_type: "customer_welcome",
+            template_type: selectedTemplateType,
             subject,
             content,
           });
@@ -143,9 +179,24 @@ export const EmailTemplateEditor = () => {
   };
 
   const getPreviewContent = () => {
-    return content
-      .replace(/\{\{customer_name\}\}/g, "Ola Nordmann")
-      .replace(/\{\{company_name\}\}/g, "Ditt Selskap");
+    const currentTemplateType = templateTypes.find(t => t.value === selectedTemplateType);
+    let previewContent = content;
+
+    // Replace variables with sample data
+    if (currentTemplateType) {
+      previewContent = previewContent
+        .replace(/\{\{customer_name\}\}/g, "Ola Nordmann")
+        .replace(/\{\{user_name\}\}/g, "Kari Nordmann")
+        .replace(/\{\{company_name\}\}/g, "Ditt Selskap")
+        .replace(/\{\{mission_title\}\}/g, "Drone inspeksjon av vindmøller")
+        .replace(/\{\{mission_location\}\}/g, "Oslo, Norge")
+        .replace(/\{\{mission_date\}\}/g, "15. januar 2025 kl. 10:00")
+        .replace(/\{\{mission_status\}\}/g, "Planlagt")
+        .replace(/\{\{document_title\}\}/g, "Droneoperatørsertifikat")
+        .replace(/\{\{expiry_date\}\}/g, "31. desember 2025");
+    }
+
+    return previewContent;
   };
 
   const wrapContentInEmailTemplate = (htmlContent: string) => {
@@ -213,6 +264,8 @@ export const EmailTemplateEditor = () => {
     return content;
   };
 
+  const currentTemplateType = templateTypes.find(t => t.value === selectedTemplateType);
+
   if (loading) {
     return (
       <GlassCard className="p-6">
@@ -229,10 +282,10 @@ export const EmailTemplateEditor = () => {
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-2">
             <Mail className="h-5 w-5 text-primary" />
-            <h2 className="text-xl font-semibold">Kunde Velkomst E-post</h2>
+            <h2 className="text-xl font-semibold">E-postmaler</h2>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={handleReset}>
+            <Button variant="outline" onClick={handleReset} disabled={!template}>
               <RefreshCw className="h-4 w-4 mr-2" />
               Tilbakestill
             </Button>
@@ -248,11 +301,30 @@ export const EmailTemplateEditor = () => {
         </div>
 
         <div className="space-y-6">
+          <div className="space-y-2">
+            <Label htmlFor="template-type">Maltype</Label>
+            <Select value={selectedTemplateType} onValueChange={setSelectedTemplateType}>
+              <SelectTrigger>
+                <SelectValue placeholder="Velg maltype" />
+              </SelectTrigger>
+              <SelectContent>
+                {templateTypes.map((type) => (
+                  <SelectItem key={type.value} value={type.value}>
+                    {type.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
             <h3 className="font-semibold text-sm mb-2">Tilgjengelige variabler:</h3>
             <div className="space-y-1 text-sm text-muted-foreground">
-              <p><code className="bg-white dark:bg-gray-800 px-2 py-1 rounded">{"{{customer_name}}"}</code> - Kundens navn</p>
-              <p><code className="bg-white dark:bg-gray-800 px-2 py-1 rounded">{"{{company_name}}"}</code> - Selskapets navn</p>
+              {currentTemplateType?.variables.map((variable) => (
+                <p key={variable}>
+                  <code className="bg-white dark:bg-gray-800 px-2 py-1 rounded">{variable}</code>
+                </p>
+              ))}
             </div>
           </div>
 
@@ -293,7 +365,7 @@ export const EmailTemplateEditor = () => {
                   />
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Bruk verktøylinjen ovenfor for å formatere teksten. Du kan bruke variabler som {"{{customer_name}}"} og {"{{company_name}}"} i teksten.
+                  Bruk verktøylinjen ovenfor for å formatere teksten. Du kan bruke variabler fra listen ovenfor i teksten.
                 </p>
               </div>
             </TabsContent>
@@ -326,10 +398,12 @@ export const EmailTemplateEditor = () => {
           </DialogHeader>
           <div className="space-y-4">
             <div>
+              <Label className="text-sm text-muted-foreground">Maltype:</Label>
+              <p className="font-semibold">{currentTemplateType?.label}</p>
+            </div>
+            <div>
               <Label className="text-sm text-muted-foreground">Emne:</Label>
-              <p className="font-semibold">
-                {subject.replace(/\{\{company_name\}\}/g, "Ditt Selskap")}
-              </p>
+              <p className="font-semibold">{getPreviewContent().slice(0, 100)}</p>
             </div>
             <div className="border rounded-lg overflow-hidden">
               <div 

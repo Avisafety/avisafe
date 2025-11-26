@@ -154,6 +154,33 @@ const Admin = () => {
 
       if (error) throw error;
 
+      // Get user details and send approval email
+      const profile = profiles.find(p => p.id === userId);
+      if (profile) {
+        // Get user email from auth
+        const { data: authUser } = await supabase.auth.admin.getUserById(userId);
+        
+        // Get company name
+        const { data: company } = await supabase
+          .from("companies")
+          .select("navn")
+          .eq("id", companyId)
+          .single();
+
+        if (authUser?.user?.email && company) {
+          // Send approval email via edge function
+          await supabase.functions.invoke('send-user-approved-email', {
+            body: {
+              user_id: userId,
+              user_name: profile.full_name || "Bruker",
+              user_email: authUser.user.email,
+              company_name: company.navn,
+              company_id: companyId
+            }
+          });
+        }
+      }
+
       toast.success("Bruker godkjent");
       fetchData();
     } catch (error) {

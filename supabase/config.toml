@@ -2,3 +2,6 @@ project_id = "ltlpmhpqqchrlktgeeoc"
 
 [functions.check-document-expiry]
 verify_jwt = false
+
+[functions.send-user-approved-email]
+verify_jwt = false

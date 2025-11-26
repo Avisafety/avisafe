@@ -1,5 +1,6 @@
 import droneBackground from "@/assets/drone-background.png";
 import { DocumentSection } from "@/components/dashboard/DocumentSection";
+import { AISearchBar } from "@/components/dashboard/AISearchBar";
 import { StatusPanel } from "@/components/dashboard/StatusPanel";
 import { CalendarWidget } from "@/components/dashboard/CalendarWidget";
 import { IncidentsSection } from "@/components/dashboard/IncidentsSection";
@@ -235,6 +236,9 @@ const Index = () => {
                   <div className="lg:col-span-6 space-y-3 sm:space-y-4">
                     {/* Empty space for drone background - reduced on mobile */}
                     <div className="min-h-[200px] sm:min-h-[300px] lg:min-h-[400px]" />
+                    
+                    {/* AI Search Bar above missions */}
+                    <AISearchBar />
                     
                     {/* Missions below drone */}
                     {layout

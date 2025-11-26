@@ -98,15 +98,36 @@ export const EmailTemplateEditor = () => {
           .from('email-images')
           .getPublicUrl(filePath);
 
-        // Insert image into editor
-        const quill = quillRef.current?.getEditor();
-        if (quill) {
-          const range = quill.getSelection(true);
-          quill.insertEmbed(range.index, 'image', publicUrl);
-          quill.setSelection(range.index + 1, 0);
-        }
+        // Read image dimensions
+        const img = new Image();
+        img.onload = () => {
+          // Calculate scaled dimensions (max 560px width for email compatibility)
+          const maxWidth = 560;
+          let width = img.width;
+          let height = img.height;
 
-        toast.success("Bilde lastet opp");
+          if (width > maxWidth) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          }
+
+          // Insert image with inline styles for email compatibility
+          const quill = quillRef.current?.getEditor();
+          if (quill) {
+            const range = quill.getSelection(true);
+            const imageHtml = `<img src="${publicUrl}" alt="Bilde" width="${width}" height="${height}" style="max-width: 100%; height: auto; display: block;" />`;
+            quill.clipboard.dangerouslyPasteHTML(range.index, imageHtml);
+            quill.setSelection(range.index + 1, 0);
+          }
+
+          toast.success("Bilde lastet opp");
+        };
+
+        img.onerror = () => {
+          toast.error("Kunne ikke lese bildedimensjoner");
+        };
+
+        img.src = publicUrl;
       } catch (error) {
         console.error('Error uploading image:', error);
         toast.error("Kunne ikke laste opp bilde");

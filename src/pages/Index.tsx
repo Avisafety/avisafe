@@ -222,10 +222,7 @@ const Index = () => {
                     <AISearchBar />
                     {/* Empty space for drone background */}
                     <div
-                      className={`transition-all duration-500 ${results ? "min-h-[100px]" : "min-h-[200px]"} sm:min-h-[300px] lg:min-h-[400px]`}
-                    >
-                      {/* Drone background will dynamically adjust height */}
-                    </div>
+                       <div className="min-h-[200px] sm:min-h-[300px] lg:min-h-[400px]" />
                     {/* Missions below drone */}
                     {layout
                       .filter((item) => item.component === "missions")

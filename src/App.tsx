@@ -14,6 +14,7 @@ import KartPage from "./pages/Kart";
 import Documents from "./pages/Documents";
 import Kalender from "./pages/Kalender";
 import Hendelser from "./pages/Hendelser";
+import Status from "./pages/Status";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -38,6 +39,7 @@ const App = () => {
                 <Route path="/dokumenter" element={<Documents />} />
                 <Route path="/kalender" element={<Kalender />} />
                 <Route path="/hendelser" element={<Hendelser />} />
+                <Route path="/status" element={<Status />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

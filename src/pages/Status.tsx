@@ -22,6 +22,13 @@ import {
 import { Activity, AlertTriangle, Clock, Package } from "lucide-react";
 import { format, subMonths, startOfMonth, endOfMonth } from "date-fns";
 import { nb } from "date-fns/locale";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface KPIData {
   totalMissions: number;
@@ -53,6 +60,7 @@ const Status = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [timePeriod, setTimePeriod] = useState<"month" | "quarter" | "year">("year");
   const [kpiData, setKpiData] = useState<KPIData>({
     totalMissions: 0,
     completedMissions: 0,
@@ -83,7 +91,7 @@ const Status = () => {
     }
 
     fetchAllStatistics();
-  }, [user, navigate]);
+  }, [user, navigate, timePeriod]);
 
   const fetchAllStatistics = async () => {
     setLoading(true);
@@ -102,11 +110,33 @@ const Status = () => {
     }
   };
 
+  const getDateFilter = () => {
+    const now = new Date();
+    switch (timePeriod) {
+      case "month":
+        return subMonths(now, 1);
+      case "quarter":
+        return subMonths(now, 3);
+      case "year":
+        return subMonths(now, 12);
+      default:
+        return subMonths(now, 12);
+    }
+  };
+
   const fetchKPIData = async () => {
-    const { data: missions } = await supabase.from("missions").select("status");
+    const startDate = getDateFilter().toISOString();
+    
+    const { data: missions } = await supabase
+      .from("missions")
+      .select("status, tidspunkt")
+      .gte("tidspunkt", startDate);
     const { data: drones } = await supabase.from("drones").select("flyvetimer, aktiv");
     const { data: equipment } = await supabase.from("equipment").select("aktiv");
-    const { data: incidents } = await supabase.from("incidents").select("*");
+    const { data: incidents } = await supabase
+      .from("incidents")
+      .select("*")
+      .gte("hendelsestidspunkt", startDate);
 
     const totalMissions = missions?.length || 0;
     const completedMissions = missions?.filter((m) => m.status === "Fullført").length || 0;
@@ -125,15 +155,19 @@ const Status = () => {
   };
 
   const fetchMissionStatistics = async () => {
+    const startDate = getDateFilter().toISOString();
+    
     const { data: missions } = await supabase
       .from("missions")
-      .select("tidspunkt, status, risk_nivå") as any;
+      .select("tidspunkt, status, risk_nivå")
+      .gte("tidspunkt", startDate) as any;
 
     if (!missions) return;
 
-    // Missions by month (last 12 months)
+    // Missions by month (based on selected period)
+    const monthsToShow = timePeriod === "month" ? 1 : timePeriod === "quarter" ? 3 : 12;
     const monthlyData: { [key: string]: number } = {};
-    for (let i = 11; i >= 0; i--) {
+    for (let i = monthsToShow - 1; i >= 0; i--) {
       const monthDate = subMonths(new Date(), i);
       const monthKey = format(monthDate, "MMM yyyy", { locale: nb });
       monthlyData[monthKey] = 0;
@@ -171,16 +205,20 @@ const Status = () => {
   };
 
   const fetchIncidentStatistics = async () => {
+    const startDate = getDateFilter().toISOString();
+    
     const { data: incidents } = await supabase
       .from("incidents")
       .select("hendelsestidspunkt, kategori, alvorlighetsgrad")
+      .gte("hendelsestidspunkt", startDate)
       .order("hendelsestidspunkt", { ascending: false });
 
     if (!incidents) return;
 
-    // Incidents by month (last 6 months)
+    // Incidents by month (based on selected period)
+    const monthsToShow = timePeriod === "month" ? 1 : timePeriod === "quarter" ? 3 : 12;
     const monthlyData: { [key: string]: number } = {};
-    for (let i = 5; i >= 0; i--) {
+    for (let i = monthsToShow - 1; i >= 0; i--) {
       const monthDate = subMonths(new Date(), i);
       const monthKey = format(monthDate, "MMM yyyy", { locale: nb });
       monthlyData[monthKey] = 0;
@@ -305,8 +343,21 @@ const Status = () => {
     <div className="min-h-screen bg-gradient-to-b from-background via-background/95 to-background/90">
       <Header />
       <main className="container mx-auto px-4 py-8 space-y-8">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-4">
           <h1 className="text-4xl font-bold text-foreground">Statistikk</h1>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">Tidsperiode:</span>
+            <Select value={timePeriod} onValueChange={(value: "month" | "quarter" | "year") => setTimePeriod(value)}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="month">Siste måned</SelectItem>
+                <SelectItem value="quarter">Siste kvartal</SelectItem>
+                <SelectItem value="year">Siste år</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         {/* KPI Cards */}
@@ -364,7 +415,7 @@ const Status = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <GlassCard className="p-6">
             <h2 className="text-xl font-semibold mb-4 text-foreground">
-              Oppdrag per måned (siste 12 mnd)
+              Oppdrag per måned
             </h2>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={missionsByMonth}>

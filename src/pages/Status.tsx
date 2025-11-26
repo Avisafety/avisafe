@@ -448,7 +448,7 @@ const Status = () => {
       XLSX.utils.book_append_sheet(wb, wsExpiringDocs, "Dokumenter som utløper");
 
       // Generate filename with date
-      const fileName = `statistikk-rapport-${format(new Date(), "yyyy-MM-dd")}.xlsx`;
+      const fileName = `statistikk-rapport-${format(new Date(), "yyyy-MM-dd-HHmmss")}.xlsx`;
       
       // Convert workbook to array buffer for upload
       const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
@@ -471,7 +471,7 @@ const Status = () => {
         .from('documents')
         .upload(filePath, blob, {
           contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-          upsert: false
+          upsert: true
         });
 
       if (uploadError) throw uploadError;
@@ -536,7 +536,7 @@ const Status = () => {
       const blob = new Blob([htmlContent], { type: 'text/html' });
       
       // Generate filename
-      const fileName = `statistikk-rapport-${format(new Date(), "yyyy-MM-dd")}.html`;
+      const fileName = `statistikk-rapport-${format(new Date(), "yyyy-MM-dd-HHmmss")}.html`;
 
       // Upload to Supabase Storage
       const filePath = `${companyId}/${fileName}`;
@@ -544,7 +544,7 @@ const Status = () => {
         .from('documents')
         .upload(filePath, blob, {
           contentType: 'text/html',
-          upsert: false
+          upsert: true
         });
 
       if (uploadError) throw uploadError;

@@ -1,5 +1,4 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Equipment } from "@/types";
 import { StatusBadge } from "@/components/StatusBadge";
 import { format } from "date-fns";
 import { nb } from "date-fns/locale";
@@ -7,7 +6,7 @@ import { nb } from "date-fns/locale";
 interface EquipmentListDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  equipment: Equipment[];
+  equipment: any[];
 }
 
 export const EquipmentListDialog = ({ open, onOpenChange, equipment }: EquipmentListDialogProps) => {
@@ -42,7 +41,7 @@ export const EquipmentListDialog = ({ open, onOpenChange, equipment }: Equipment
                   <div>
                     <span className="text-muted-foreground">Neste vedlikehold:</span>
                     <span className="ml-2 font-medium">
-                      {format(item.neste_vedlikehold, "dd.MM.yyyy", { locale: nb })}
+                      {format(new Date(item.neste_vedlikehold), "dd.MM.yyyy", { locale: nb })}
                     </span>
                   </div>
                 )}
@@ -50,7 +49,7 @@ export const EquipmentListDialog = ({ open, onOpenChange, equipment }: Equipment
                   <div>
                     <span className="text-muted-foreground">Sist vedlikeholdt:</span>
                     <span className="ml-2 font-medium">
-                      {format(item.sist_vedlikeholdt, "dd.MM.yyyy", { locale: nb })}
+                      {format(new Date(item.sist_vedlikeholdt), "dd.MM.yyyy", { locale: nb })}
                     </span>
                   </div>
                 )}

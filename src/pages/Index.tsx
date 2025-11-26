@@ -221,9 +221,6 @@ const Index = () => {
                     {/* AI Search Bar above missions */}
                     <AISearchBar />
 
-                    {/* Empty space for drone background */}
-                    <div className="flex-1 min-h-[100px]" />
-
                     {/* Missions below drone */}
                     {layout &&
                       layout.length > 0 &&

@@ -38,6 +38,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 interface KPIData {
   totalMissions: number;
@@ -529,21 +531,177 @@ const Status = () => {
       const periodLabel = timePeriod === "month" ? "Siste måned" : 
                          timePeriod === "quarter" ? "Siste kvartal" : "Siste år";
 
-      // Generate HTML content
-      const htmlContent = generateHTMLReport(companyName, periodLabel);
+      // Create PDF document
+      const doc = new jsPDF();
+      let yPos = 20;
 
-      // Create a blob from the HTML content
-      const blob = new Blob([htmlContent], { type: 'text/html' });
-      
-      // Generate filename
-      const fileName = `statistikk-rapport-${format(new Date(), "yyyy-MM-dd-HHmmss")}.html`;
+      // Add header
+      doc.setFontSize(20);
+      doc.setFont("helvetica", "bold");
+      doc.text(`Statistikkrapport - ${companyName}`, 20, yPos);
+      yPos += 10;
+
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "normal");
+      doc.text(`Periode: ${periodLabel}`, 20, yPos);
+      yPos += 7;
+      doc.text(`Generert: ${format(new Date(), "dd.MM.yyyy 'kl.' HH:mm", { locale: nb })}`, 20, yPos);
+      yPos += 15;
+
+      // Add KPIs section
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text("Nøkkeltall", 20, yPos);
+      yPos += 5;
+
+      autoTable(doc, {
+        startY: yPos,
+        head: [['KPI', 'Verdi']],
+        body: [
+          ['Totalt oppdrag', kpiData.totalMissions.toString()],
+          ['Fullførte oppdrag', `${kpiData.completedMissions} (${kpiData.totalMissions > 0 ? Math.round((kpiData.completedMissions / kpiData.totalMissions) * 100) : 0}%)`],
+          ['Totale flyvetimer', kpiData.totalFlightHours.toString()],
+          ['Hendelsesfrekvens', `${kpiData.incidentRate.toFixed(1)}%`],
+          ['Aktive ressurser', kpiData.activeResources.toString()],
+        ],
+        theme: 'grid',
+        headStyles: { fillColor: [59, 130, 246] },
+      });
+
+      yPos = (doc as any).lastAutoTable.finalY + 15;
+
+      // Add Missions by Status
+      if (missionsByStatus.length > 0) {
+        doc.setFontSize(14);
+        doc.setFont("helvetica", "bold");
+        doc.text("Oppdrag per status", 20, yPos);
+        yPos += 5;
+
+        autoTable(doc, {
+          startY: yPos,
+          head: [['Status', 'Antall']],
+          body: missionsByStatus.map(item => [item.name, item.value.toString()]),
+          theme: 'grid',
+          headStyles: { fillColor: [59, 130, 246] },
+        });
+
+        yPos = (doc as any).lastAutoTable.finalY + 15;
+      }
+
+      // Add page break if needed
+      if (yPos > 250) {
+        doc.addPage();
+        yPos = 20;
+      }
+
+      // Add Incidents by Severity
+      if (incidentsBySeverity.length > 0) {
+        doc.setFontSize(14);
+        doc.setFont("helvetica", "bold");
+        doc.text("Hendelser per alvorlighetsgrad", 20, yPos);
+        yPos += 5;
+
+        autoTable(doc, {
+          startY: yPos,
+          head: [['Alvorlighetsgrad', 'Antall']],
+          body: incidentsBySeverity.map(item => [item.name, item.value.toString()]),
+          theme: 'grid',
+          headStyles: { fillColor: [59, 130, 246] },
+        });
+
+        yPos = (doc as any).lastAutoTable.finalY + 10;
+      }
+
+      // Add days since last severe incident
+      if (daysSinceLastSevere > 0) {
+        doc.setFontSize(11);
+        doc.setFont("helvetica", "normal");
+        doc.text(`Dager siden siste alvorlige hendelse: ${daysSinceLastSevere}`, 20, yPos);
+        yPos += 15;
+      }
+
+      // Add page break if needed
+      if (yPos > 250) {
+        doc.addPage();
+        yPos = 20;
+      }
+
+      // Add Resource Status - Drones
+      if (droneStatus.length > 0) {
+        doc.setFontSize(14);
+        doc.setFont("helvetica", "bold");
+        doc.text("Dronestatus", 20, yPos);
+        yPos += 5;
+
+        autoTable(doc, {
+          startY: yPos,
+          head: [['Status', 'Antall']],
+          body: droneStatus.map(item => [item.name, item.value.toString()]),
+          theme: 'grid',
+          headStyles: { fillColor: [59, 130, 246] },
+        });
+
+        yPos = (doc as any).lastAutoTable.finalY + 15;
+      }
+
+      // Add page break if needed
+      if (yPos > 250) {
+        doc.addPage();
+        yPos = 20;
+      }
+
+      // Add Equipment Status
+      if (equipmentStatus.length > 0) {
+        doc.setFontSize(14);
+        doc.setFont("helvetica", "bold");
+        doc.text("Utstyrsstatus", 20, yPos);
+        yPos += 5;
+
+        autoTable(doc, {
+          startY: yPos,
+          head: [['Status', 'Antall']],
+          body: equipmentStatus.map(item => [item.name, item.value.toString()]),
+          theme: 'grid',
+          headStyles: { fillColor: [59, 130, 246] },
+        });
+
+        yPos = (doc as any).lastAutoTable.finalY + 15;
+      }
+
+      // Add page break if needed
+      if (yPos > 250) {
+        doc.addPage();
+        yPos = 20;
+      }
+
+      // Add Expiring Documents
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text("Dokumenter som utløper", 20, yPos);
+      yPos += 5;
+
+      autoTable(doc, {
+        startY: yPos,
+        head: [['Periode', 'Antall']],
+        body: [
+          ['Innen 30 dager', expiringDocs.thirtyDays.toString()],
+          ['Innen 60 dager', expiringDocs.sixtyDays.toString()],
+          ['Innen 90 dager', expiringDocs.ninetyDays.toString()],
+        ],
+        theme: 'grid',
+        headStyles: { fillColor: [59, 130, 246] },
+      });
+
+      // Generate PDF blob
+      const pdfBlob = doc.output('blob');
+      const fileName = `statistikk-rapport-${format(new Date(), "yyyy-MM-dd-HHmmss")}.pdf`;
 
       // Upload to Supabase Storage
       const filePath = `${companyId}/${fileName}`;
       const { error: uploadError } = await supabase.storage
         .from('documents')
-        .upload(filePath, blob, {
-          contentType: 'text/html',
+        .upload(filePath, pdfBlob, {
+          contentType: 'application/pdf',
           upsert: true
         });
 
@@ -555,10 +713,10 @@ const Status = () => {
         .insert({
           tittel: `Statistikkrapport - ${periodLabel}`,
           kategori: 'Rapporter',
-          beskrivelse: `HTML-rapport generert ${format(new Date(), "dd.MM.yyyy 'kl.' HH:mm")} (åpne i nettleser og skriv ut til PDF)`,
+          beskrivelse: `PDF-rapport generert ${format(new Date(), "dd.MM.yyyy 'kl.' HH:mm")}`,
           fil_navn: fileName,
           fil_url: filePath,
-          fil_storrelse: blob.size,
+          fil_storrelse: pdfBlob.size,
           company_id: companyId,
           user_id: user?.id,
           opprettet_av: user?.id
@@ -567,7 +725,7 @@ const Status = () => {
       if (dbError) throw dbError;
 
       // Also download the file for the user
-      const url = window.URL.createObjectURL(blob);
+      const url = window.URL.createObjectURL(pdfBlob);
       const a = document.createElement('a');
       a.href = url;
       a.download = fileName;
@@ -585,332 +743,6 @@ const Status = () => {
         description: "Kunne ikke generere PDF-rapport"
       });
     }
-  };
-
-  const generateHTMLReport = (companyName: string, periodLabel: string): string => {
-    return `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 40px;
-      max-width: 800px;
-      margin: 0 auto;
-    }
-    h1 {
-      color: #1a1a1a;
-      border-bottom: 3px solid #3b82f6;
-      padding-bottom: 10px;
-      margin-bottom: 30px;
-    }
-    h2 {
-      color: #374151;
-      margin-top: 30px;
-      margin-bottom: 15px;
-      border-bottom: 1px solid #e5e7eb;
-      padding-bottom: 5px;
-    }
-    .kpi-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 20px;
-      margin-bottom: 30px;
-    }
-    .kpi-card {
-      background: #f9fafb;
-      border: 1px solid #e5e7eb;
-      border-radius: 8px;
-      padding: 20px;
-    }
-    .kpi-label {
-      color: #6b7280;
-      font-size: 14px;
-      margin-bottom: 5px;
-    }
-    .kpi-value {
-      font-size: 32px;
-      font-weight: bold;
-      color: #1a1a1a;
-    }
-    .kpi-subtitle {
-      color: #9ca3af;
-      font-size: 12px;
-      margin-top: 5px;
-    }
-    .data-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 15px 0;
-    }
-    .data-table th,
-    .data-table td {
-      padding: 12px;
-      text-align: left;
-      border-bottom: 1px solid #e5e7eb;
-    }
-    .data-table th {
-      background: #f3f4f6;
-      font-weight: 600;
-      color: #374151;
-    }
-    .data-table tr:hover {
-      background: #f9fafb;
-    }
-    .footer {
-      margin-top: 50px;
-      padding-top: 20px;
-      border-top: 1px solid #e5e7eb;
-      color: #6b7280;
-      font-size: 12px;
-      text-align: center;
-    }
-    .period-badge {
-      display: inline-block;
-      background: #dbeafe;
-      color: #1e40af;
-      padding: 4px 12px;
-      border-radius: 4px;
-      font-size: 14px;
-      margin-left: 10px;
-    }
-  </style>
-</head>
-<body>
-  <h1>${companyName} - Statistikkrapport <span class="period-badge">${periodLabel}</span></h1>
-  <p style="color: #6b7280; margin-bottom: 30px;">Generert: ${new Date().toLocaleDateString('nb-NO', { 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  })}</p>
-
-  <h2>📊 Nøkkeltall (KPI)</h2>
-  <div class="kpi-grid">
-    <div class="kpi-card">
-      <div class="kpi-label">Totale oppdrag</div>
-      <div class="kpi-value">${kpiData.totalMissions}</div>
-      <div class="kpi-subtitle">${completionRate}% fullført</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Totale flyvetimer</div>
-      <div class="kpi-value">${kpiData.totalFlightHours}</div>
-      <div class="kpi-subtitle">timer</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Hendelsesfrekvens</div>
-      <div class="kpi-value">${kpiData.incidentRate.toFixed(2)}</div>
-      <div class="kpi-subtitle">per 100 flyvetimer</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Aktive ressurser</div>
-      <div class="kpi-value">${kpiData.activeResources}</div>
-      <div class="kpi-subtitle">droner og utstyr</div>
-    </div>
-  </div>
-
-  <h2>🚁 Oppdrag per måned</h2>
-  <table class="data-table">
-    <thead>
-      <tr>
-        <th>Måned</th>
-        <th>Antall oppdrag</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${missionsByMonth.map(item => `
-        <tr>
-          <td>${item.month}</td>
-          <td>${item.count}</td>
-        </tr>
-      `).join('')}
-    </tbody>
-  </table>
-
-  <h2>📋 Oppdrag per status</h2>
-  <table class="data-table">
-    <thead>
-      <tr>
-        <th>Status</th>
-        <th>Antall</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${missionsByStatus.map(item => `
-        <tr>
-          <td>${item.name}</td>
-          <td>${item.value}</td>
-        </tr>
-      `).join('')}
-    </tbody>
-  </table>
-
-  <h2>⚠️ Oppdrag per risikonivå</h2>
-  <table class="data-table">
-    <thead>
-      <tr>
-        <th>Risikonivå</th>
-        <th>Antall</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${missionsByRisk.map(item => `
-        <tr>
-          <td>${item.name}</td>
-          <td>${item.value}</td>
-        </tr>
-      `).join('')}
-    </tbody>
-  </table>
-
-  <h2>🚨 Hendelser per måned</h2>
-  <table class="data-table">
-    <thead>
-      <tr>
-        <th>Måned</th>
-        <th>Antall hendelser</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${incidentsByMonth.map(item => `
-        <tr>
-          <td>${item.month}</td>
-          <td>${item.count}</td>
-        </tr>
-      `).join('')}
-    </tbody>
-  </table>
-
-  <h2>📂 Hendelser per kategori</h2>
-  <table class="data-table">
-    <thead>
-      <tr>
-        <th>Kategori</th>
-        <th>Antall</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${incidentsByCategory.map(item => `
-        <tr>
-          <td>${item.name}</td>
-          <td>${item.value}</td>
-        </tr>
-      `).join('')}
-    </tbody>
-  </table>
-
-  <h2>🎯 Hendelser per alvorlighetsgrad</h2>
-  <table class="data-table">
-    <thead>
-      <tr>
-        <th>Alvorlighetsgrad</th>
-        <th>Antall</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${incidentsBySeverity.map(item => `
-        <tr>
-          <td>${item.name}</td>
-          <td>${item.value}</td>
-        </tr>
-      `).join('')}
-    </tbody>
-  </table>
-
-  <h2>🛡️ Sikkerhetsinformasjon</h2>
-  <div class="kpi-card">
-    <div class="kpi-label">Dager siden siste alvorlige hendelse</div>
-    <div class="kpi-value">${daysSinceLastSevere === 999 ? 'Ingen registrert' : daysSinceLastSevere}</div>
-  </div>
-
-  <h2>🚁 Dronestatus</h2>
-  <table class="data-table">
-    <thead>
-      <tr>
-        <th>Status</th>
-        <th>Antall</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${droneStatus.map(item => `
-        <tr>
-          <td>${item.name}</td>
-          <td>${item.value}</td>
-        </tr>
-      `).join('')}
-    </tbody>
-  </table>
-
-  <h2>📦 Utstyrstatus</h2>
-  <table class="data-table">
-    <thead>
-      <tr>
-        <th>Status</th>
-        <th>Antall</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${equipmentStatus.map(item => `
-        <tr>
-          <td>${item.name}</td>
-          <td>${item.value}</td>
-        </tr>
-      `).join('')}
-    </tbody>
-  </table>
-
-  <h2>✈️ Flyvetimer per drone</h2>
-  <table class="data-table">
-    <thead>
-      <tr>
-        <th>Drone</th>
-        <th>Flyvetimer</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${flightHoursByDrone.map(item => `
-        <tr>
-          <td>${item.name}</td>
-          <td>${item.hours}</td>
-        </tr>
-      `).join('')}
-    </tbody>
-  </table>
-
-  <h2>📄 Dokumenter som utløper snart</h2>
-  <table class="data-table">
-    <thead>
-      <tr>
-        <th>Tidsperiode</th>
-        <th>Antall dokumenter</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>Innen 30 dager</td>
-        <td>${expiringDocs.thirtyDays}</td>
-      </tr>
-      <tr>
-        <td>Innen 60 dager</td>
-        <td>${expiringDocs.sixtyDays}</td>
-      </tr>
-      <tr>
-        <td>Innen 90 dager</td>
-        <td>${expiringDocs.ninetyDays}</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <div class="footer">
-    <p>Denne rapporten er generert automatisk fra ${companyName} sitt statistikksystem.</p>
-    <p>For spørsmål om rapporten, vennligst kontakt systemadministrator.</p>
-  </div>
-</body>
-</html>
-    `;
   };
 
   return (

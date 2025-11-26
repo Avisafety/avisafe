@@ -35,6 +35,7 @@ export const MissionDetailDialog = ({ open, onOpenChange, mission, onMissionUpda
   if (!mission) return null;
 
   const handleEditClick = () => {
+    onOpenChange(false);
     setEditDialogOpen(true);
   };
 
@@ -50,7 +51,7 @@ export const MissionDetailDialog = ({ open, onOpenChange, mission, onMissionUpda
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-6 !z-[1000]">
           <DialogHeader>
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center justify-between gap-4 pr-8">
               <DialogTitle className="text-lg sm:text-xl">{mission.tittel}</DialogTitle>
               <Button size="sm" variant="outline" onClick={handleEditClick}>
                 <Pencil className="w-4 h-4 mr-2" />

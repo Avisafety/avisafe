@@ -222,7 +222,7 @@ const Index = () => {
                     <AISearchBar />
 
                     {/* Empty space for drone background */}
-                    <div className="min-h-[100px] sm:min-h-[250px] lg:min-h-[250px]" />
+                    <div className="min-h-[100px] sm:min-h-[280px] lg:min-h-[280px]" />
 
                     {/* Missions below drone */}
                     {layout &&

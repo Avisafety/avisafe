@@ -22,6 +22,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
@@ -86,6 +87,7 @@ export const CustomerManagementDialog = ({
 }: CustomerManagementDialogProps) => {
   const { user, companyId } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [sendWelcomeEmail, setSendWelcomeEmail] = useState(false);
   const isCreating = !customer;
 
   const form = useForm<CustomerFormData>({
@@ -153,8 +155,8 @@ export const CustomerManagementDialog = ({
 
         if (error) throw error;
 
-        // Send welcome email if customer has email
-        if (data.epost) {
+        // Send welcome email if customer has email and checkbox is checked
+        if (data.epost && sendWelcomeEmail) {
           try {
             // Get company name
             const { data: companyData } = await supabase
@@ -263,6 +265,23 @@ export const CustomerManagementDialog = ({
                 </FormItem>
               )}
             />
+
+            {isCreating && (
+              <div className="flex items-center space-x-2 p-4 rounded-lg bg-muted/50">
+                <Checkbox
+                  id="sendWelcomeEmail"
+                  checked={sendWelcomeEmail}
+                  onCheckedChange={(checked) => setSendWelcomeEmail(checked === true)}
+                  disabled={!form.watch("epost") || !form.formState.isValid}
+                />
+                <label
+                  htmlFor="sendWelcomeEmail"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  Send velkomst-e-post til kunde
+                </label>
+              </div>
+            )}
 
             <FormField
               control={form.control}

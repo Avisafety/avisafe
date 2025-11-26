@@ -217,12 +217,12 @@ const Index = () => {
                   </div>
 
                   {/* Center Column - Drone space and missions */}
-                  <div className="lg:col-span-6 space-y-3 sm:space-y-4">
+                  <div className="lg:col-span-6 flex flex-col gap-3 sm:gap-4">
                     {/* AI Search Bar above missions */}
                     <AISearchBar />
 
                     {/* Empty space for drone background */}
-                    <div className="min-h-[200px] sm:min-h-[290px] lg:min-h-[290px]" />
+                    <div className="flex-1 min-h-[100px]" />
 
                     {/* Missions below drone */}
                     {layout &&

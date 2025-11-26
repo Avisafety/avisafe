@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Header } from "@/components/Header";
 import { GlassCard } from "@/components/GlassCard";
+import droneBackground from "@/assets/drone-background.png";
 import {
   BarChart,
   Bar,
@@ -898,7 +899,21 @@ const Status = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-background/95 to-background/90">
+    <div className="min-h-screen relative w-full overflow-x-hidden">
+      {/* Background with gradient overlay */}
+      <div
+        className="fixed inset-0 z-0"
+        style={{
+          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.5)), url(${droneBackground})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center center",
+          backgroundAttachment: "fixed",
+          backgroundRepeat: "no-repeat",
+        }}
+      />
+
+      {/* Content */}
+      <div className="relative z-10 w-full">
       <Header />
       <main className="container mx-auto px-4 py-8 space-y-8">
         <div className="flex items-center justify-between flex-wrap gap-4">
@@ -1353,6 +1368,7 @@ const Status = () => {
           </GlassCard>
         </div>
       </main>
+      </div>
     </div>
   );
 };

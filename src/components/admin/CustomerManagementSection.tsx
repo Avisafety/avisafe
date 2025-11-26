@@ -1,0 +1,313 @@
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { GlassCard } from "@/components/GlassCard";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { CustomerManagementDialog } from "./CustomerManagementDialog";
+import { Plus, Pencil, Users, Mail, Phone, MapPin, User } from "lucide-react";
+import { toast } from "sonner";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+
+interface Customer {
+  id: string;
+  navn: string;
+  kontaktperson: string | null;
+  epost: string | null;
+  telefon: string | null;
+  adresse: string | null;
+  merknader: string | null;
+  aktiv: boolean;
+  company_id: string;
+  user_id: string;
+  opprettet_dato: string;
+  oppdatert_dato: string;
+}
+
+export const CustomerManagementSection = () => {
+  const { companyId, isSuperAdmin } = useAuth();
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null);
+
+  useEffect(() => {
+    fetchCustomers();
+
+    const channel = supabase
+      .channel("customers_changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "customers",
+        },
+        () => {
+          fetchCustomers();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [companyId]);
+
+  const fetchCustomers = async () => {
+    try {
+      let query = supabase
+        .from("customers")
+        .select("*")
+        .order("navn", { ascending: true });
+
+      // Filter by company if not superadmin
+      if (!isSuperAdmin && companyId) {
+        query = query.eq("company_id", companyId);
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+      setCustomers(data || []);
+    } catch (error: any) {
+      console.error("Error fetching customers:", error);
+      toast.error("Kunne ikke laste kunder");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddCustomer = () => {
+    setSelectedCustomer(null);
+    setDialogOpen(true);
+  };
+
+  const handleEditCustomer = (customer: Customer) => {
+    setSelectedCustomer(customer);
+    setDialogOpen(true);
+  };
+
+  const handleToggleActive = async (customer: Customer) => {
+    try {
+      const { error } = await supabase
+        .from("customers")
+        .update({ aktiv: !customer.aktiv })
+        .eq("id", customer.id);
+
+      if (error) throw error;
+      toast.success(
+        customer.aktiv
+          ? "Kunde deaktivert"
+          : "Kunde aktivert"
+      );
+    } catch (error: any) {
+      console.error("Error toggling customer status:", error);
+      toast.error("Kunne ikke oppdatere status");
+    }
+  };
+
+  const handleDeleteClick = (customer: Customer) => {
+    setCustomerToDelete(customer);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!customerToDelete) return;
+
+    try {
+      const { error } = await supabase
+        .from("customers")
+        .delete()
+        .eq("id", customerToDelete.id);
+
+      if (error) throw error;
+      toast.success("Kunde slettet");
+      setDeleteDialogOpen(false);
+      setCustomerToDelete(null);
+    } catch (error: any) {
+      console.error("Error deleting customer:", error);
+      toast.error("Kunne ikke slette kunde: " + error.message);
+    }
+  };
+
+  if (loading) {
+    return (
+      <GlassCard className="p-6">
+        <div className="flex items-center justify-center py-8">
+          <p className="text-muted-foreground">Laster kunder...</p>
+        </div>
+      </GlassCard>
+    );
+  }
+
+  return (
+    <>
+      <GlassCard className="p-6">
+        <div className="flex justify-between items-center mb-6">
+          <div className="flex items-center gap-2">
+            <Users className="h-5 w-5 text-primary" />
+            <h2 className="text-xl font-semibold">Kundeadministrasjon</h2>
+          </div>
+          <Button onClick={handleAddCustomer}>
+            <Plus className="h-4 w-4 mr-2" />
+            Ny kunde
+          </Button>
+        </div>
+
+        {customers.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            Ingen kunder funnet. Opprett din første kunde.
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Navn</TableHead>
+                  <TableHead>Kontaktperson</TableHead>
+                  <TableHead>Kontaktinfo</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Handlinger</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {customers.map((customer) => (
+                  <TableRow key={customer.id}>
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-2">
+                        <Users className="h-4 w-4 text-muted-foreground" />
+                        {customer.navn}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {customer.kontaktperson ? (
+                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                          <User className="h-3 w-3" />
+                          {customer.kontaktperson}
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground">-</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <div className="space-y-1 text-sm">
+                        {customer.epost && (
+                          <div className="flex items-center gap-1 text-muted-foreground">
+                            <Mail className="h-3 w-3" />
+                            {customer.epost}
+                          </div>
+                        )}
+                        {customer.telefon && (
+                          <div className="flex items-center gap-1 text-muted-foreground">
+                            <Phone className="h-3 w-3" />
+                            {customer.telefon}
+                          </div>
+                        )}
+                        {customer.adresse && (
+                          <div className="flex items-center gap-1 text-muted-foreground">
+                            <MapPin className="h-3 w-3" />
+                            {customer.adresse}
+                          </div>
+                        )}
+                        {!customer.epost &&
+                          !customer.telefon &&
+                          !customer.adresse && (
+                            <span className="text-muted-foreground">
+                              Ingen kontaktinfo
+                            </span>
+                          )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Switch
+                          checked={customer.aktiv}
+                          onCheckedChange={() => handleToggleActive(customer)}
+                        />
+                        <Label className="cursor-pointer">
+                          <Badge
+                            variant={customer.aktiv ? "default" : "secondary"}
+                          >
+                            {customer.aktiv ? "Aktiv" : "Inaktiv"}
+                          </Badge>
+                        </Label>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEditCustomer(customer)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleDeleteClick(customer)}
+                        >
+                          Slett
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </GlassCard>
+
+      <CustomerManagementDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        customer={selectedCustomer}
+        onSuccess={fetchCustomers}
+      />
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Bekreft sletting</AlertDialogTitle>
+            <AlertDialogDescription>
+              Er du sikker på at du vil slette kunden "
+              {customerToDelete?.navn}"? Denne handlingen kan ikke angres.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Avbryt</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              Slett kunde
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
+};

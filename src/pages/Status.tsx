@@ -19,7 +19,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { Activity, AlertTriangle, Clock, Package } from "lucide-react";
+import { Activity, AlertTriangle, Clock, Package, Download } from "lucide-react";
 import { format, subMonths, startOfMonth, endOfMonth } from "date-fns";
 import { nb } from "date-fns/locale";
 import {
@@ -29,6 +29,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { toast } from "sonner";
+import * as XLSX from "xlsx";
 
 interface KPIData {
   totalMissions: number;
@@ -339,13 +348,195 @@ const Status = () => {
     ? ((kpiData.completedMissions / kpiData.totalMissions) * 100).toFixed(1)
     : "0";
 
+  const handleExportExcel = () => {
+    try {
+      const wb = XLSX.utils.book_new();
+
+      // KPI Sheet
+      const kpiSheetData = [
+        ["Nøkkeltall (KPI)", ""],
+        ["Totale oppdrag", kpiData.totalMissions],
+        ["Fullførte oppdrag", kpiData.completedMissions],
+        ["Fullføringsgrad", `${completionRate}%`],
+        ["Totale flyvetimer", kpiData.totalFlightHours],
+        ["Hendelsesfrekvens", kpiData.incidentRate.toFixed(2)],
+        ["Aktive ressurser", kpiData.activeResources],
+      ];
+      const wsKPI = XLSX.utils.aoa_to_sheet(kpiSheetData);
+      XLSX.utils.book_append_sheet(wb, wsKPI, "KPI");
+
+      // Missions by Month
+      const missionMonthData = [
+        ["Måned", "Antall oppdrag"],
+        ...missionsByMonth.map(item => [item.month, item.count])
+      ];
+      const wsMissionsMonth = XLSX.utils.aoa_to_sheet(missionMonthData);
+      XLSX.utils.book_append_sheet(wb, wsMissionsMonth, "Oppdrag per måned");
+
+      // Missions by Status
+      const missionStatusData = [
+        ["Status", "Antall"],
+        ...missionsByStatus.map(item => [item.name, item.value])
+      ];
+      const wsMissionsStatus = XLSX.utils.aoa_to_sheet(missionStatusData);
+      XLSX.utils.book_append_sheet(wb, wsMissionsStatus, "Oppdrag per status");
+
+      // Missions by Risk
+      const missionRiskData = [
+        ["Risikonivå", "Antall"],
+        ...missionsByRisk.map(item => [item.name, item.value])
+      ];
+      const wsMissionsRisk = XLSX.utils.aoa_to_sheet(missionRiskData);
+      XLSX.utils.book_append_sheet(wb, wsMissionsRisk, "Oppdrag per risiko");
+
+      // Incidents by Month
+      const incidentMonthData = [
+        ["Måned", "Antall hendelser"],
+        ...incidentsByMonth.map(item => [item.month, item.count])
+      ];
+      const wsIncidentsMonth = XLSX.utils.aoa_to_sheet(incidentMonthData);
+      XLSX.utils.book_append_sheet(wb, wsIncidentsMonth, "Hendelser per måned");
+
+      // Incidents by Category
+      const incidentCategoryData = [
+        ["Kategori", "Antall"],
+        ...incidentsByCategory.map(item => [item.name, item.value])
+      ];
+      const wsIncidentsCategory = XLSX.utils.aoa_to_sheet(incidentCategoryData);
+      XLSX.utils.book_append_sheet(wb, wsIncidentsCategory, "Hendelser per kategori");
+
+      // Incidents by Severity
+      const incidentSeverityData = [
+        ["Alvorlighetsgrad", "Antall"],
+        ...incidentsBySeverity.map(item => [item.name, item.value])
+      ];
+      const wsIncidentsSeverity = XLSX.utils.aoa_to_sheet(incidentSeverityData);
+      XLSX.utils.book_append_sheet(wb, wsIncidentsSeverity, "Hendelser per alvorlighetsgrad");
+
+      // Drone Status
+      const droneStatusData = [
+        ["Status", "Antall"],
+        ...droneStatus.map(item => [item.name, item.value])
+      ];
+      const wsDroneStatus = XLSX.utils.aoa_to_sheet(droneStatusData);
+      XLSX.utils.book_append_sheet(wb, wsDroneStatus, "Dronestatus");
+
+      // Equipment Status
+      const equipmentStatusData = [
+        ["Status", "Antall"],
+        ...equipmentStatus.map(item => [item.name, item.value])
+      ];
+      const wsEquipmentStatus = XLSX.utils.aoa_to_sheet(equipmentStatusData);
+      XLSX.utils.book_append_sheet(wb, wsEquipmentStatus, "Utstyrstatus");
+
+      // Flight Hours by Drone
+      const flightHoursData = [
+        ["Drone", "Flyvetimer"],
+        ...flightHoursByDrone.map(item => [item.name, item.hours])
+      ];
+      const wsFlightHours = XLSX.utils.aoa_to_sheet(flightHoursData);
+      XLSX.utils.book_append_sheet(wb, wsFlightHours, "Flyvetimer per drone");
+
+      // Expiring Documents
+      const expiringDocsData = [
+        ["Tidsperiode", "Antall dokumenter"],
+        ["Innen 30 dager", expiringDocs.thirtyDays],
+        ["Innen 60 dager", expiringDocs.sixtyDays],
+        ["Innen 90 dager", expiringDocs.ninetyDays],
+      ];
+      const wsExpiringDocs = XLSX.utils.aoa_to_sheet(expiringDocsData);
+      XLSX.utils.book_append_sheet(wb, wsExpiringDocs, "Dokumenter som utløper");
+
+      // Generate filename with date
+      const fileName = `statistikk-rapport-${format(new Date(), "yyyy-MM-dd")}.xlsx`;
+      
+      // Write file
+      XLSX.writeFile(wb, fileName);
+      
+      toast.success("Excel-rapport eksportert", {
+        description: "Filen har blitt lastet ned"
+      });
+    } catch (error) {
+      console.error("Error exporting to Excel:", error);
+      toast.error("Feil ved eksport", {
+        description: "Kunne ikke generere Excel-rapport"
+      });
+    }
+  };
+
+  const handleExportPDF = async () => {
+    try {
+      toast.loading("Genererer PDF-rapport...");
+      
+      // Get company name from profile
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("company_id")
+        .eq("id", user?.id)
+        .single();
+
+      const { data: company } = await supabase
+        .from("companies")
+        .select("navn")
+        .eq("id", profile?.company_id)
+        .single();
+
+      const periodLabel = timePeriod === "month" ? "Siste måned" : 
+                         timePeriod === "quarter" ? "Siste kvartal" : "Siste år";
+
+      const exportData = {
+        kpiData,
+        missionsByMonth,
+        missionsByStatus,
+        missionsByRisk,
+        incidentsByMonth,
+        incidentsByCategory,
+        incidentsBySeverity,
+        daysSinceLastSevere,
+        droneStatus,
+        equipmentStatus,
+        expiringDocs,
+        timePeriod: periodLabel,
+        companyName: company?.navn || "Ukjent selskap",
+      };
+
+      const { data, error } = await supabase.functions.invoke('export-statistics-pdf', {
+        body: exportData,
+      });
+
+      if (error) throw error;
+
+      // Create a blob from the HTML content and download
+      const blob = new Blob([data], { type: 'text/html' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `statistikk-rapport-${format(new Date(), "yyyy-MM-dd")}.html`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast.dismiss();
+      toast.success("PDF-rapport eksportert", {
+        description: "Filen har blitt lastet ned (åpne i nettleser og skriv ut til PDF)"
+      });
+    } catch (error) {
+      console.error("Error exporting to PDF:", error);
+      toast.dismiss();
+      toast.error("Feil ved eksport", {
+        description: "Kunne ikke generere PDF-rapport"
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background/95 to-background/90">
       <Header />
       <main className="container mx-auto px-4 py-8 space-y-8">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <h1 className="text-4xl font-bold text-foreground">Statistikk</h1>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <span className="text-sm text-muted-foreground">Tidsperiode:</span>
             <Select value={timePeriod} onValueChange={(value: "month" | "quarter" | "year") => setTimePeriod(value)}>
               <SelectTrigger className="w-[180px]">
@@ -357,6 +548,25 @@ const Status = () => {
                 <SelectItem value="year">Siste år</SelectItem>
               </SelectContent>
             </Select>
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="default" size="sm" className="gap-2">
+                  <Download className="w-4 h-4" />
+                  Eksporter
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={handleExportExcel}>
+                  <Download className="w-4 h-4 mr-2" />
+                  Eksporter til Excel
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleExportPDF}>
+                  <Download className="w-4 h-4 mr-2" />
+                  Eksporter til PDF
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 

@@ -77,7 +77,7 @@ export const Header = () => {
               <DropdownMenuItem onClick={() => navigate("/dokumenter")}>Dokumenter</DropdownMenuItem>
               <DropdownMenuItem onClick={() => navigate("/kalender")}>Kalender</DropdownMenuItem>
               <DropdownMenuItem onClick={() => navigate("/hendelser")}>Hendelser</DropdownMenuItem>
-              <DropdownMenuItem>Status</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/status")}>Status</DropdownMenuItem>
               <DropdownMenuItem onClick={() => navigate("/ressurser")}>Ressurser</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -88,7 +88,7 @@ export const Header = () => {
             <Button variant="ghost" size="sm" onClick={() => navigate("/dokumenter")}>Dokumenter</Button>
             <Button variant="ghost" size="sm" onClick={() => navigate("/kalender")}>Kalender</Button>
             <Button variant="ghost" size="sm" onClick={() => navigate("/hendelser")}>Hendelser</Button>
-            <Button variant="ghost" size="sm">Status</Button>
+            <Button variant="ghost" size="sm" onClick={() => navigate("/status")}>Status</Button>
             <Button variant="ghost" size="sm" onClick={() => navigate("/ressurser")}>Ressurser</Button>
           </nav>
           

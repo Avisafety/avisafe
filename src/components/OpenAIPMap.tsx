@@ -157,10 +157,8 @@ export function OpenAIPMap({ onMissionClick }: OpenAIPMapProps = {}) {
 
           // Velg farge basert på status
           let markerColor = '#3b82f6'; // blå (Planlagt)
-          if (mission.status === 'Tildelt') markerColor = '#06b6d4'; // cyan
-          else if (mission.status === 'Pågår') markerColor = '#eab308'; // gul
+          if (mission.status === 'Pågående') markerColor = '#eab308'; // gul
           else if (mission.status === 'Fullført') markerColor = '#6b7280'; // grå
-          else if (mission.status === 'Avlyst') markerColor = '#ef4444'; // rød
           
           // Opprett en pin med divIcon (SVG MapPin)
           const icon = L.divIcon({

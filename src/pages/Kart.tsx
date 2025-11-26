@@ -35,7 +35,7 @@ export default function KartPage() {
       <Header />
 
       {/* Map Content */}
-      <div className="flex-1 relative overflow-hidden">
+      <div className="flex-1 relative overflow-hidden z-0">
         <OpenAIPMap onMissionClick={handleMissionClick} />
       </div>
 

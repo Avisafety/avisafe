@@ -476,11 +476,6 @@ const Status = () => {
 
       if (uploadError) throw uploadError;
 
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('documents')
-        .getPublicUrl(filePath);
-
       // Create document entry in database
       const periodLabel = timePeriod === "month" ? "Siste måned" : 
                          timePeriod === "quarter" ? "Siste kvartal" : "Siste år";
@@ -492,7 +487,7 @@ const Status = () => {
           kategori: 'Rapporter',
           beskrivelse: `Excel-rapport generert ${format(new Date(), "dd.MM.yyyy 'kl.' HH:mm")}`,
           fil_navn: fileName,
-          fil_url: publicUrl,
+          fil_url: filePath,
           fil_storrelse: blob.size,
           company_id: profile.company_id,
           user_id: user?.id,
@@ -554,11 +549,6 @@ const Status = () => {
 
       if (uploadError) throw uploadError;
 
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('documents')
-        .getPublicUrl(filePath);
-
       // Create document entry in database
       const { error: dbError } = await supabase
         .from('documents')
@@ -567,7 +557,7 @@ const Status = () => {
           kategori: 'Rapporter',
           beskrivelse: `HTML-rapport generert ${format(new Date(), "dd.MM.yyyy 'kl.' HH:mm")} (åpne i nettleser og skriv ut til PDF)`,
           fil_navn: fileName,
-          fil_url: publicUrl,
+          fil_url: filePath,
           fil_storrelse: blob.size,
           company_id: companyId,
           user_id: user?.id,

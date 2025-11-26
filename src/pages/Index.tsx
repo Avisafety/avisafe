@@ -221,7 +221,7 @@ const Index = () => {
                     {/* AI Search Bar above missions */}
                     <AISearchBar />
                     {/* Empty space for drone background - reduced on mobile */}
-                    <div className="min-h-[200px] sm:min-h-[300px] lg:min-h-[400px]" />
+                    <div className={`transition-all duration-500 ${results ? 'min-h-[100px]' : 'min-h-[200px]'} sm:min-h-[300px] lg:min-h-[400px]`}>
 
                     {/* Missions below drone */}
                     {layout

@@ -12,6 +12,7 @@ interface CustomerWelcomeRequest {
   customer_name: string;
   customer_email: string;
   company_name: string;
+  company_id: string;
 }
 
 serve(async (req) => {
@@ -22,7 +23,7 @@ serve(async (req) => {
   }
 
   try {
-    const { customer_id, customer_name, customer_email, company_name }: CustomerWelcomeRequest = await req.json();
+    const { customer_id, customer_name, customer_email, company_name, company_id }: CustomerWelcomeRequest = await req.json();
     console.log("Processing welcome email for customer:", customer_name, customer_email);
 
     if (!customer_email) {
@@ -47,6 +48,71 @@ serve(async (req) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       );
+    }
+
+    // Create Supabase client
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Fetch email template from database
+    const { data: template, error: templateError } = await supabase
+      .from('email_templates')
+      .select('subject, content')
+      .eq('company_id', company_id)
+      .eq('template_type', 'customer_welcome')
+      .maybeSingle();
+
+    if (templateError) {
+      console.error("Error fetching template:", templateError);
+      throw templateError;
+    }
+
+    // Default template if none exists
+    let emailSubject = `Velkommen som kunde hos ${company_name}`;
+    let emailContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="UTF-8">
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+            .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }
+            .footer { text-align: center; margin-top: 30px; font-size: 12px; color: #888; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>Velkommen som kunde!</h1>
+            </div>
+            <div class="content">
+              <h2>Hei ${customer_name}!</h2>
+              <p>Vi er glade for å ønske deg velkommen som kunde hos <strong>${company_name}</strong>.</p>
+              <p>Du er nå registrert i vårt system, og vi ser frem til å samarbeide med deg.</p>
+              <p>Hvis du har spørsmål eller trenger hjelp, ta gjerne kontakt med oss.</p>
+              <div class="footer">
+                <p>Med vennlig hilsen,<br>${company_name}</p>
+                <p style="font-size: 11px; color: #aaa;">Dette er en automatisk generert e-post. Vennligst ikke svar på denne e-posten.</p>
+              </div>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+
+    // Use custom template if available
+    if (template) {
+      console.log("Using custom email template");
+      emailSubject = template.subject
+        .replace(/\{\{customer_name\}\}/g, customer_name)
+        .replace(/\{\{company_name\}\}/g, company_name);
+      
+      emailContent = template.content
+        .replace(/\{\{customer_name\}\}/g, customer_name)
+        .replace(/\{\{company_name\}\}/g, company_name);
     }
 
     // Get email configuration from environment
@@ -76,46 +142,12 @@ serve(async (req) => {
       },
     });
 
-    const emailContent = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="UTF-8">
-          <style>
-            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-            .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
-            .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }
-            .button { display: inline-block; padding: 12px 24px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
-            .footer { text-align: center; margin-top: 30px; font-size: 12px; color: #888; }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <div class="header">
-              <h1>Velkommen som kunde!</h1>
-            </div>
-            <div class="content">
-              <h2>Hei ${customer_name}!</h2>
-              <p>Vi er glade for å ønske deg velkommen som kunde hos <strong>${company_name}</strong>.</p>
-              <p>Du er nå registrert i vårt system, og vi ser frem til å samarbeide med deg.</p>
-              <p>Hvis du har spørsmål eller trenger hjelp, ta gjerne kontakt med oss.</p>
-              <div class="footer">
-                <p>Med vennlig hilsen,<br>${company_name}</p>
-                <p style="font-size: 11px; color: #aaa;">Dette er en automatisk generert e-post. Vennligst ikke svar på denne e-posten.</p>
-              </div>
-            </div>
-          </div>
-        </body>
-      </html>
-    `;
-
     console.log("Attempting to send email to:", customer_email);
 
     await client.send({
       from: emailUser,
       to: customer_email,
-      subject: `Velkommen som kunde hos ${company_name}`,
+      subject: emailSubject,
       content: "auto",
       html: emailContent,
     });

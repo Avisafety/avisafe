@@ -217,7 +217,7 @@ const Index = () => {
                   </div>
 
                   {/* Center Column - Drone space and missions */}
-                  <div className="lg:col-span-6 flex flex-col gap-3 sm:gap-4 lg:h-[600px] overflow-hidden">
+                  <div className="lg:col-span-6 flex flex-col gap-3 sm:gap-4">
                     {/* AI Search Bar above missions */}
                     <AISearchBar />
 

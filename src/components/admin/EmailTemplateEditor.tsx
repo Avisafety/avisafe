@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { GlassCard } from "@/components/GlassCard";
@@ -68,19 +68,69 @@ export const EmailTemplateEditor = () => {
   const [saving, setSaving] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [editorMode, setEditorMode] = useState<"visual" | "html">("visual");
+  const quillRef = useRef<ReactQuill>(null);
+
+  // Handle image upload to Supabase Storage
+  const handleImageUpload = async () => {
+    const input = document.createElement('input');
+    input.setAttribute('type', 'file');
+    input.setAttribute('accept', 'image/*');
+    input.click();
+
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (!file) return;
+
+      try {
+        // Upload image to Supabase Storage
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
+        const filePath = `${companyId}/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('email-images')
+          .upload(filePath, file);
+
+        if (uploadError) throw uploadError;
+
+        // Get public URL
+        const { data: { publicUrl } } = supabase.storage
+          .from('email-images')
+          .getPublicUrl(filePath);
+
+        // Insert image into editor
+        const quill = quillRef.current?.getEditor();
+        if (quill) {
+          const range = quill.getSelection(true);
+          quill.insertEmbed(range.index, 'image', publicUrl);
+          quill.setSelection(range.index + 1, 0);
+        }
+
+        toast.success("Bilde lastet opp");
+      } catch (error) {
+        console.error('Error uploading image:', error);
+        toast.error("Kunne ikke laste opp bilde");
+      }
+    };
+  };
 
   // Quill modules configuration
   const modules = useMemo(() => ({
-    toolbar: [
-      [{ 'header': [1, 2, 3, false] }],
-      ['bold', 'italic', 'underline', 'strike'],
-      [{ 'color': [] }, { 'background': [] }],
-      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-      [{ 'align': [] }],
-      ['link', 'image'],
-      ['clean']
-    ],
-  }), []);
+    toolbar: {
+      container: [
+        [{ 'header': [1, 2, 3, false] }],
+        ['bold', 'italic', 'underline', 'strike'],
+        [{ 'color': [] }, { 'background': [] }],
+        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+        [{ 'align': [] }],
+        ['link', 'image'],
+        ['clean']
+      ],
+      handlers: {
+        image: handleImageUpload
+      }
+    }
+  }), [companyId]);
 
   const formats = [
     'header',
@@ -355,6 +405,7 @@ export const EmailTemplateEditor = () => {
                 <Label>E-post innhold (Visuell editor)</Label>
                 <div className="border rounded-lg overflow-hidden bg-white">
                   <ReactQuill
+                    ref={quillRef}
                     theme="snow"
                     value={getVisualEditorContent()}
                     onChange={handleVisualEditorChange}

@@ -23,10 +23,7 @@ import {
   useSensors,
   DragEndEvent,
 } from "@dnd-kit/core";
-import {
-  SortableContext,
-  rectSortingStrategy,
-} from "@dnd-kit/sortable";
+import { SortableContext, rectSortingStrategy } from "@dnd-kit/sortable";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
@@ -64,15 +61,11 @@ const Index = () => {
   const checkUserApproval = async () => {
     setCheckingApproval(true);
     try {
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("approved")
-        .eq("id", user?.id)
-        .maybeSingle();
+      const { data: profileData } = await supabase.from("profiles").select("approved").eq("id", user?.id).maybeSingle();
 
       if (profileData) {
         setIsApproved((profileData as any).approved);
-        
+
         if (!(profileData as any).approved) {
           // User is not approved, sign them out
           await signOut();
@@ -85,10 +78,7 @@ const Index = () => {
     }
   };
 
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor)
-  );
+  const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor));
 
   useEffect(() => {
     const savedLayout = localStorage.getItem(STORAGE_KEY);
@@ -115,7 +105,7 @@ const Index = () => {
 
         localStorage.setItem(STORAGE_KEY, JSON.stringify(newLayout));
         toast.success("Layout oppdatert");
-        
+
         return newLayout;
       });
     }
@@ -141,9 +131,7 @@ const Index = () => {
           <p className="text-muted-foreground mb-6">
             Din konto venter på godkjenning fra administrator. Du vil motta tilgang så snart kontoen er godkjent.
           </p>
-          <Button onClick={() => navigate("/auth")}>
-            Tilbake til innlogging
-          </Button>
+          <Button onClick={() => navigate("/auth")}>Tilbake til innlogging</Button>
         </div>
       </div>
     );
@@ -173,7 +161,7 @@ const Index = () => {
   return (
     <div className="min-h-screen relative w-full overflow-x-hidden">
       {/* Background with gradient overlay */}
-      <div 
+      <div
         className="fixed inset-0 z-0"
         style={{
           backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.5)), url(${droneBackground})`,
@@ -190,11 +178,7 @@ const Index = () => {
 
         {/* Main Content */}
         <main className="w-full px-3 sm:px-4 py-3 sm:py-5">
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
-          >
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <SortableContext items={layout.map((item) => item.id)} strategy={rectSortingStrategy}>
               <div className="space-y-3 sm:space-y-4">
                 {/* Top Row - News and Status */}
@@ -234,12 +218,11 @@ const Index = () => {
 
                   {/* Center Column - Drone space and missions */}
                   <div className="lg:col-span-6 space-y-3 sm:space-y-4">
-                    {/* Empty space for drone background - reduced on mobile */}
-                    <div className="min-h-[200px] sm:min-h-[300px] lg:min-h-[400px]" />
-                    
                     {/* AI Search Bar above missions */}
                     <AISearchBar />
-                    
+                    {/* Empty space for drone background - reduced on mobile */}
+                    <div className="min-h-[200px] sm:min-h-[300px] lg:min-h-[400px]" />
+
                     {/* Missions below drone */}
                     {layout
                       .filter((item) => item.component === "missions")

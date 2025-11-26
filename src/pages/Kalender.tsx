@@ -13,6 +13,7 @@ import { nb } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 import type { Tables } from "@/integrations/supabase/types";
 import { AddMissionDialog } from "@/components/dashboard/AddMissionDialog";
@@ -49,6 +50,7 @@ const getColorForType = (type: string): string => {
 export default function Kalender() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -419,16 +421,16 @@ export default function Kalender() {
         <main className="w-full px-3 sm:px-4 py-3 sm:py-5">
           <div className="flex flex-col lg:flex-row gap-6">
             {/* Calendar */}
-            <div className="flex-1 bg-card/50 backdrop-blur-sm rounded-lg border border-border p-6">
-              <div className="flex items-center justify-between mb-6">
+            <div className="flex-1 bg-card/50 backdrop-blur-sm rounded-lg border border-border p-3 sm:p-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
                 <div className="flex items-center gap-2">
-                  <CalendarIcon className="w-6 h-6 text-primary" />
-                  <h2 className="text-2xl font-semibold">Månedsoversikt</h2>
+                  <CalendarIcon className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+                  <h2 className="text-xl sm:text-2xl font-semibold">Månedsoversikt</h2>
                 </div>
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button className="gap-2">
+                    <Button className="gap-2 w-full sm:w-auto">
                       <Plus className="w-4 h-4" />
                       Legg til oppføring
                     </Button>
@@ -469,11 +471,11 @@ export default function Kalender() {
                   head_cell: "text-muted-foreground rounded-md w-full font-normal text-sm",
                   row: "flex w-full mt-2",
                   cell: cn(
-                    "relative p-0 text-center focus-within:relative focus-within:z-20 w-full min-h-[120px]",
+                    "relative p-0 text-center focus-within:relative focus-within:z-20 w-full min-h-[70px] sm:min-h-[120px]",
                     "[&:has([aria-selected])]:bg-accent [&:has([aria-selected].day-outside)]:bg-accent/50"
                   ),
                   day: cn(
-                    "h-full w-full p-2 font-normal hover:bg-accent/30 hover:text-accent-foreground rounded-md",
+                    "h-full w-full p-1 sm:p-2 font-normal hover:bg-accent/30 hover:text-accent-foreground rounded-md",
                     "flex flex-col items-start justify-start gap-1"
                   ),
                   day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground",
@@ -484,15 +486,16 @@ export default function Kalender() {
                 components={{
                   Day: ({ date: dayDate, ...props }) => {
                     const dayEvents = getEventsForDate(dayDate);
-                    const displayEvents = dayEvents.slice(0, 2);
-                    const remainingCount = dayEvents.length - 2;
+                    const maxEvents = isMobile ? 1 : 2;
+                    const displayEvents = dayEvents.slice(0, maxEvents);
+                    const remainingCount = dayEvents.length - maxEvents;
 
                     return (
                       <button
                         {...props}
                         onClick={() => handleDateClick(dayDate)}
                         className={cn(
-                          "h-full w-full p-2 font-normal hover:bg-accent/30 hover:text-accent-foreground rounded-md",
+                          "h-full w-full p-1 sm:p-2 font-normal hover:bg-accent/30 hover:text-accent-foreground rounded-md",
                           "flex flex-col items-start justify-start gap-1 text-left"
                         )}
                       >
@@ -500,7 +503,7 @@ export default function Kalender() {
                         {displayEvents.map((event, idx) => (
                           <div
                             key={event.id || idx}
-                            className="text-xs truncate w-full px-1 py-0.5 bg-primary/10 rounded text-foreground hover:bg-primary/20 cursor-pointer transition-colors font-medium"
+                            className="text-xs truncate w-full px-1.5 py-1 bg-primary/10 rounded text-foreground hover:bg-primary/20 cursor-pointer transition-colors font-medium"
                             title={event.title}
                           >
                             {event.title}

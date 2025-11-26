@@ -37,6 +37,8 @@ export const AddMissionDialog = ({ open, onOpenChange, onMissionAdded, mission }
   const [selectedDrones, setSelectedDrones] = useState<string[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<string>("");
   const [openPersonnelPopover, setOpenPersonnelPopover] = useState(false);
+  const [openEquipmentPopover, setOpenEquipmentPopover] = useState(false);
+  const [openDronePopover, setOpenDronePopover] = useState(false);
   const [openCustomerPopover, setOpenCustomerPopover] = useState(false);
   const [newCustomerName, setNewCustomerName] = useState("");
   const [showNewCustomerInput, setShowNewCustomerInput] = useState(false);
@@ -461,6 +463,11 @@ export const AddMissionDialog = ({ open, onOpenChange, onMissionAdded, mission }
         ? prev.filter(id => id !== equipmentId)
         : [...prev, equipmentId]
     );
+    setOpenEquipmentPopover(false);
+  };
+
+  const removeEquipment = (equipmentId: string) => {
+    setSelectedEquipment(prev => prev.filter(id => id !== equipmentId));
   };
 
   const toggleDrone = (droneId: string) => {
@@ -469,6 +476,11 @@ export const AddMissionDialog = ({ open, onOpenChange, onMissionAdded, mission }
         ? prev.filter(id => id !== droneId)
         : [...prev, droneId]
     );
+    setOpenDronePopover(false);
+  };
+
+  const removeDrone = (droneId: string) => {
+    setSelectedDrones(prev => prev.filter(id => id !== droneId));
   };
 
   return (
@@ -723,42 +735,132 @@ export const AddMissionDialog = ({ open, onOpenChange, onMissionAdded, mission }
 
           <div>
             <Label>Utstyr</Label>
-            <div className="border rounded-md p-3 space-y-2 max-h-40 overflow-y-auto">
-              {equipment.map((eq) => (
-                <label key={eq.id} className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={selectedEquipment.includes(eq.id)}
-                    onChange={() => toggleEquipment(eq.id)}
-                    className="rounded"
-                  />
-                  <span className="text-sm">{eq.navn} ({eq.type})</span>
-                </label>
-              ))}
-              {equipment.length === 0 && (
-                <p className="text-sm text-muted-foreground">Ingen utstyr funnet</p>
-              )}
-            </div>
+            <Popover open={openEquipmentPopover} onOpenChange={setOpenEquipmentPopover}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={openEquipmentPopover}
+                  className="w-full justify-between"
+                >
+                  Velg utstyr...
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-full p-0">
+                <Command>
+                  <CommandInput placeholder="Søk utstyr..." />
+                  <CommandList>
+                    <CommandEmpty>Ingen utstyr funnet.</CommandEmpty>
+                    <CommandGroup>
+                      {equipment.map((eq) => (
+                        <CommandItem
+                          key={eq.id}
+                          value={`${eq.navn} ${eq.type}`}
+                          onSelect={() => toggleEquipment(eq.id)}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              selectedEquipment.includes(eq.id) ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          {eq.navn} ({eq.type})
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+            
+            {selectedEquipment.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {selectedEquipment.map((id) => {
+                  const eq = equipment.find((e) => e.id === id);
+                  return (
+                    <div
+                      key={id}
+                      className="flex items-center gap-1 bg-secondary text-secondary-foreground px-2 py-1 rounded-md text-sm"
+                    >
+                      <span>{eq?.navn} ({eq?.type})</span>
+                      <button
+                        type="button"
+                        onClick={() => removeEquipment(id)}
+                        className="hover:bg-secondary-foreground/20 rounded-full p-0.5"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           <div>
             <Label>Droner</Label>
-            <div className="border rounded-md p-3 space-y-2 max-h-40 overflow-y-auto">
-              {drones.map((drone) => (
-                <label key={drone.id} className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={selectedDrones.includes(drone.id)}
-                    onChange={() => toggleDrone(drone.id)}
-                    className="rounded"
-                  />
-                  <span className="text-sm">{drone.modell} ({drone.registrering})</span>
-                </label>
-              ))}
-              {drones.length === 0 && (
-                <p className="text-sm text-muted-foreground">Ingen droner funnet</p>
-              )}
-            </div>
+            <Popover open={openDronePopover} onOpenChange={setOpenDronePopover}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={openDronePopover}
+                  className="w-full justify-between"
+                >
+                  Velg drone...
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-full p-0">
+                <Command>
+                  <CommandInput placeholder="Søk drone..." />
+                  <CommandList>
+                    <CommandEmpty>Ingen droner funnet.</CommandEmpty>
+                    <CommandGroup>
+                      {drones.map((drone) => (
+                        <CommandItem
+                          key={drone.id}
+                          value={`${drone.modell} ${drone.registrering}`}
+                          onSelect={() => toggleDrone(drone.id)}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              selectedDrones.includes(drone.id) ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          {drone.modell} ({drone.registrering})
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+            
+            {selectedDrones.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {selectedDrones.map((id) => {
+                  const drone = drones.find((d) => d.id === id);
+                  return (
+                    <div
+                      key={id}
+                      className="flex items-center gap-1 bg-secondary text-secondary-foreground px-2 py-1 rounded-md text-sm"
+                    >
+                      <span>{drone?.modell} ({drone?.registrering})</span>
+                      <button
+                        type="button"
+                        onClick={() => removeDrone(id)}
+                        className="hover:bg-secondary-foreground/20 rounded-full p-0.5"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           <div className="flex gap-2 justify-end pt-4">

@@ -162,14 +162,14 @@ export const AISearchBar = () => {
   return <div className="space-y-4 mb-6">
       <GlassCard className="p-4">
         <div className="flex gap-2">
-          <Input value={query} onChange={e => setQuery(e.target.value)} onKeyPress={handleKeyPress} className="flex-1" placeholder="S\xF8k (oppdrag, hendelser, dokumenter, utstyr...)" />
+          <Input value={query} onChange={e => setQuery(e.target.value)} onKeyPress={handleKeyPress} className="flex-1" placeholder="Sok (oppdrag, hendelser, dokumenter, utstyr...)" />
           <Button onClick={handleSearch} disabled={isSearching || !query.trim()}>
             {isSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
           </Button>
         </div>
       </GlassCard>
 
-      {results && <GlassCard className="p-6 space-y-4">
+      {results && <GlassCard className="p-6 space-y-4 max-h-[350px] overflow-y-auto">
           <div className="space-y-2">
             <h3 className="font-semibold text-lg">Søkeresultater ({getTotalResults()})</h3>
             {results.summary && <p className="text-sm text-slate-950">{results.summary}</p>}

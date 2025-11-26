@@ -348,7 +348,7 @@ const Status = () => {
     ? ((kpiData.completedMissions / kpiData.totalMissions) * 100).toFixed(1)
     : "0";
 
-  const handleExportExcel = () => {
+  const handleExportExcel = async () => {
     try {
       const wb = XLSX.utils.book_new();
 
@@ -450,11 +450,62 @@ const Status = () => {
       // Generate filename with date
       const fileName = `statistikk-rapport-${format(new Date(), "yyyy-MM-dd")}.xlsx`;
       
-      // Write file
+      // Convert workbook to array buffer for upload
+      const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+      const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+
+      // Get user's company_id
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("company_id")
+        .eq("id", user?.id)
+        .single();
+
+      if (!profile?.company_id) {
+        throw new Error("Kunne ikke hente firmaopplysninger");
+      }
+
+      // Upload to Supabase Storage
+      const filePath = `${profile.company_id}/${fileName}`;
+      const { error: uploadError } = await supabase.storage
+        .from('documents')
+        .upload(filePath, blob, {
+          contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          upsert: false
+        });
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('documents')
+        .getPublicUrl(filePath);
+
+      // Create document entry in database
+      const periodLabel = timePeriod === "month" ? "Siste måned" : 
+                         timePeriod === "quarter" ? "Siste kvartal" : "Siste år";
+      
+      const { error: dbError } = await supabase
+        .from('documents')
+        .insert({
+          tittel: `Statistikkrapport - ${periodLabel}`,
+          kategori: 'Rapporter',
+          beskrivelse: `Excel-rapport generert ${format(new Date(), "dd.MM.yyyy 'kl.' HH:mm")}`,
+          fil_navn: fileName,
+          fil_url: publicUrl,
+          fil_storrelse: blob.size,
+          company_id: profile.company_id,
+          user_id: user?.id,
+          opprettet_av: user?.id
+        });
+
+      if (dbError) throw dbError;
+
+      // Also download the file for the user
       XLSX.writeFile(wb, fileName);
       
-      toast.success("Excel-rapport eksportert", {
-        description: "Filen har blitt lastet ned"
+      toast.success("Excel-rapport lagret", {
+        description: "Rapporten er lagret i dokumenter under kategorien Rapporter"
       });
     } catch (error) {
       console.error("Error exporting to Excel:", error);
@@ -466,7 +517,7 @@ const Status = () => {
 
   const handleExportPDF = async () => {
     try {
-      // Get company name from profile
+      // Get company name and company_id from profile
       const { data: profile } = await supabase
         .from("profiles")
         .select("company_id, companies(navn)")
@@ -474,25 +525,69 @@ const Status = () => {
         .single();
 
       const companyName = (profile as any)?.companies?.navn || "Ukjent selskap";
+      const companyId = profile?.company_id;
+      
+      if (!companyId) {
+        throw new Error("Kunne ikke hente firmaopplysninger");
+      }
+
       const periodLabel = timePeriod === "month" ? "Siste måned" : 
                          timePeriod === "quarter" ? "Siste kvartal" : "Siste år";
 
       // Generate HTML content
       const htmlContent = generateHTMLReport(companyName, periodLabel);
 
-      // Create a blob from the HTML content and download
+      // Create a blob from the HTML content
       const blob = new Blob([htmlContent], { type: 'text/html' });
+      
+      // Generate filename
+      const fileName = `statistikk-rapport-${format(new Date(), "yyyy-MM-dd")}.html`;
+
+      // Upload to Supabase Storage
+      const filePath = `${companyId}/${fileName}`;
+      const { error: uploadError } = await supabase.storage
+        .from('documents')
+        .upload(filePath, blob, {
+          contentType: 'text/html',
+          upsert: false
+        });
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('documents')
+        .getPublicUrl(filePath);
+
+      // Create document entry in database
+      const { error: dbError } = await supabase
+        .from('documents')
+        .insert({
+          tittel: `Statistikkrapport - ${periodLabel}`,
+          kategori: 'Rapporter',
+          beskrivelse: `HTML-rapport generert ${format(new Date(), "dd.MM.yyyy 'kl.' HH:mm")} (åpne i nettleser og skriv ut til PDF)`,
+          fil_navn: fileName,
+          fil_url: publicUrl,
+          fil_storrelse: blob.size,
+          company_id: companyId,
+          user_id: user?.id,
+          opprettet_av: user?.id
+        });
+
+      if (dbError) throw dbError;
+
+      // Also download the file for the user
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `statistikk-rapport-${format(new Date(), "yyyy-MM-dd")}.html`;
+      a.download = fileName;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
 
-      toast.success("PDF-rapport eksportert", {
-        description: "Filen har blitt lastet ned (åpne i nettleser og skriv ut til PDF)"
+      toast.success("PDF-rapport lagret", {
+        description: "Rapporten er lagret i dokumenter under kategorien Rapporter"
       });
     } catch (error) {
       console.error("Error exporting to PDF:", error);

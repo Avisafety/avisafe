@@ -221,8 +221,7 @@ const Index = () => {
                     {/* AI Search Bar above missions */}
                     <AISearchBar />
                     {/* Empty space for drone background */}
-                    <div
-                       <div className="min-h-[200px] sm:min-h-[300px] lg:min-h-[400px]" />
+                    <div className="min-h-[200px] sm:min-h-[300px] lg:min-h-[400px]" />
                     {/* Missions below drone */}
                     {layout
                       .filter((item) => item.component === "missions")

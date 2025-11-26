@@ -11,12 +11,10 @@ import { toast } from "sonner";
 
 const getDocumentStatus = (doc: Document) => {
   if (!doc.gyldig_til) return "Grønn";
-  
+
   const today = new Date();
-  const daysUntilExpiry = Math.floor(
-    (doc.gyldig_til.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
-  );
-  
+  const daysUntilExpiry = Math.floor((doc.gyldig_til.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
   if (daysUntilExpiry < 0) return "Rød";
   if (daysUntilExpiry <= doc.varsel_dager_for_utløp) return "Gul";
   return "Grønn";
@@ -46,9 +44,9 @@ export const DocumentSection = () => {
   const fetchDocuments = async () => {
     try {
       const { data, error } = await supabase
-        .from('documents')
-        .select('*')
-        .order('opprettet_dato', { ascending: false });
+        .from("documents")
+        .select("*")
+        .order("opprettet_dato", { ascending: false });
 
       if (error) throw error;
 
@@ -70,13 +68,12 @@ export const DocumentSection = () => {
 
       setDocuments(mappedDocuments);
     } catch (error: any) {
-      console.error('Error fetching documents:', error);
-      toast.error('Kunne ikke hente dokumenter');
+      console.error("Error fetching documents:", error);
+      toast.error("Kunne ikke hente dokumenter");
     } finally {
       setLoading(false);
     }
   };
-
 
   const handleDocumentClick = (doc: Document, status: string) => {
     setSelectedDocument(doc);
@@ -86,81 +83,81 @@ export const DocumentSection = () => {
 
   return (
     <>
-      <GlassCard className="h-[300px] flex flex-col overflow-hidden">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2 sm:mb-3 gap-2">
-        <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-          <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-primary flex-shrink-0" />
-          <h2 className="text-sm sm:text-base font-semibold truncate">Dokumenter</h2>
+      <GlassCard className="h-[400px] flex flex-col overflow-hidden">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2 sm:mb-3 gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+            <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-primary flex-shrink-0" />
+            <h2 className="text-sm sm:text-base font-semibold truncate">Dokumenter</h2>
+          </div>
+          <Button
+            size="sm"
+            className="gap-1 h-7 sm:h-8 text-xs sm:text-sm px-2 sm:px-3 flex-shrink-0"
+            onClick={() => setUploadDialogOpen(true)}
+          >
+            <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
+            <span className="hidden xs:inline">Legg til</span>
+          </Button>
         </div>
-        <Button size="sm" className="gap-1 h-7 sm:h-8 text-xs sm:text-sm px-2 sm:px-3 flex-shrink-0" onClick={() => setUploadDialogOpen(true)}>
-          <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
-          <span className="hidden xs:inline">Legg til</span>
-        </Button>
-      </div>
 
-      <div className="relative mb-2 sm:mb-3">
-        <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground" />
-        <Input placeholder="Søk..." className="pl-7 sm:pl-8 h-8 sm:h-9 text-xs sm:text-sm" />
-      </div>
+        <div className="relative mb-2 sm:mb-3">
+          <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground" />
+          <Input placeholder="Søk..." className="pl-7 sm:pl-8 h-8 sm:h-9 text-xs sm:text-sm" />
+        </div>
 
-      <div className="space-y-1.5 sm:space-y-2 flex-1 overflow-y-auto">
-        {loading ? (
-          <div className="flex items-center justify-center py-8">
-            <p className="text-xs sm:text-sm text-muted-foreground">Laster dokumenter...</p>
-          </div>
-        ) : documents.length === 0 ? (
-          <div className="flex items-center justify-center py-8">
-            <p className="text-xs sm:text-sm text-muted-foreground">Ingen dokumenter lagt til ennå</p>
-          </div>
-        ) : (
-          documents.map((doc) => {
-            const status = getDocumentStatus(doc);
-            return (
-              <div
-                key={doc.id}
-                onClick={() => handleDocumentClick(doc, status)}
-                className="flex items-center justify-between p-2 sm:p-3 bg-card/30 rounded hover:bg-card/50 transition-colors cursor-pointer"
-              >
-                <div className="flex items-center gap-1.5 sm:gap-2 flex-1 min-w-0">
-                  <StatusDot status={status} />
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-xs sm:text-sm truncate">{doc.tittel}</h3>
-                    <div className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1">
-                      <span className="px-1.5 sm:px-2 py-0.5 bg-primary/10 text-primary rounded text-[10px] sm:text-xs">
-                        {doc.kategori}
-                      </span>
-                      <span>v{doc.versjon}</span>
+        <div className="space-y-1.5 sm:space-y-2 flex-1 overflow-y-auto">
+          {loading ? (
+            <div className="flex items-center justify-center py-8">
+              <p className="text-xs sm:text-sm text-muted-foreground">Laster dokumenter...</p>
+            </div>
+          ) : documents.length === 0 ? (
+            <div className="flex items-center justify-center py-8">
+              <p className="text-xs sm:text-sm text-muted-foreground">Ingen dokumenter lagt til ennå</p>
+            </div>
+          ) : (
+            documents.map((doc) => {
+              const status = getDocumentStatus(doc);
+              return (
+                <div
+                  key={doc.id}
+                  onClick={() => handleDocumentClick(doc, status)}
+                  className="flex items-center justify-between p-2 sm:p-3 bg-card/30 rounded hover:bg-card/50 transition-colors cursor-pointer"
+                >
+                  <div className="flex items-center gap-1.5 sm:gap-2 flex-1 min-w-0">
+                    <StatusDot status={status} />
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-medium text-xs sm:text-sm truncate">{doc.tittel}</h3>
+                      <div className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1">
+                        <span className="px-1.5 sm:px-2 py-0.5 bg-primary/10 text-primary rounded text-[10px] sm:text-xs">
+                          {doc.kategori}
+                        </span>
+                        <span>v{doc.versjon}</span>
+                      </div>
                     </div>
                   </div>
+
+                  {status !== "Grønn" && doc.gyldig_til && (
+                    <div className="flex items-center gap-0.5 sm:gap-1 text-[10px] sm:text-xs flex-shrink-0">
+                      <AlertCircle className="w-3 h-3 sm:w-4 sm:h-4 text-destructive" />
+                      <span className={status === "Rød" ? "text-destructive font-medium" : "text-status-yellow"}>
+                        {status === "Rød" ? "Utløpt" : "Snart"}
+                      </span>
+                    </div>
+                  )}
                 </div>
-                
-                {status !== "Grønn" && doc.gyldig_til && (
-                  <div className="flex items-center gap-0.5 sm:gap-1 text-[10px] sm:text-xs flex-shrink-0">
-                    <AlertCircle className="w-3 h-3 sm:w-4 sm:h-4 text-destructive" />
-                    <span className={status === "Rød" ? "text-destructive font-medium" : "text-status-yellow"}>
-                      {status === "Rød" ? "Utløpt" : "Snart"}
-                    </span>
-                  </div>
-                )}
-              </div>
-            );
-          })
-        )}
-      </div>
+              );
+            })
+          )}
+        </div>
 
-      <DocumentUploadDialog
-        open={uploadDialogOpen}
-        onOpenChange={setUploadDialogOpen}
-        onSuccess={fetchDocuments}
-      />
+        <DocumentUploadDialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen} onSuccess={fetchDocuments} />
 
-      <DocumentDetailDialog
-        open={detailDialogOpen}
-        onOpenChange={setDetailDialogOpen}
-        document={selectedDocument}
-        status={selectedDocStatus}
-      />
-    </GlassCard>
+        <DocumentDetailDialog
+          open={detailDialogOpen}
+          onOpenChange={setDetailDialogOpen}
+          document={selectedDocument}
+          status={selectedDocStatus}
+        />
+      </GlassCard>
     </>
   );
 };

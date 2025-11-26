@@ -47,7 +47,7 @@ const StatusCard = ({
     Gul: "border-status-yellow",
     Rød: "border-status-red"
   };
-  return <div onClick={onClick} className={`${bgColors[primaryStatus]} ${borderColors[primaryStatus]} border-2 rounded p-2 sm:p-3 transition-all hover:scale-105 cursor-pointer`}>
+  return <div onClick={onClick} className={`${bgColors[primaryStatus]} ${borderColors[primaryStatus]} border-2 rounded p-2 sm:p-3 transition-all hover:scale-105 cursor-pointer text-gray-700 dark:text-gray-200`}>
       <div className="flex items-center gap-1 sm:gap-2 mb-1 sm:mb-2">
         <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
         <h3 className="font-semibold text-xs sm:text-sm">{title}</h3>

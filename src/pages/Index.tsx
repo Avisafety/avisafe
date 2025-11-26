@@ -220,9 +220,12 @@ const Index = () => {
                   <div className="lg:col-span-6 space-y-3 sm:space-y-4">
                     {/* AI Search Bar above missions */}
                     <AISearchBar />
-                    {/* Empty space for drone background - reduced on mobile */}
-                    <div className={`transition-all duration-500 ${results ? 'min-h-[100px]' : 'min-h-[200px]'} sm:min-h-[300px] lg:min-h-[400px]`}>
-
+                    {/* Empty space for drone background */}
+                    <div
+                      className={`transition-all duration-500 ${results ? "min-h-[100px]" : "min-h-[200px]"} sm:min-h-[300px] lg:min-h-[400px]`}
+                    >
+                      {/* Drone background will dynamically adjust height */}
+                    </div>
                     {/* Missions below drone */}
                     {layout
                       .filter((item) => item.component === "missions")

@@ -24,14 +24,17 @@ interface AddMissionDialogProps {
 type Profile = Tables<"profiles">;
 type Equipment = any;
 type Customer = any;
+type Drone = any;
 
 export const AddMissionDialog = ({ open, onOpenChange, onMissionAdded, mission }: AddMissionDialogProps) => {
   const [loading, setLoading] = useState(false);
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [equipment, setEquipment] = useState<Equipment[]>([]);
+  const [drones, setDrones] = useState<Drone[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [selectedPersonnel, setSelectedPersonnel] = useState<string[]>([]);
   const [selectedEquipment, setSelectedEquipment] = useState<string[]>([]);
+  const [selectedDrones, setSelectedDrones] = useState<string[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<string>("");
   const [openPersonnelPopover, setOpenPersonnelPopover] = useState(false);
   const [openCustomerPopover, setOpenCustomerPopover] = useState(false);
@@ -54,6 +57,7 @@ export const AddMissionDialog = ({ open, onOpenChange, onMissionAdded, mission }
     if (open) {
       fetchProfiles();
       fetchEquipment();
+      fetchDrones();
       fetchCustomers();
       
       // Pre-fylle skjemaet hvis vi redigerer
@@ -72,6 +76,7 @@ export const AddMissionDialog = ({ open, onOpenChange, onMissionAdded, mission }
         setSelectedCustomer(mission.customer_id || "");
         fetchMissionPersonnel(mission.id);
         fetchMissionEquipment(mission.id);
+        fetchMissionDrones(mission.id);
       } else {
         // Reset form når vi oppretter nytt oppdrag
         setFormData({
@@ -87,6 +92,7 @@ export const AddMissionDialog = ({ open, onOpenChange, onMissionAdded, mission }
         });
         setSelectedPersonnel([]);
         setSelectedEquipment([]);
+        setSelectedDrones([]);
         setSelectedCustomer("");
       }
     }
@@ -117,6 +123,20 @@ export const AddMissionDialog = ({ open, onOpenChange, onMissionAdded, mission }
       console.error(error);
     } else {
       setEquipment(data || []);
+    }
+  };
+
+  const fetchDrones = async () => {
+    const { data, error } = await (supabase as any)
+      .from("drones")
+      .select("*")
+      .eq("aktiv", true);
+    
+    if (error) {
+      toast.error("Kunne ikke hente droner");
+      console.error(error);
+    } else {
+      setDrones(data || []);
     }
   };
 
@@ -158,6 +178,19 @@ export const AddMissionDialog = ({ open, onOpenChange, onMissionAdded, mission }
       console.error("Error fetching mission equipment:", error);
     } else {
       setSelectedEquipment(data?.map(e => e.equipment_id) || []);
+    }
+  };
+
+  const fetchMissionDrones = async (missionId: string) => {
+    const { data, error } = await supabase
+      .from("mission_drones")
+      .select("drone_id")
+      .eq("mission_id", missionId);
+    
+    if (error) {
+      console.error("Error fetching mission drones:", error);
+    } else {
+      setSelectedDrones(data?.map(d => d.drone_id) || []);
     }
   };
 
@@ -246,9 +279,10 @@ export const AddMissionDialog = ({ open, onOpenChange, onMissionAdded, mission }
 
         if (missionError) throw missionError;
 
-        // Delete existing personnel and equipment
+        // Delete existing personnel, equipment, and drones
         await supabase.from("mission_personnel").delete().eq("mission_id", mission.id);
         await supabase.from("mission_equipment").delete().eq("mission_id", mission.id);
+        await supabase.from("mission_drones").delete().eq("mission_id", mission.id);
 
         // Insert new personnel
         if (selectedPersonnel.length > 0) {
@@ -276,6 +310,20 @@ export const AddMissionDialog = ({ open, onOpenChange, onMissionAdded, mission }
             .insert(equipmentData);
           
           if (equipmentError) throw equipmentError;
+        }
+
+        // Insert new drones
+        if (selectedDrones.length > 0) {
+          const dronesData = selectedDrones.map(droneId => ({
+            mission_id: mission.id,
+            drone_id: droneId,
+          }));
+          
+          const { error: dronesError } = await supabase
+            .from("mission_drones")
+            .insert(dronesData);
+          
+          if (dronesError) throw dronesError;
         }
 
         toast.success("Oppdrag oppdatert!");
@@ -330,6 +378,20 @@ export const AddMissionDialog = ({ open, onOpenChange, onMissionAdded, mission }
           if (equipmentError) throw equipmentError;
         }
 
+        // Insert mission drones
+        if (selectedDrones.length > 0) {
+          const dronesData = selectedDrones.map(droneId => ({
+            mission_id: newMission.id,
+            drone_id: droneId,
+          }));
+          
+          const { error: dronesError } = await (supabase as any)
+            .from("mission_drones")
+            .insert(dronesData);
+          
+          if (dronesError) throw dronesError;
+        }
+
         // Send email notification for new mission
         try {
           await supabase.functions.invoke('send-notification-email', {
@@ -368,6 +430,7 @@ export const AddMissionDialog = ({ open, onOpenChange, onMissionAdded, mission }
       });
       setSelectedPersonnel([]);
       setSelectedEquipment([]);
+      setSelectedDrones([]);
       setSelectedCustomer("");
       setNewCustomerName("");
       setShowNewCustomerInput(false);
@@ -397,6 +460,14 @@ export const AddMissionDialog = ({ open, onOpenChange, onMissionAdded, mission }
       prev.includes(equipmentId)
         ? prev.filter(id => id !== equipmentId)
         : [...prev, equipmentId]
+    );
+  };
+
+  const toggleDrone = (droneId: string) => {
+    setSelectedDrones(prev =>
+      prev.includes(droneId)
+        ? prev.filter(id => id !== droneId)
+        : [...prev, droneId]
     );
   };
 
@@ -666,6 +737,26 @@ export const AddMissionDialog = ({ open, onOpenChange, onMissionAdded, mission }
               ))}
               {equipment.length === 0 && (
                 <p className="text-sm text-muted-foreground">Ingen utstyr funnet</p>
+              )}
+            </div>
+          </div>
+
+          <div>
+            <Label>Droner</Label>
+            <div className="border rounded-md p-3 space-y-2 max-h-40 overflow-y-auto">
+              {drones.map((drone) => (
+                <label key={drone.id} className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={selectedDrones.includes(drone.id)}
+                    onChange={() => toggleDrone(drone.id)}
+                    className="rounded"
+                  />
+                  <span className="text-sm">{drone.modell} ({drone.registrering})</span>
+                </label>
+              ))}
+              {drones.length === 0 && (
+                <p className="text-sm text-muted-foreground">Ingen droner funnet</p>
               )}
             </div>
           </div>

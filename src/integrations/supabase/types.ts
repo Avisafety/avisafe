@@ -480,6 +480,42 @@ export type Database = {
           },
         ]
       }
+      mission_drones: {
+        Row: {
+          created_at: string | null
+          drone_id: string
+          id: string
+          mission_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          drone_id: string
+          id?: string
+          mission_id: string
+        }
+        Update: {
+          created_at?: string | null
+          drone_id?: string
+          id?: string
+          mission_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mission_drones_drone_id_fkey"
+            columns: ["drone_id"]
+            isOneToOne: false
+            referencedRelation: "drones"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mission_drones_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "missions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mission_equipment: {
         Row: {
           equipment_id: string

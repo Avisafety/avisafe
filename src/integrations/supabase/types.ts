@@ -310,6 +310,44 @@ export type Database = {
           },
         ]
       }
+      email_templates: {
+        Row: {
+          company_id: string
+          content: string
+          created_at: string
+          id: string
+          subject: string
+          template_type: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          content: string
+          created_at?: string
+          id?: string
+          subject: string
+          template_type: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          subject?: string
+          template_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_templates_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       equipment: {
         Row: {
           aktiv: boolean

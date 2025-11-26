@@ -169,6 +169,7 @@ export const CustomerManagementDialog = ({
                 customer_name: data.navn,
                 customer_email: data.epost,
                 company_name: companyData?.navn || "Selskapet",
+                company_id: companyId,
               },
             });
             console.log("Welcome email sent to customer");

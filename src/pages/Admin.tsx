@@ -32,6 +32,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CompanyManagementSection } from "@/components/admin/CompanyManagementSection";
 import { CustomerManagementSection } from "@/components/admin/CustomerManagementSection";
+import { EmailTemplateEditor } from "@/components/admin/EmailTemplateEditor";
 
 interface Profile {
   id: string;
@@ -309,14 +310,18 @@ const Admin = () => {
 
       <main className="w-full px-4 py-8">
         <Tabs defaultValue="users" className="w-full">
-          <TabsList className="grid w-full max-w-2xl mx-auto" style={{ gridTemplateColumns: isSuperAdmin ? '1fr 1fr 1fr' : '1fr 1fr' }}>
+          <TabsList className="grid w-full max-w-3xl mx-auto" style={{ gridTemplateColumns: isSuperAdmin ? '1fr 1fr 1fr 1fr' : '1fr 1fr 1fr' }}>
             <TabsTrigger value="users" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
-              Brukeradministrasjon
+              Brukere
             </TabsTrigger>
             <TabsTrigger value="customers" className="flex items-center gap-2">
               <UserCog className="h-4 w-4" />
               Kunder
+            </TabsTrigger>
+            <TabsTrigger value="email-templates" className="flex items-center gap-2">
+              <Settings className="h-4 w-4" />
+              E-postmaler
             </TabsTrigger>
             {isSuperAdmin && (
               <TabsTrigger value="companies" className="flex items-center gap-2">
@@ -473,6 +478,10 @@ const Admin = () => {
 
           <TabsContent value="customers" className="mt-6">
             <CustomerManagementSection />
+          </TabsContent>
+
+          <TabsContent value="email-templates" className="mt-6">
+            <EmailTemplateEditor />
           </TabsContent>
 
           {isSuperAdmin && (

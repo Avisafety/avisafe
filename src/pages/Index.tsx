@@ -220,16 +220,21 @@ const Index = () => {
                   <div className="lg:col-span-6 space-y-3 sm:space-y-4">
                     {/* AI Search Bar above missions */}
                     <AISearchBar />
+
                     {/* Empty space for drone background */}
                     <div className="min-h-[200px] sm:min-h-[300px] lg:min-h-[400px]" />
+
                     {/* Missions below drone */}
-                    {layout
-                      .filter((item) => item.component === "missions")
-                      .map((item) => (
-                        <DraggableSection key={item.id} id={item.id}>
-                          {renderSection(item.component)}
-                        </DraggableSection>
-                      ))}
+                    {layout &&
+                      layout.length > 0 &&
+                      layout
+                        .filter((item) => item.component === "missions")
+                        .map((item) => (
+                          <DraggableSection key={item.id} id={item.id}>
+                            {renderSection(item.component)}
+                          </DraggableSection>
+                        ))}
+                  </div>
 
                   {/* Right Column */}
                   <div className="lg:col-span-3 flex flex-col gap-3 sm:gap-4">

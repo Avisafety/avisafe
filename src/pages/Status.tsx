@@ -916,29 +916,31 @@ const Status = () => {
       <div className="relative z-10 w-full">
       <Header />
       <main className="container mx-auto px-4 py-8 space-y-8">
-        <div className="flex items-center justify-between flex-wrap gap-4">
-          <h1 className="text-4xl font-bold text-foreground">Statistikk</h1>
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-sm text-muted-foreground">Tidsperiode:</span>
-            <Select value={timePeriod} onValueChange={(value: "month" | "quarter" | "year") => setTimePeriod(value)}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="month">Siste måned</SelectItem>
-                <SelectItem value="quarter">Siste kvartal</SelectItem>
-                <SelectItem value="year">Siste år</SelectItem>
-              </SelectContent>
-            </Select>
+        <div className="flex flex-col gap-4">
+          <h1 className="text-3xl sm:text-4xl font-bold text-foreground">Statistikk</h1>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full">
+            <div className="flex items-center gap-2 flex-1">
+              <span className="text-sm text-muted-foreground whitespace-nowrap">Tidsperiode:</span>
+              <Select value={timePeriod} onValueChange={(value: "month" | "quarter" | "year") => setTimePeriod(value)}>
+                <SelectTrigger className="w-full sm:w-[180px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="month">Siste måned</SelectItem>
+                  <SelectItem value="quarter">Siste kvartal</SelectItem>
+                  <SelectItem value="year">Siste år</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="default" size="sm" className="gap-2">
+                <Button variant="default" size="default" className="gap-2 w-full sm:w-auto">
                   <Download className="w-4 h-4" />
                   Eksporter
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
+              <DropdownMenuContent align="end" className="w-[200px]">
                 <DropdownMenuItem onClick={handleExportExcel}>
                   <Download className="w-4 h-4 mr-2" />
                   Eksporter til Excel

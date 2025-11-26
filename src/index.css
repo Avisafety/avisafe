@@ -36,7 +36,7 @@ All colors MUST be HSL.
     --input: 214 32% 91%;
     --ring: 210 80% 28%;
 
-    --radius: 0.75rem;
+    --radius: 0.625rem;
 
     --status-green: 142 71% 45%;
     --status-yellow: 38 92% 50%;
@@ -53,6 +53,10 @@ All colors MUST be HSL.
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+    --shadow-sm: 0px 1px 2.75px 0px hsla(0, 0%, 0%, 0.1);
+    --shadow: 0px 1px 5.5px 0px hsla(0, 0%, 0%, 0.1);
+    --shadow-md: 0px 1px 8.25px 0px hsla(0, 0%, 0%, 0.1);
+    --shadow-lg: 0px 1px 13.75px 0px hsla(0, 0%, 0%, 0.1);
   }
 
   .dark {
@@ -99,6 +103,11 @@ All colors MUST be HSL.
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+    --radius: 0.625rem;
+    --shadow-sm: 0px 1px 2.75px 0px hsla(0, 0%, 0%, 0.1);
+    --shadow: 0px 1px 5.5px 0px hsla(0, 0%, 0%, 0.1);
+    --shadow-md: 0px 1px 8.25px 0px hsla(0, 0%, 0%, 0.1);
+    --shadow-lg: 0px 1px 13.75px 0px hsla(0, 0%, 0%, 0.1);
   }
 }
 
@@ -116,5 +125,17 @@ All colors MUST be HSL.
   
   #root {
     @apply w-full overflow-x-hidden;
+  }
+}
+
+/* ---break---
+*/
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
   }
 }

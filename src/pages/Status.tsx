@@ -533,9 +533,149 @@ const Status = () => {
 
       // Create PDF document
       const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.width;
+      const pageHeight = doc.internal.pageSize.height;
       let yPos = 20;
 
-      // Add header
+      // Color palette
+      const COLORS = {
+        primary: [59, 130, 246] as [number, number, number],
+        success: [34, 197, 94] as [number, number, number],
+        warning: [234, 179, 8] as [number, number, number],
+        destructive: [239, 68, 68] as [number, number, number],
+        muted: [156, 163, 175] as [number, number, number],
+      };
+
+      // Helper function: Draw bar chart
+      const drawBarChart = (data: { name: string; value: number }[], x: number, y: number, width: number, height: number, title: string) => {
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.text(title, x, y);
+        y += 8;
+
+        if (data.length === 0 || data.every(d => d.value === 0)) {
+          doc.setFontSize(10);
+          doc.setFont('helvetica', 'normal');
+          doc.text("Ingen data", x, y + 20);
+          return;
+        }
+
+        const maxValue = Math.max(...data.map(d => d.value), 1);
+        const barWidth = Math.min((width - 10) / data.length - 5, 25);
+        const chartHeight = height - 25;
+
+        // Draw axes
+        doc.setDrawColor(200, 200, 200);
+        doc.line(x, y + chartHeight, x + width, y + chartHeight); // X-axis
+        doc.line(x, y, x, y + chartHeight); // Y-axis
+
+        // Draw bars
+        data.forEach((item, index) => {
+          const barHeight = (item.value / maxValue) * chartHeight;
+          const barX = x + 5 + index * (barWidth + 5);
+          const barY = y + chartHeight - barHeight;
+
+          doc.setFillColor(...COLORS.primary);
+          doc.rect(barX, barY, barWidth, barHeight, 'F');
+
+          // Value label on top
+          doc.setFontSize(8);
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(0, 0, 0);
+          doc.text(item.value.toString(), barX + barWidth / 2, barY - 2, { align: 'center' });
+
+          // Name label below
+          doc.setFont('helvetica', 'normal');
+          doc.text(item.name, barX + barWidth / 2, y + chartHeight + 5, { 
+            align: 'center', 
+            maxWidth: barWidth + 3 
+          });
+        });
+        
+        doc.setTextColor(0, 0, 0);
+      };
+
+      // Helper function: Draw pie chart
+      const drawPieChart = (data: { name: string; value: number }[], x: number, y: number, radius: number, title: string) => {
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.text(title, x - radius, y - radius - 5);
+
+        const total = data.reduce((sum, item) => sum + item.value, 0);
+        if (total === 0) {
+          doc.setFontSize(10);
+          doc.setFont('helvetica', 'normal');
+          doc.text("Ingen data", x, y, { align: 'center' });
+          return;
+        }
+
+        const colors = [COLORS.primary, COLORS.success, COLORS.warning, COLORS.destructive, COLORS.muted];
+        let currentAngle = -90; // Start at top
+
+        // Draw each slice
+        data.forEach((item, index) => {
+          const sliceAngle = (item.value / total) * 360;
+          const color = colors[index % colors.length];
+          const startAngle = (currentAngle * Math.PI) / 180;
+          const endAngle = ((currentAngle + sliceAngle) * Math.PI) / 180;
+          
+          doc.setFillColor(...color);
+          
+          // Draw slice as filled path
+          doc.setDrawColor(...color);
+          const segments = Math.max(2, Math.ceil(sliceAngle / 5));
+          
+          for (let i = 0; i <= segments; i++) {
+            const angle = startAngle + (i / segments) * (endAngle - startAngle);
+            const px = x + radius * Math.cos(angle);
+            const py = y + radius * Math.sin(angle);
+            
+            if (i === 0) {
+              doc.line(x, y, px, py);
+            } else {
+              const prevAngle = startAngle + ((i - 1) / segments) * (endAngle - startAngle);
+              const prevPx = x + radius * Math.cos(prevAngle);
+              const prevPy = y + radius * Math.sin(prevAngle);
+              
+              // Draw triangle for each segment
+              doc.setFillColor(...color);
+              doc.triangle(x, y, prevPx, prevPy, px, py, 'FD');
+            }
+          }
+
+          // Add percentage label
+          const labelAngle = currentAngle + sliceAngle / 2;
+          const labelRadius = radius * 0.65;
+          const labelX = x + labelRadius * Math.cos((labelAngle * Math.PI) / 180);
+          const labelY = y + labelRadius * Math.sin((labelAngle * Math.PI) / 180);
+          
+          const percentage = ((item.value / total) * 100).toFixed(0);
+          if (parseInt(percentage) >= 5) { // Only show label if slice is big enough
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(255, 255, 255);
+            doc.text(`${percentage}%`, labelX, labelY + 1, { align: 'center' });
+          }
+
+          currentAngle += sliceAngle;
+        });
+        
+        doc.setTextColor(0, 0, 0);
+
+        // Draw legend
+        let legendY = y + radius + 10;
+        doc.setFont('helvetica', 'normal');
+        data.forEach((item, index) => {
+          const color = colors[index % colors.length];
+          doc.setFillColor(...color);
+          doc.rect(x - radius, legendY, 4, 4, 'F');
+          doc.setFontSize(8);
+          doc.text(`${item.name} (${item.value})`, x - radius + 6, legendY + 3);
+          legendY += 6;
+        });
+      };
+
+      // Page 1: Header and KPIs
       doc.setFontSize(20);
       doc.setFont("helvetica", "bold");
       doc.text(`Statistikkrapport - ${companyName}`, 20, yPos);
@@ -548,7 +688,7 @@ const Status = () => {
       doc.text(`Generert: ${format(new Date(), "dd.MM.yyyy 'kl.' HH:mm", { locale: nb })}`, 20, yPos);
       yPos += 15;
 
-      // Add KPIs section
+      // KPI Table
       doc.setFontSize(14);
       doc.setFont("helvetica", "bold");
       doc.text("Nøkkeltall", 20, yPos);
@@ -565,116 +705,128 @@ const Status = () => {
           ['Aktive ressurser', kpiData.activeResources.toString()],
         ],
         theme: 'grid',
-        headStyles: { fillColor: [59, 130, 246] },
+        headStyles: { fillColor: COLORS.primary },
       });
 
       yPos = (doc as any).lastAutoTable.finalY + 15;
 
-      // Add Missions by Status
+      // Missions by Month Bar Chart
+      if (missionsByMonth.length > 0) {
+        if (yPos > 200) {
+          doc.addPage();
+          yPos = 20;
+        }
+        drawBarChart(
+          missionsByMonth.map(m => ({ name: m.month, value: m.count })), 
+          20, 
+          yPos, 
+          170, 
+          60, 
+          "Oppdrag per måned"
+        );
+        yPos += 70;
+      }
+
+      // Missions by Status Pie Chart
       if (missionsByStatus.length > 0) {
-        doc.setFontSize(14);
-        doc.setFont("helvetica", "bold");
-        doc.text("Oppdrag per status", 20, yPos);
-        yPos += 5;
-
-        autoTable(doc, {
-          startY: yPos,
-          head: [['Status', 'Antall']],
-          body: missionsByStatus.map(item => [item.name, item.value.toString()]),
-          theme: 'grid',
-          headStyles: { fillColor: [59, 130, 246] },
-        });
-
-        yPos = (doc as any).lastAutoTable.finalY + 15;
+        if (yPos > 220) {
+          doc.addPage();
+          yPos = 20;
+        }
+        drawPieChart(missionsByStatus, 60, yPos + 35, 30, "Oppdrag per status");
+        yPos += 100;
       }
 
-      // Add page break if needed
-      if (yPos > 250) {
-        doc.addPage();
-        yPos = 20;
+      // Page 2: Incidents
+      doc.addPage();
+      yPos = 20;
+
+      doc.setFontSize(16);
+      doc.setFont("helvetica", "bold");
+      doc.text("Hendelser", 20, yPos);
+      yPos += 15;
+
+      // Incidents by Month Bar Chart
+      if (incidentsByMonth.length > 0) {
+        drawBarChart(
+          incidentsByMonth.map(m => ({ name: m.month, value: m.count })), 
+          20, 
+          yPos, 
+          170, 
+          60, 
+          "Hendelser per måned"
+        );
+        yPos += 70;
       }
 
-      // Add Incidents by Severity
+      // Incidents by Category Pie Chart
+      if (incidentsByCategory.length > 0) {
+        if (yPos > 200) {
+          doc.addPage();
+          yPos = 20;
+        }
+        drawPieChart(incidentsByCategory, 60, yPos + 35, 30, "Hendelser per kategori");
+        yPos += 100;
+      }
+
+      // Incidents by Severity Bar Chart
       if (incidentsBySeverity.length > 0) {
-        doc.setFontSize(14);
-        doc.setFont("helvetica", "bold");
-        doc.text("Hendelser per alvorlighetsgrad", 20, yPos);
-        yPos += 5;
-
-        autoTable(doc, {
-          startY: yPos,
-          head: [['Alvorlighetsgrad', 'Antall']],
-          body: incidentsBySeverity.map(item => [item.name, item.value.toString()]),
-          theme: 'grid',
-          headStyles: { fillColor: [59, 130, 246] },
-        });
-
-        yPos = (doc as any).lastAutoTable.finalY + 10;
+        if (yPos > 200) {
+          doc.addPage();
+          yPos = 20;
+        }
+        drawBarChart(incidentsBySeverity, 20, yPos, 170, 50, "Hendelser per alvorlighetsgrad");
+        yPos += 60;
       }
 
-      // Add days since last severe incident
-      if (daysSinceLastSevere > 0) {
-        doc.setFontSize(11);
-        doc.setFont("helvetica", "normal");
-        doc.text(`Dager siden siste alvorlige hendelse: ${daysSinceLastSevere}`, 20, yPos);
-        yPos += 15;
-      }
-
-      // Add page break if needed
-      if (yPos > 250) {
+      // HMS Box - Days since last severe incident
+      if (yPos > 240) {
         doc.addPage();
         yPos = 20;
       }
+      doc.setFillColor(...COLORS.success);
+      doc.rect(20, yPos, 170, 20, 'F');
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(255, 255, 255);
+      const daysText = daysSinceLastSevere > 0 
+        ? `${daysSinceLastSevere} dager siden siste alvorlige hendelse`
+        : 'Ingen alvorlige hendelser registrert';
+      doc.text(daysText, 105, yPos + 12, { align: 'center' });
+      doc.setTextColor(0, 0, 0);
+      yPos += 30;
 
-      // Add Resource Status - Drones
+      // Page 3: Resources
+      doc.addPage();
+      yPos = 20;
+
+      doc.setFontSize(16);
+      doc.setFont("helvetica", "bold");
+      doc.text("Ressurser", 20, yPos);
+      yPos += 15;
+
+      // Drone Status Pie Chart
       if (droneStatus.length > 0) {
-        doc.setFontSize(14);
-        doc.setFont("helvetica", "bold");
-        doc.text("Dronestatus", 20, yPos);
-        yPos += 5;
-
-        autoTable(doc, {
-          startY: yPos,
-          head: [['Status', 'Antall']],
-          body: droneStatus.map(item => [item.name, item.value.toString()]),
-          theme: 'grid',
-          headStyles: { fillColor: [59, 130, 246] },
-        });
-
-        yPos = (doc as any).lastAutoTable.finalY + 15;
+        drawPieChart(droneStatus, 60, yPos + 35, 30, "Dronestatus");
+        yPos += 100;
       }
 
-      // Add page break if needed
-      if (yPos > 250) {
-        doc.addPage();
-        yPos = 20;
-      }
-
-      // Add Equipment Status
+      // Equipment Status Pie Chart
       if (equipmentStatus.length > 0) {
-        doc.setFontSize(14);
-        doc.setFont("helvetica", "bold");
-        doc.text("Utstyrsstatus", 20, yPos);
-        yPos += 5;
-
-        autoTable(doc, {
-          startY: yPos,
-          head: [['Status', 'Antall']],
-          body: equipmentStatus.map(item => [item.name, item.value.toString()]),
-          theme: 'grid',
-          headStyles: { fillColor: [59, 130, 246] },
-        });
-
-        yPos = (doc as any).lastAutoTable.finalY + 15;
+        if (yPos > 200) {
+          doc.addPage();
+          yPos = 20;
+        }
+        drawPieChart(equipmentStatus, 60, yPos + 35, 30, "Utstyrsstatus");
+        yPos += 100;
       }
 
-      // Add page break if needed
-      if (yPos > 250) {
+      // Expiring Documents
+      if (yPos > 220) {
         doc.addPage();
         yPos = 20;
       }
 
-      // Add Expiring Documents
       doc.setFontSize(14);
       doc.setFont("helvetica", "bold");
       doc.text("Dokumenter som utløper", 20, yPos);
@@ -689,7 +841,7 @@ const Status = () => {
           ['Innen 90 dager', expiringDocs.ninetyDays.toString()],
         ],
         theme: 'grid',
-        headStyles: { fillColor: [59, 130, 246] },
+        headStyles: { fillColor: COLORS.primary },
       });
 
       // Generate PDF blob

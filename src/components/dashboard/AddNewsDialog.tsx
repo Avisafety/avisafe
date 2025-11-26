@@ -51,7 +51,7 @@ export const AddNewsDialog = ({ open, onOpenChange, news }: AddNewsDialogProps) 
 
       const { data: profile } = await supabase
         .from('profiles')
-        .select('full_name')
+        .select('full_name, company_id')
         .eq('id', user.id)
         .single();
 
@@ -78,6 +78,7 @@ export const AddNewsDialog = ({ open, onOpenChange, news }: AddNewsDialogProps) 
             innhold: innhold.trim(),
             pin_on_top: pinOnTop,
             user_id: user.id,
+            company_id: profile?.company_id,
             forfatter: profile?.full_name || 'Ukjent'
           });
 

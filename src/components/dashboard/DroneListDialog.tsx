@@ -2,14 +2,30 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { StatusBadge } from "@/components/StatusBadge";
 import { format } from "date-fns";
 import { nb } from "date-fns/locale";
+import { useState } from "react";
+import { DroneDetailDialog } from "@/components/resources/DroneDetailDialog";
 
 interface DroneListDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   drones: any[];
+  onDronesUpdated?: () => void;
 }
 
-export const DroneListDialog = ({ open, onOpenChange, drones }: DroneListDialogProps) => {
+export const DroneListDialog = ({ open, onOpenChange, drones, onDronesUpdated }: DroneListDialogProps) => {
+  const [selectedDrone, setSelectedDrone] = useState<any>(null);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+
+  const handleDroneClick = (drone: any) => {
+    setSelectedDrone(drone);
+    setDetailDialogOpen(true);
+  };
+
+  const handleDroneUpdated = () => {
+    if (onDronesUpdated) {
+      onDronesUpdated();
+    }
+  };
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
@@ -19,7 +35,11 @@ export const DroneListDialog = ({ open, onOpenChange, drones }: DroneListDialogP
         
         <div className="space-y-4">
           {drones.map((drone) => (
-            <div key={drone.id} className="border border-border rounded-lg p-4 space-y-2">
+            <div 
+              key={drone.id} 
+              onClick={() => handleDroneClick(drone)}
+              className="border border-border rounded-lg p-4 space-y-2 cursor-pointer hover:bg-muted/50 transition-colors"
+            >
               <div className="flex items-start justify-between">
                 <div>
                   <h3 className="font-semibold text-lg">{drone.modell}</h3>
@@ -65,6 +85,15 @@ export const DroneListDialog = ({ open, onOpenChange, drones }: DroneListDialogP
           ))}
         </div>
       </DialogContent>
+
+      {selectedDrone && (
+        <DroneDetailDialog
+          open={detailDialogOpen}
+          onOpenChange={setDetailDialogOpen}
+          drone={selectedDrone}
+          onDroneUpdated={handleDroneUpdated}
+        />
+      )}
     </Dialog>
   );
 };

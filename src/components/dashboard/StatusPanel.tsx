@@ -139,8 +139,23 @@ export const StatusPanel = () => {
         </div>
       </GlassCard>
       
-      <DroneListDialog open={droneDialogOpen} onOpenChange={setDroneDialogOpen} drones={drones} />
-      <EquipmentListDialog open={equipmentDialogOpen} onOpenChange={setEquipmentDialogOpen} equipment={equipment} />
-      <PersonnelListDialog open={personnelDialogOpen} onOpenChange={setPersonnelDialogOpen} personnel={personnel} />
+      <DroneListDialog 
+        open={droneDialogOpen} 
+        onOpenChange={setDroneDialogOpen} 
+        drones={drones}
+        onDronesUpdated={fetchDrones}
+      />
+      <EquipmentListDialog 
+        open={equipmentDialogOpen} 
+        onOpenChange={setEquipmentDialogOpen} 
+        equipment={equipment}
+        onEquipmentUpdated={fetchEquipment}
+      />
+      <PersonnelListDialog 
+        open={personnelDialogOpen} 
+        onOpenChange={setPersonnelDialogOpen} 
+        personnel={personnel}
+        onPersonnelUpdated={fetchPersonnel}
+      />
     </>;
 };

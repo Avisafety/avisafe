@@ -83,7 +83,7 @@ export const DocumentSection = () => {
 
   return (
     <>
-      <GlassCard className="h-[400px] flex flex-col overflow-hidden">
+      <GlassCard className="h-[415px] flex flex-col overflow-hidden">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2 sm:mb-3 gap-2">
           <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
             <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-primary flex-shrink-0" />

@@ -194,6 +194,7 @@ export const MissionsSection = () => {
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         mission={selectedMission}
+        onMissionUpdated={fetchMissions}
       />
       
       <AddMissionDialog

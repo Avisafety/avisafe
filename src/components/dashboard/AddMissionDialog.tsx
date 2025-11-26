@@ -18,13 +18,14 @@ interface AddMissionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onMissionAdded: () => void;
+  mission?: any; // Valgfri - hvis satt, er vi i redigeringsmodus
 }
 
 type Profile = Tables<"profiles">;
 type Equipment = any;
 type Customer = any;
 
-export const AddMissionDialog = ({ open, onOpenChange, onMissionAdded }: AddMissionDialogProps) => {
+export const AddMissionDialog = ({ open, onOpenChange, onMissionAdded, mission }: AddMissionDialogProps) => {
   const [loading, setLoading] = useState(false);
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [equipment, setEquipment] = useState<Equipment[]>([]);
@@ -54,8 +55,42 @@ export const AddMissionDialog = ({ open, onOpenChange, onMissionAdded }: AddMiss
       fetchProfiles();
       fetchEquipment();
       fetchCustomers();
+      
+      // Pre-fylle skjemaet hvis vi redigerer
+      if (mission) {
+        setFormData({
+          tittel: mission.tittel || "",
+          lokasjon: mission.lokasjon || "",
+          tidspunkt: mission.tidspunkt ? new Date(mission.tidspunkt).toISOString().slice(0, 16) : "",
+          beskrivelse: mission.beskrivelse || "",
+          merknader: mission.merknader || "",
+          status: mission.status || "Planlagt",
+          risk_nivå: mission.risk_nivå || "Lav",
+          latitude: mission.latitude || null,
+          longitude: mission.longitude || null,
+        });
+        setSelectedCustomer(mission.customer_id || "");
+        fetchMissionPersonnel(mission.id);
+        fetchMissionEquipment(mission.id);
+      } else {
+        // Reset form når vi oppretter nytt oppdrag
+        setFormData({
+          tittel: "",
+          lokasjon: "",
+          tidspunkt: "",
+          beskrivelse: "",
+          merknader: "",
+          status: "Planlagt",
+          risk_nivå: "Lav",
+          latitude: null,
+          longitude: null,
+        });
+        setSelectedPersonnel([]);
+        setSelectedEquipment([]);
+        setSelectedCustomer("");
+      }
     }
-  }, [open]);
+  }, [open, mission]);
 
   const fetchProfiles = async () => {
     const { data, error } = await supabase
@@ -97,6 +132,32 @@ export const AddMissionDialog = ({ open, onOpenChange, onMissionAdded }: AddMiss
       console.error(error);
     } else {
       setCustomers(data || []);
+    }
+  };
+
+  const fetchMissionPersonnel = async (missionId: string) => {
+    const { data, error } = await supabase
+      .from("mission_personnel")
+      .select("profile_id")
+      .eq("mission_id", missionId);
+    
+    if (error) {
+      console.error("Error fetching mission personnel:", error);
+    } else {
+      setSelectedPersonnel(data?.map(p => p.profile_id) || []);
+    }
+  };
+
+  const fetchMissionEquipment = async (missionId: string) => {
+    const { data, error } = await supabase
+      .from("mission_equipment")
+      .select("equipment_id")
+      .eq("mission_id", missionId);
+    
+    if (error) {
+      console.error("Error fetching mission equipment:", error);
+    } else {
+      setSelectedEquipment(data?.map(e => e.equipment_id) || []);
     }
   };
 
@@ -164,75 +225,132 @@ export const AddMissionDialog = ({ open, onOpenChange, onMissionAdded }: AddMiss
         throw new Error("Kunne ikke hente brukerinformasjon");
       }
 
-      // Insert mission
-      const { data: mission, error: missionError } = await (supabase as any)
-        .from("missions")
-        .insert({
-          tittel: formData.tittel,
-          lokasjon: formData.lokasjon,
-          tidspunkt: formData.tidspunkt,
-          beskrivelse: formData.beskrivelse,
-          merknader: formData.merknader,
-          status: formData.status,
-          risk_nivå: formData.risk_nivå,
-          customer_id: selectedCustomer || null,
-          user_id: user.id,
-          company_id: profile.company_id,
-          latitude: formData.latitude,
-          longitude: formData.longitude,
-        })
-        .select()
-        .single();
+      if (mission) {
+        // UPDATE mode
+        const { error: missionError } = await (supabase as any)
+          .from("missions")
+          .update({
+            tittel: formData.tittel,
+            lokasjon: formData.lokasjon,
+            tidspunkt: formData.tidspunkt,
+            beskrivelse: formData.beskrivelse,
+            merknader: formData.merknader,
+            status: formData.status,
+            risk_nivå: formData.risk_nivå,
+            customer_id: selectedCustomer || null,
+            latitude: formData.latitude,
+            longitude: formData.longitude,
+            oppdatert_dato: new Date().toISOString(),
+          })
+          .eq("id", mission.id);
 
-      if (missionError) throw missionError;
+        if (missionError) throw missionError;
 
-      // Insert mission personnel
-      if (selectedPersonnel.length > 0) {
-        const personnelData = selectedPersonnel.map(profileId => ({
-          mission_id: mission.id,
-          profile_id: profileId,
-        }));
-        
-        const { error: personnelError } = await (supabase as any)
-          .from("mission_personnel")
-          .insert(personnelData);
-        
-        if (personnelError) throw personnelError;
-      }
+        // Delete existing personnel and equipment
+        await supabase.from("mission_personnel").delete().eq("mission_id", mission.id);
+        await supabase.from("mission_equipment").delete().eq("mission_id", mission.id);
 
-      // Insert mission equipment
-      if (selectedEquipment.length > 0) {
-        const equipmentData = selectedEquipment.map(equipmentId => ({
-          mission_id: mission.id,
-          equipment_id: equipmentId,
-        }));
-        
-        const { error: equipmentError } = await (supabase as any)
-          .from("mission_equipment")
-          .insert(equipmentData);
-        
-        if (equipmentError) throw equipmentError;
-      }
+        // Insert new personnel
+        if (selectedPersonnel.length > 0) {
+          const personnelData = selectedPersonnel.map(profileId => ({
+            mission_id: mission.id,
+            profile_id: profileId,
+          }));
+          
+          const { error: personnelError } = await supabase
+            .from("mission_personnel")
+            .insert(personnelData);
+          
+          if (personnelError) throw personnelError;
+        }
 
-      // Send email notification for new mission
-      try {
-        await supabase.functions.invoke('send-notification-email', {
-          body: {
-            type: 'notify_new_mission',
-            companyId: profile.company_id,
-            mission: {
-              tittel: formData.tittel,
-              lokasjon: formData.lokasjon,
-              tidspunkt: formData.tidspunkt,
-              beskrivelse: formData.beskrivelse
+        // Insert new equipment
+        if (selectedEquipment.length > 0) {
+          const equipmentData = selectedEquipment.map(equipmentId => ({
+            mission_id: mission.id,
+            equipment_id: equipmentId,
+          }));
+          
+          const { error: equipmentError } = await supabase
+            .from("mission_equipment")
+            .insert(equipmentData);
+          
+          if (equipmentError) throw equipmentError;
+        }
+
+        toast.success("Oppdrag oppdatert!");
+      } else {
+        // INSERT mode
+        const { data: newMission, error: missionError } = await (supabase as any)
+          .from("missions")
+          .insert({
+            tittel: formData.tittel,
+            lokasjon: formData.lokasjon,
+            tidspunkt: formData.tidspunkt,
+            beskrivelse: formData.beskrivelse,
+            merknader: formData.merknader,
+            status: formData.status,
+            risk_nivå: formData.risk_nivå,
+            customer_id: selectedCustomer || null,
+            user_id: user.id,
+            company_id: profile.company_id,
+            latitude: formData.latitude,
+            longitude: formData.longitude,
+          })
+          .select()
+          .single();
+
+        if (missionError) throw missionError;
+
+        // Insert mission personnel
+        if (selectedPersonnel.length > 0) {
+          const personnelData = selectedPersonnel.map(profileId => ({
+            mission_id: newMission.id,
+            profile_id: profileId,
+          }));
+          
+          const { error: personnelError } = await (supabase as any)
+            .from("mission_personnel")
+            .insert(personnelData);
+          
+          if (personnelError) throw personnelError;
+        }
+
+        // Insert mission equipment
+        if (selectedEquipment.length > 0) {
+          const equipmentData = selectedEquipment.map(equipmentId => ({
+            mission_id: newMission.id,
+            equipment_id: equipmentId,
+          }));
+          
+          const { error: equipmentError } = await (supabase as any)
+            .from("mission_equipment")
+            .insert(equipmentData);
+          
+          if (equipmentError) throw equipmentError;
+        }
+
+        // Send email notification for new mission
+        try {
+          await supabase.functions.invoke('send-notification-email', {
+            body: {
+              type: 'notify_new_mission',
+              companyId: profile.company_id,
+              mission: {
+                tittel: formData.tittel,
+                lokasjon: formData.lokasjon,
+                tidspunkt: formData.tidspunkt,
+                beskrivelse: formData.beskrivelse
+              }
             }
-          }
-        });
-      } catch (emailError) {
-        console.error('Error sending new mission notification:', emailError);
-      }
+          });
+        } catch (emailError) {
+          console.error('Error sending new mission notification:', emailError);
+        }
 
-      toast.success("Oppdrag opprettet!");
+        toast.success("Oppdrag opprettet!");
+      }
+      
       onMissionAdded();
       onOpenChange(false);
       
@@ -254,8 +372,8 @@ export const AddMissionDialog = ({ open, onOpenChange, onMissionAdded }: AddMiss
       setNewCustomerName("");
       setShowNewCustomerInput(false);
     } catch (error) {
-      console.error("Error creating mission:", error);
-      toast.error("Kunne ikke opprette oppdrag");
+      console.error("Error saving mission:", error);
+      toast.error(mission ? "Kunne ikke oppdatere oppdrag" : "Kunne ikke opprette oppdrag");
     } finally {
       setLoading(false);
     }
@@ -286,7 +404,7 @@ export const AddMissionDialog = ({ open, onOpenChange, onMissionAdded }: AddMiss
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
-          <DialogTitle>Legg til oppdrag</DialogTitle>
+          <DialogTitle>{mission ? "Rediger oppdrag" : "Legg til oppdrag"}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -558,7 +676,7 @@ export const AddMissionDialog = ({ open, onOpenChange, onMissionAdded }: AddMiss
             </Button>
             <Button type="submit" disabled={loading}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Opprett oppdrag
+              {mission ? "Lagre endringer" : "Opprett oppdrag"}
             </Button>
           </div>
         </form>

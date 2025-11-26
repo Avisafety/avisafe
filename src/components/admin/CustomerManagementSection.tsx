@@ -24,7 +24,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { CustomerManagementDialog } from "./CustomerManagementDialog";
 import { CustomerDetailDialog } from "./CustomerDetailDialog";
-import { Plus, Pencil, Users, Mail, Phone, MapPin, User, Eye } from "lucide-react";
+import { Plus, Pencil, Users, Mail, Phone, MapPin, User, Eye, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -54,6 +55,7 @@ export const CustomerManagementSection = () => {
   const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [viewCustomer, setViewCustomer] = useState<Customer | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     fetchCustomers();
@@ -160,6 +162,18 @@ export const CustomerManagementSection = () => {
     }
   };
 
+  // Filter customers based on search query
+  const filteredCustomers = customers.filter((customer) => {
+    const query = searchQuery.toLowerCase().trim();
+    if (!query) return true;
+
+    return (
+      customer.navn.toLowerCase().includes(query) ||
+      customer.kontaktperson?.toLowerCase().includes(query) ||
+      customer.epost?.toLowerCase().includes(query)
+    );
+  });
+
   if (loading) {
     return (
       <GlassCard className="p-6">
@@ -184,9 +198,25 @@ export const CustomerManagementSection = () => {
           </Button>
         </div>
 
+        {/* Search Bar */}
+        <div className="mb-6 relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="Søk etter kunde (navn, kontaktperson, e-post)..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+
         {customers.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             Ingen kunder funnet. Opprett din første kunde.
+          </div>
+        ) : filteredCustomers.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            Ingen kunder matcher søket "{searchQuery}"
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -201,7 +231,7 @@ export const CustomerManagementSection = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {customers.map((customer) => (
+                {filteredCustomers.map((customer) => (
                   <TableRow key={customer.id}>
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-2">

@@ -1,11 +1,12 @@
 import { GlassCard } from "@/components/GlassCard";
-import { mockDrones, mockEquipment, mockPersonnel } from "@/data/mockData";
 import { Plane, Gauge, Users } from "lucide-react";
 import { Status } from "@/types";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DroneListDialog } from "./DroneListDialog";
 import { EquipmentListDialog } from "./EquipmentListDialog";
 import { PersonnelListDialog } from "./PersonnelListDialog";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 interface StatusCounts {
   Grønn: number;
   Gul: number;
@@ -71,12 +72,63 @@ const StatusCard = ({
     </div>;
 };
 export const StatusPanel = () => {
+  const { user } = useAuth();
   const [droneDialogOpen, setDroneDialogOpen] = useState(false);
   const [equipmentDialogOpen, setEquipmentDialogOpen] = useState(false);
   const [personnelDialogOpen, setPersonnelDialogOpen] = useState(false);
-  const droneStatus = countByStatus(mockDrones);
-  const equipmentStatus = countByStatus(mockEquipment);
-  const personnelStatus = countByStatus(mockPersonnel);
+  const [drones, setDrones] = useState<any[]>([]);
+  const [equipment, setEquipment] = useState<any[]>([]);
+  const [personnel, setPersonnel] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (user) {
+      fetchDrones();
+      fetchEquipment();
+      fetchPersonnel();
+    }
+  }, [user]);
+
+  const fetchDrones = async () => {
+    const { data, error } = await supabase
+      .from("drones")
+      .select("*")
+      .eq("aktiv", true);
+    
+    if (!error && data) {
+      setDrones(data);
+    }
+  };
+
+  const fetchEquipment = async () => {
+    const { data, error } = await supabase
+      .from("equipment")
+      .select("*")
+      .eq("aktiv", true);
+    
+    if (!error && data) {
+      setEquipment(data);
+    }
+  };
+
+  const fetchPersonnel = async () => {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("*, personnel_competencies(*)")
+      .eq("approved", true);
+    
+    if (!error && data) {
+      // Map profiles to include a status field (default to "Grønn")
+      const personnelWithStatus = data.map(profile => ({
+        ...profile,
+        status: "Grønn" as Status
+      }));
+      setPersonnel(personnelWithStatus);
+    }
+  };
+
+  const droneStatus = countByStatus(drones);
+  const equipmentStatus = countByStatus(equipment);
+  const personnelStatus = countByStatus(personnel);
   return <>
       <GlassCard className="overflow-hidden">
         <h2 className="text-sm sm:text-base font-semibold mb-3">Ressursstatus </h2>
@@ -87,8 +139,8 @@ export const StatusPanel = () => {
         </div>
       </GlassCard>
       
-      <DroneListDialog open={droneDialogOpen} onOpenChange={setDroneDialogOpen} drones={mockDrones} />
-      <EquipmentListDialog open={equipmentDialogOpen} onOpenChange={setEquipmentDialogOpen} equipment={mockEquipment} />
-      <PersonnelListDialog open={personnelDialogOpen} onOpenChange={setPersonnelDialogOpen} personnel={mockPersonnel} />
+      <DroneListDialog open={droneDialogOpen} onOpenChange={setDroneDialogOpen} drones={drones} />
+      <EquipmentListDialog open={equipmentDialogOpen} onOpenChange={setEquipmentDialogOpen} equipment={equipment} />
+      <PersonnelListDialog open={personnelDialogOpen} onOpenChange={setPersonnelDialogOpen} personnel={personnel} />
     </>;
 };

@@ -1,5 +1,4 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Drone } from "@/types";
 import { StatusBadge } from "@/components/StatusBadge";
 import { format } from "date-fns";
 import { nb } from "date-fns/locale";
@@ -7,7 +6,7 @@ import { nb } from "date-fns/locale";
 interface DroneListDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  drones: Drone[];
+  drones: any[];
 }
 
 export const DroneListDialog = ({ open, onOpenChange, drones }: DroneListDialogProps) => {
@@ -24,15 +23,15 @@ export const DroneListDialog = ({ open, onOpenChange, drones }: DroneListDialogP
               <div className="flex items-start justify-between">
                 <div>
                   <h3 className="font-semibold text-lg">{drone.modell}</h3>
-                  <p className="text-sm text-muted-foreground">{drone.registreringsnummer}</p>
+                  <p className="text-sm text-muted-foreground">{drone.registrering}</p>
                 </div>
                 <StatusBadge status={drone.status} />
               </div>
               
               <div className="grid grid-cols-2 gap-2 text-sm">
                 <div>
-                  <span className="text-muted-foreground">Flytimer:</span>
-                  <span className="ml-2 font-medium">{drone.flytimer}</span>
+                  <span className="text-muted-foreground">Flyvetimer:</span>
+                  <span className="ml-2 font-medium">{drone.flyvetimer}</span>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Tilgjengelig:</span>
@@ -42,7 +41,7 @@ export const DroneListDialog = ({ open, onOpenChange, drones }: DroneListDialogP
                   <div>
                     <span className="text-muted-foreground">Neste inspeksjon:</span>
                     <span className="ml-2 font-medium">
-                      {format(drone.neste_inspeksjon, "dd.MM.yyyy", { locale: nb })}
+                      {format(new Date(drone.neste_inspeksjon), "dd.MM.yyyy", { locale: nb })}
                     </span>
                   </div>
                 )}
@@ -50,7 +49,7 @@ export const DroneListDialog = ({ open, onOpenChange, drones }: DroneListDialogP
                   <div>
                     <span className="text-muted-foreground">Sist inspeksjon:</span>
                     <span className="ml-2 font-medium">
-                      {format(drone.sist_inspeksjon, "dd.MM.yyyy", { locale: nb })}
+                      {format(new Date(drone.sist_inspeksjon), "dd.MM.yyyy", { locale: nb })}
                     </span>
                   </div>
                 )}

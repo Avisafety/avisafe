@@ -292,6 +292,18 @@ export default function Kalender() {
     return getEventsForDate(checkDate).length > 0;
   };
 
+  const getEventDotColor = (type: string): string => {
+    switch (type) {
+      case "Oppdrag": return "bg-primary";
+      case "Hendelse": return "bg-red-500";
+      case "Dokument": return "bg-blue-400";
+      case "Vedlikehold": return "bg-orange-500";
+      case "Nyhet": return "bg-purple-500";
+      case "Annet": return "bg-gray-400";
+      default: return "bg-gray-400";
+    }
+  };
+
   const handleDateClick = (clickedDate: Date | undefined) => {
     if (clickedDate) {
       setSelectedDate(clickedDate);
@@ -486,20 +498,48 @@ export default function Kalender() {
                 components={{
                   Day: ({ date: dayDate, ...props }) => {
                     const dayEvents = getEventsForDate(dayDate);
-                    const maxEvents = isMobile ? 1 : 2;
-                    const displayEvents = dayEvents.slice(0, maxEvents);
-                    const remainingCount = dayEvents.length - maxEvents;
+
+                    if (isMobile) {
+                      const maxDots = 4;
+                      const displayDots = dayEvents.slice(0, maxDots);
+                      const hasMore = dayEvents.length > maxDots;
+
+                      return (
+                        <button
+                          {...props}
+                          onClick={() => handleDateClick(dayDate)}
+                          className="h-full w-full p-1 font-normal hover:bg-accent/30 hover:text-accent-foreground rounded-md flex flex-col items-center justify-start gap-1"
+                        >
+                          <span className="text-sm font-medium">{format(dayDate, "d")}</span>
+                          {displayDots.length > 0 && (
+                            <div className="flex flex-wrap gap-0.5 justify-center mt-0.5">
+                              {displayDots.map((event, idx) => (
+                                <div
+                                  key={event.id || idx}
+                                  className={cn("w-2 h-2 rounded-full", getEventDotColor(event.type))}
+                                />
+                              ))}
+                              {hasMore && <span className="text-[8px] text-muted-foreground">+</span>}
+                            </div>
+                          )}
+                        </button>
+                      );
+                    }
+
+                    // Desktop: tekstbasert visning
+                    const displayEvents = dayEvents.slice(0, 2);
+                    const remainingCount = dayEvents.length - 2;
 
                     return (
                       <button
                         {...props}
                         onClick={() => handleDateClick(dayDate)}
                         className={cn(
-                          "h-full w-full p-1 sm:p-2 font-normal hover:bg-accent/30 hover:text-accent-foreground rounded-md",
+                          "h-full w-full p-2 font-normal hover:bg-accent/30 hover:text-accent-foreground rounded-md",
                           "flex flex-col items-start justify-start gap-1 text-left"
                         )}
                       >
-                        <span className="text-sm font-medium">{format(dayDate, "d")}</span>
+                        <span className="text-sm font-medium mb-1">{format(dayDate, "d")}</span>
                         {displayEvents.map((event, idx) => (
                           <div
                             key={event.id || idx}
@@ -510,9 +550,7 @@ export default function Kalender() {
                           </div>
                         ))}
                         {remainingCount > 0 && (
-                          <div className="text-[10px] text-muted-foreground">
-                            +{remainingCount} flere
-                          </div>
+                          <span className="text-[10px] text-muted-foreground px-1">+{remainingCount} mer</span>
                         )}
                       </button>
                     );

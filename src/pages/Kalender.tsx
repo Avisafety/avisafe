@@ -304,6 +304,18 @@ export default function Kalender() {
     }
   };
 
+  const getEventBackgroundColor = (type: string): string => {
+    switch (type) {
+      case "Oppdrag": return "bg-primary/10 hover:bg-primary/20 border-primary/20";
+      case "Hendelse": return "bg-red-500/10 hover:bg-red-500/20 border-red-500/20";
+      case "Dokument": return "bg-blue-400/10 hover:bg-blue-400/20 border-blue-400/20";
+      case "Vedlikehold": return "bg-orange-500/10 hover:bg-orange-500/20 border-orange-500/20";
+      case "Nyhet": return "bg-purple-500/10 hover:bg-purple-500/20 border-purple-500/20";
+      case "Annet": return "bg-gray-400/10 hover:bg-gray-400/20 border-gray-400/20";
+      default: return "bg-gray-400/10 hover:bg-gray-400/20 border-gray-400/20";
+    }
+  };
+
   const handleDateClick = (clickedDate: Date | undefined) => {
     if (clickedDate) {
       setSelectedDate(clickedDate);
@@ -543,7 +555,10 @@ export default function Kalender() {
                         {displayEvents.map((event, idx) => (
                           <div
                             key={event.id || idx}
-                            className="text-xs truncate w-full px-1.5 py-1 bg-primary/10 rounded text-foreground hover:bg-primary/20 cursor-pointer transition-colors font-medium"
+                            className={cn(
+                              "text-xs truncate w-full px-1.5 py-1 rounded text-foreground cursor-pointer transition-colors font-medium border",
+                              getEventBackgroundColor(event.type)
+                            )}
                             title={event.title}
                           >
                             {event.title}

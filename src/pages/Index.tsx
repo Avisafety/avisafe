@@ -221,16 +221,18 @@ const Index = () => {
                     {/* AI Search Bar above missions */}
                     <AISearchBar />
 
-                    {/* Missions below drone */}
-                    {layout &&
-                      layout.length > 0 &&
-                      layout
-                        .filter((item) => item.component === "missions")
-                        .map((item) => (
-                          <DraggableSection key={item.id} id={item.id}>
-                            {renderSection(item.component)}
-                          </DraggableSection>
-                        ))}
+                    {/* Missions - pushed to bottom with mt-auto */}
+                    <div className="mt-auto">
+                      {layout &&
+                        layout.length > 0 &&
+                        layout
+                          .filter((item) => item.component === "missions")
+                          .map((item) => (
+                            <DraggableSection key={item.id} id={item.id}>
+                              {renderSection(item.component)}
+                            </DraggableSection>
+                          ))}
+                    </div>
                   </div>
 
                   {/* Right Column */}

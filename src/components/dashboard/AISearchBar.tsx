@@ -169,9 +169,6 @@ export const AISearchBar = () => {
         </div>
       </GlassCard>
 
-      {/* Empty space for drone background - only shown when no search results */}
-      {!results && <div className="flex-1 min-h-[100px]" />}
-
       {results && <GlassCard className="p-6 space-y-4 max-h-[350px] overflow-y-auto">
           <div className="space-y-2">
             <h3 className="font-semibold text-lg">Søkeresultater ({getTotalResults()})</h3>

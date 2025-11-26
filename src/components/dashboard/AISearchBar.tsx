@@ -34,7 +34,9 @@ export const AISearchBar = () => {
   const [selectedEquipment, setSelectedEquipment] = useState<any>(null);
   const [selectedDrone, setSelectedDrone] = useState<any>(null);
   const [selectedSora, setSelectedSora] = useState<string | null>(null);
-  const { user } = useAuth();
+  const {
+    user
+  } = useAuth();
   const handleSearch = async () => {
     if (!query.trim() || !user) return;
     setIsSearching(true);
@@ -75,97 +77,77 @@ export const AISearchBar = () => {
     } = results.results;
     return missions.length + incidents.length + documents.length + equipment.length + drones.length + competencies.length + sora.length;
   };
-
   const handleMissionClick = async (missionId: string) => {
-    const { data, error } = await supabase
-      .from('missions')
-      .select('*')
-      .eq('id', missionId)
-      .single();
-    
+    const {
+      data,
+      error
+    } = await supabase.from('missions').select('*').eq('id', missionId).single();
     if (error) {
       toast.error('Kunne ikke hente oppdragsdetaljer');
       return;
     }
     setSelectedMission(data);
   };
-
   const handleIncidentClick = async (incidentId: string) => {
-    const { data, error } = await supabase
-      .from('incidents')
-      .select('*')
-      .eq('id', incidentId)
-      .single();
-    
+    const {
+      data,
+      error
+    } = await supabase.from('incidents').select('*').eq('id', incidentId).single();
     if (error) {
       toast.error('Kunne ikke hente hendelsesdetaljer');
       return;
     }
     setSelectedIncident(data);
   };
-
   const handleDocumentClick = async (documentId: string) => {
-    const { data, error } = await supabase
-      .from('documents')
-      .select('*')
-      .eq('id', documentId)
-      .single();
-    
+    const {
+      data,
+      error
+    } = await supabase.from('documents').select('*').eq('id', documentId).single();
     if (error) {
       toast.error('Kunne ikke hente dokumentdetaljer');
       return;
     }
     setSelectedDocument(data);
   };
-
   const handleEquipmentClick = async (equipmentId: string) => {
-    const { data, error } = await supabase
-      .from('equipment')
-      .select('*')
-      .eq('id', equipmentId)
-      .single();
-    
+    const {
+      data,
+      error
+    } = await supabase.from('equipment').select('*').eq('id', equipmentId).single();
     if (error) {
       toast.error('Kunne ikke hente utstyrsdetaljer');
       return;
     }
     setSelectedEquipment(data);
   };
-
   const handleDroneClick = async (droneId: string) => {
-    const { data, error } = await supabase
-      .from('drones')
-      .select('*')
-      .eq('id', droneId)
-      .single();
-    
+    const {
+      data,
+      error
+    } = await supabase.from('drones').select('*').eq('id', droneId).single();
     if (error) {
       toast.error('Kunne ikke hente dronedetaljer');
       return;
     }
     setSelectedDrone(data);
   };
-
   const handleSoraClick = async (soraId: string) => {
-    const { data, error } = await supabase
-      .from('mission_sora')
-      .select('mission_id')
-      .eq('id', soraId)
-      .single();
-    
+    const {
+      data,
+      error
+    } = await supabase.from('mission_sora').select('mission_id').eq('id', soraId).single();
     if (error) {
       toast.error('Kunne ikke hente SORA-detaljer');
       return;
     }
     setSelectedSora(data.mission_id);
   };
-
   const getDocumentStatus = (doc: any): string => {
     if (!doc.gyldig_til) return "Grønn";
     const today = new Date();
     const expiryDate = new Date(doc.gyldig_til);
     const daysUntilExpiry = Math.floor((expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-    
     if (daysUntilExpiry < 0) return "Rød";
     if (daysUntilExpiry <= (doc.varsel_dager_for_utløp || 30)) return "Gul";
     return "Grønn";
@@ -173,7 +155,7 @@ export const AISearchBar = () => {
   return <div className="space-y-4 mb-6">
       <GlassCard className="p-4">
         <div className="flex gap-2">
-          <Input placeholder="Søk med AI i alle data (oppdrag, hendelser, dokumenter, utstyr...)" value={query} onChange={e => setQuery(e.target.value)} onKeyPress={handleKeyPress} className="flex-1" />
+          <Input value={query} onChange={e => setQuery(e.target.value)} onKeyPress={handleKeyPress} className="flex-1" placeholder="S\xF8k i alle data (oppdrag, hendelser, dokumenter, utstyr...)" />
           <Button onClick={handleSearch} disabled={isSearching || !query.trim()}>
             {isSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
           </Button>
@@ -238,38 +220,11 @@ export const AISearchBar = () => {
           </div>
         </GlassCard>}
 
-      <MissionDetailDialog 
-        open={!!selectedMission} 
-        onOpenChange={(open) => !open && setSelectedMission(null)} 
-        mission={selectedMission} 
-      />
-      <IncidentDetailDialog 
-        open={!!selectedIncident} 
-        onOpenChange={(open) => !open && setSelectedIncident(null)} 
-        incident={selectedIncident} 
-      />
-      <DocumentDetailDialog 
-        open={!!selectedDocument} 
-        onOpenChange={(open) => !open && setSelectedDocument(null)} 
-        document={selectedDocument}
-        status={selectedDocument ? getDocumentStatus(selectedDocument) : "Grønn"}
-      />
-      <EquipmentDetailDialog 
-        open={!!selectedEquipment} 
-        onOpenChange={(open) => !open && setSelectedEquipment(null)} 
-        equipment={selectedEquipment}
-        onEquipmentUpdated={() => {}}
-      />
-      <DroneDetailDialog 
-        open={!!selectedDrone} 
-        onOpenChange={(open) => !open && setSelectedDrone(null)} 
-        drone={selectedDrone}
-        onDroneUpdated={() => {}}
-      />
-      <SoraAnalysisDialog 
-        open={!!selectedSora} 
-        onOpenChange={(open) => !open && setSelectedSora(null)} 
-        missionId={selectedSora || undefined}
-      />
+      <MissionDetailDialog open={!!selectedMission} onOpenChange={open => !open && setSelectedMission(null)} mission={selectedMission} />
+      <IncidentDetailDialog open={!!selectedIncident} onOpenChange={open => !open && setSelectedIncident(null)} incident={selectedIncident} />
+      <DocumentDetailDialog open={!!selectedDocument} onOpenChange={open => !open && setSelectedDocument(null)} document={selectedDocument} status={selectedDocument ? getDocumentStatus(selectedDocument) : "Grønn"} />
+      <EquipmentDetailDialog open={!!selectedEquipment} onOpenChange={open => !open && setSelectedEquipment(null)} equipment={selectedEquipment} onEquipmentUpdated={() => {}} />
+      <DroneDetailDialog open={!!selectedDrone} onOpenChange={open => !open && setSelectedDrone(null)} drone={selectedDrone} onDroneUpdated={() => {}} />
+      <SoraAnalysisDialog open={!!selectedSora} onOpenChange={open => !open && setSelectedSora(null)} missionId={selectedSora || undefined} />
     </div>;
 };

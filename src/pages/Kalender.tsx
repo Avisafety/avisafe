@@ -557,6 +557,37 @@ export default function Kalender() {
                   },
                 }}
               />
+
+              {/* Fargelegende */}
+              <div className="mt-6 pt-4 border-t border-border">
+                <p className="text-sm font-medium text-muted-foreground mb-3">Fargekode:</p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-primary flex-shrink-0" />
+                    <span className="text-xs sm:text-sm">Oppdrag</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-red-500 flex-shrink-0" />
+                    <span className="text-xs sm:text-sm">Hendelse</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-blue-400 flex-shrink-0" />
+                    <span className="text-xs sm:text-sm">Dokument</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-orange-500 flex-shrink-0" />
+                    <span className="text-xs sm:text-sm">Vedlikehold</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-purple-500 flex-shrink-0" />
+                    <span className="text-xs sm:text-sm">Nyhet</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-gray-400 flex-shrink-0" />
+                    <span className="text-xs sm:text-sm">Annet</span>
+                  </div>
+                </div>
+              </div>
             </div>
 
           </div>

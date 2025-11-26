@@ -231,7 +231,6 @@ const Index = () => {
                           {renderSection(item.component)}
                         </DraggableSection>
                       ))}
-                  </div>
 
                   {/* Right Column */}
                   <div className="lg:col-span-3 flex flex-col gap-3 sm:gap-4">

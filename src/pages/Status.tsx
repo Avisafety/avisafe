@@ -44,8 +44,8 @@ interface StatusData {
 const COLORS = {
   primary: "hsl(var(--primary))",
   destructive: "hsl(var(--destructive))",
-  warning: "hsl(var(--warning))",
-  success: "hsl(var(--success))",
+  warning: "hsl(var(--status-yellow))",
+  success: "hsl(var(--status-green))",
   muted: "hsl(var(--muted-foreground))",
 };
 

@@ -2,14 +2,30 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { StatusBadge } from "@/components/StatusBadge";
 import { format } from "date-fns";
 import { nb } from "date-fns/locale";
+import { useState } from "react";
+import { EquipmentDetailDialog } from "@/components/resources/EquipmentDetailDialog";
 
 interface EquipmentListDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   equipment: any[];
+  onEquipmentUpdated?: () => void;
 }
 
-export const EquipmentListDialog = ({ open, onOpenChange, equipment }: EquipmentListDialogProps) => {
+export const EquipmentListDialog = ({ open, onOpenChange, equipment, onEquipmentUpdated }: EquipmentListDialogProps) => {
+  const [selectedEquipment, setSelectedEquipment] = useState<any>(null);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+
+  const handleEquipmentClick = (item: any) => {
+    setSelectedEquipment(item);
+    setDetailDialogOpen(true);
+  };
+
+  const handleEquipmentUpdated = () => {
+    if (onEquipmentUpdated) {
+      onEquipmentUpdated();
+    }
+  };
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
@@ -19,7 +35,11 @@ export const EquipmentListDialog = ({ open, onOpenChange, equipment }: Equipment
         
         <div className="space-y-4">
           {equipment.map((item) => (
-            <div key={item.id} className="border border-border rounded-lg p-4 space-y-2">
+            <div 
+              key={item.id} 
+              onClick={() => handleEquipmentClick(item)}
+              className="border border-border rounded-lg p-4 space-y-2 cursor-pointer hover:bg-muted/50 transition-colors"
+            >
               <div className="flex items-start justify-between">
                 <div>
                   <h3 className="font-semibold text-lg">{item.navn}</h3>
@@ -65,6 +85,15 @@ export const EquipmentListDialog = ({ open, onOpenChange, equipment }: Equipment
           ))}
         </div>
       </DialogContent>
+
+      {selectedEquipment && (
+        <EquipmentDetailDialog
+          open={detailDialogOpen}
+          onOpenChange={setDetailDialogOpen}
+          equipment={selectedEquipment}
+          onEquipmentUpdated={handleEquipmentUpdated}
+        />
+      )}
     </Dialog>
   );
 };

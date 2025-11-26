@@ -2,14 +2,30 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { StatusBadge } from "@/components/StatusBadge";
 import { format } from "date-fns";
 import { nb } from "date-fns/locale";
+import { useState } from "react";
+import { PersonCompetencyDialog } from "@/components/resources/PersonCompetencyDialog";
 
 interface PersonnelListDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   personnel: any[];
+  onPersonnelUpdated?: () => void;
 }
 
-export const PersonnelListDialog = ({ open, onOpenChange, personnel }: PersonnelListDialogProps) => {
+export const PersonnelListDialog = ({ open, onOpenChange, personnel, onPersonnelUpdated }: PersonnelListDialogProps) => {
+  const [selectedPerson, setSelectedPerson] = useState<any>(null);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+
+  const handlePersonClick = (person: any) => {
+    setSelectedPerson(person);
+    setDetailDialogOpen(true);
+  };
+
+  const handlePersonUpdated = () => {
+    if (onPersonnelUpdated) {
+      onPersonnelUpdated();
+    }
+  };
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
@@ -19,7 +35,11 @@ export const PersonnelListDialog = ({ open, onOpenChange, personnel }: Personnel
         
         <div className="space-y-4">
           {personnel.map((person) => (
-            <div key={person.id} className="border border-border rounded-lg p-4 space-y-2">
+            <div 
+              key={person.id} 
+              onClick={() => handlePersonClick(person)}
+              className="border border-border rounded-lg p-4 space-y-2 cursor-pointer hover:bg-muted/50 transition-colors"
+            >
               <div className="flex items-start justify-between">
                 <div>
                   <h3 className="font-semibold text-lg">{person.full_name || "Ukjent navn"}</h3>
@@ -62,6 +82,15 @@ export const PersonnelListDialog = ({ open, onOpenChange, personnel }: Personnel
           ))}
         </div>
       </DialogContent>
+
+      {selectedPerson && (
+        <PersonCompetencyDialog
+          open={detailDialogOpen}
+          onOpenChange={setDetailDialogOpen}
+          person={selectedPerson}
+          onCompetencyUpdated={handlePersonUpdated}
+        />
+      )}
     </Dialog>
   );
 };

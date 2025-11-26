@@ -169,7 +169,7 @@ export const AISearchBar = () => {
         </div>
       </GlassCard>
 
-      {results && <GlassCard className="p-6 space-y-4 max-h-[350px] overflow-y-auto">
+      {results && <GlassCard className="p-6 space-y-4 max-h-[200px] overflow-y-auto">
           <div className="space-y-2">
             <h3 className="font-semibold text-lg">Søkeresultater ({getTotalResults()})</h3>
             {results.summary && <p className="text-sm text-slate-950">{results.summary}</p>}

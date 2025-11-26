@@ -145,11 +145,39 @@ export const CustomerManagementDialog = ({
       };
 
       if (isCreating) {
-        const { error } = await supabase
+        const { data: insertedCustomer, error } = await supabase
           .from("customers")
-          .insert(customerData);
+          .insert(customerData)
+          .select()
+          .single();
 
         if (error) throw error;
+
+        // Send welcome email if customer has email
+        if (data.epost) {
+          try {
+            // Get company name
+            const { data: companyData } = await supabase
+              .from("companies")
+              .select("navn")
+              .eq("id", companyId)
+              .single();
+
+            await supabase.functions.invoke("send-customer-welcome-email", {
+              body: {
+                customer_id: insertedCustomer.id,
+                customer_name: data.navn,
+                customer_email: data.epost,
+                company_name: companyData?.navn || "Selskapet",
+              },
+            });
+            console.log("Welcome email sent to customer");
+          } catch (emailError) {
+            console.error("Failed to send welcome email:", emailError);
+            // Don't fail the entire operation if email fails
+          }
+        }
+
         toast.success("Kunde opprettet");
       } else {
         const { error } = await supabase

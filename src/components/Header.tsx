@@ -59,7 +59,7 @@ export const Header = () => {
             <Shield className="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 text-primary" />
             <div className="text-left">
               <h1 className="text-sm sm:text-base lg:text-xl xl:text-2xl font-bold whitespace-nowrap">SMS</h1>
-              <p className="text-xs lg:text-sm text-muted-foreground hidden lg:block">
+              <p className="text-xs lg:text-sm text-foreground/80 hidden lg:block">
                 {isSuperAdmin ? "Super Administrator" : companyName || "Drone Operations"}
               </p>
             </div>

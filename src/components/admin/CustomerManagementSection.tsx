@@ -23,7 +23,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { CustomerManagementDialog } from "./CustomerManagementDialog";
-import { Plus, Pencil, Users, Mail, Phone, MapPin, User } from "lucide-react";
+import { CustomerDetailDialog } from "./CustomerDetailDialog";
+import { Plus, Pencil, Users, Mail, Phone, MapPin, User, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -51,6 +52,8 @@ export const CustomerManagementSection = () => {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [viewCustomer, setViewCustomer] = useState<Customer | null>(null);
 
   useEffect(() => {
     fetchCustomers();
@@ -107,6 +110,11 @@ export const CustomerManagementSection = () => {
   const handleEditCustomer = (customer: Customer) => {
     setSelectedCustomer(customer);
     setDialogOpen(true);
+  };
+
+  const handleViewCustomer = (customer: Customer) => {
+    setViewCustomer(customer);
+    setDetailDialogOpen(true);
   };
 
   const handleToggleActive = async (customer: Customer) => {
@@ -260,7 +268,16 @@ export const CustomerManagementSection = () => {
                         <Button
                           variant="outline"
                           size="sm"
+                          onClick={() => handleViewCustomer(customer)}
+                          title="Vis historikk"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
                           onClick={() => handleEditCustomer(customer)}
+                          title="Rediger"
                         >
                           <Pencil className="h-4 w-4" />
                         </Button>
@@ -268,6 +285,7 @@ export const CustomerManagementSection = () => {
                           variant="destructive"
                           size="sm"
                           onClick={() => handleDeleteClick(customer)}
+                          title="Slett"
                         >
                           Slett
                         </Button>
@@ -286,6 +304,12 @@ export const CustomerManagementSection = () => {
         onOpenChange={setDialogOpen}
         customer={selectedCustomer}
         onSuccess={fetchCustomers}
+      />
+
+      <CustomerDetailDialog
+        open={detailDialogOpen}
+        onOpenChange={setDetailDialogOpen}
+        customer={viewCustomer}
       />
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

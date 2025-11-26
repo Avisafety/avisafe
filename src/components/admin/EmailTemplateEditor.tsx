@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { GlassCard } from "@/components/GlassCard";
@@ -7,13 +7,16 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Mail, Save, Eye, RefreshCw } from "lucide-react";
+import { Mail, Save, Eye, RefreshCw, Code, Eye as EyeIcon } from "lucide-react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
 
 interface EmailTemplate {
   id: string;
@@ -33,6 +36,29 @@ export const EmailTemplateEditor = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [editorMode, setEditorMode] = useState<"visual" | "html">("visual");
+
+  // Quill modules configuration
+  const modules = useMemo(() => ({
+    toolbar: [
+      [{ 'header': [1, 2, 3, false] }],
+      ['bold', 'italic', 'underline', 'strike'],
+      [{ 'color': [] }, { 'background': [] }],
+      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+      [{ 'align': [] }],
+      ['link', 'image'],
+      ['clean']
+    ],
+  }), []);
+
+  const formats = [
+    'header',
+    'bold', 'italic', 'underline', 'strike',
+    'color', 'background',
+    'list', 'bullet',
+    'align',
+    'link', 'image'
+  ];
 
   useEffect(() => {
     fetchTemplate();
@@ -122,6 +148,71 @@ export const EmailTemplateEditor = () => {
       .replace(/\{\{company_name\}\}/g, "Ditt Selskap");
   };
 
+  const wrapContentInEmailTemplate = (htmlContent: string) => {
+    // Wrap the Quill editor content in a proper email template structure
+    return `<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <style>
+      body { 
+        font-family: Arial, sans-serif; 
+        line-height: 1.6; 
+        color: #333; 
+        margin: 0;
+        padding: 0;
+        background-color: #f4f4f4;
+      }
+      .container { 
+        max-width: 600px; 
+        margin: 20px auto; 
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      }
+      .content { 
+        padding: 30px; 
+      }
+      .footer { 
+        background: #f9f9f9;
+        padding: 20px 30px;
+        text-align: center; 
+        font-size: 12px; 
+        color: #888;
+        border-top: 1px solid #eee;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="content">
+        ${htmlContent}
+      </div>
+      <div class="footer">
+        <p>Med vennlig hilsen,<br>{{company_name}}</p>
+        <p style="font-size: 11px; color: #aaa;">Dette er en automatisk generert e-post. Vennligst ikke svar på denne e-posten.</p>
+      </div>
+    </div>
+  </body>
+</html>`;
+  };
+
+  const handleVisualEditorChange = (value: string) => {
+    // When using visual editor, wrap content in email template
+    const wrappedContent = wrapContentInEmailTemplate(value);
+    setContent(wrappedContent);
+  };
+
+  const getVisualEditorContent = () => {
+    // Extract content from between <div class="content"> tags for visual editor
+    const match = content.match(/<div class="content">([\s\S]*?)<\/div>/);
+    if (match && match[1]) {
+      return match[1].trim();
+    }
+    return content;
+  };
+
   if (loading) {
     return (
       <GlassCard className="p-6">
@@ -175,21 +266,55 @@ export const EmailTemplateEditor = () => {
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="content">E-post innhold (HTML)</Label>
-            <Textarea
-              id="content"
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="Skriv inn HTML-innhold..."
-              rows={20}
-              className="font-mono text-sm"
-            />
-          </div>
+          <Tabs value={editorMode} onValueChange={(v) => setEditorMode(v as "visual" | "html")}>
+            <TabsList className="grid w-full grid-cols-2 max-w-md">
+              <TabsTrigger value="visual" className="flex items-center gap-2">
+                <EyeIcon className="h-4 w-4" />
+                Visuell Editor
+              </TabsTrigger>
+              <TabsTrigger value="html" className="flex items-center gap-2">
+                <Code className="h-4 w-4" />
+                HTML Kode
+              </TabsTrigger>
+            </TabsList>
 
-          <div className="text-sm text-muted-foreground">
-            <p>Tips: Du kan bruke HTML og inline CSS for å style e-posten.</p>
-          </div>
+            <TabsContent value="visual" className="mt-4">
+              <div className="space-y-2">
+                <Label>E-post innhold (Visuell editor)</Label>
+                <div className="border rounded-lg overflow-hidden bg-white">
+                  <ReactQuill
+                    theme="snow"
+                    value={getVisualEditorContent()}
+                    onChange={handleVisualEditorChange}
+                    modules={modules}
+                    formats={formats}
+                    placeholder="Skriv inn e-postinnholdet her..."
+                    style={{ minHeight: "400px" }}
+                  />
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Bruk verktøylinjen ovenfor for å formatere teksten. Du kan bruke variabler som {"{{customer_name}}"} og {"{{company_name}}"} i teksten.
+                </p>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="html" className="mt-4">
+              <div className="space-y-2">
+                <Label htmlFor="content">E-post innhold (HTML)</Label>
+                <Textarea
+                  id="content"
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  placeholder="Skriv inn HTML-innhold..."
+                  rows={20}
+                  className="font-mono text-sm"
+                />
+                <p className="text-sm text-muted-foreground">
+                  Du kan bruke HTML og inline CSS for å style e-posten.
+                </p>
+              </div>
+            </TabsContent>
+          </Tabs>
         </div>
       </GlassCard>
 
